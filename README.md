@@ -5,7 +5,13 @@ When you're done, you can delete the content in this README and update the file 
 *We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
 
 ---
+## Required Libraries
+MTL.py requires
 
+1. numpy
+2. cvxpy
+3. multiprocessing 
+  
 ## Edit a file
 
 You’ll start by editing this README file to learn how to edit a file in Bitbucket.
