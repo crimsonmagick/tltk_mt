@@ -1,4 +1,4 @@
-from MTL_GPU import *
+from MTL import *
 import time
 from numpy import genfromtxt
 import matplotlib.pyplot as plt
@@ -6,7 +6,7 @@ from multiprocessing import Pool
 import matplotlib.pyplot as plt
 n = 0
 N = 1000000
-range_list = [10,100,1000,10000,100000,1000000,10000000,100000000]
+range_list = [100000]
 cpu_duration = []
 gpu_duration = []
 Aspeed = -1
@@ -18,9 +18,9 @@ for i in range_list:
     print('C: ', i)
     speed_pred = Predicate('speed',Aspeed,bspeed,'cpu')
     rpm_pred = Predicate('rpm',Arpm,brpm,'cpu')
-    #root = Not(And(Finally(0,100,speed_pred), Finally(0,100,rpm_pred)))
+    root = Not(And(Finally(0,100,speed_pred), Finally(0,100,rpm_pred)))
     #root = Until(0,float('inf'),speed_pred,rpm_pred)
-    root = speed_pred
+    #root = speed_pred
     # root = Finally(1,2.2,Predicate('geese',-1,-1))
 
     #traces = {'speed':speedData,'rpm':rpmData}
