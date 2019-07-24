@@ -6,7 +6,7 @@ from multiprocessing import Pool
 import matplotlib.pyplot as plt
 n = 0
 N = 1000000
-range_list = [100000]
+range_list = [10000]
 cpu_duration = []
 gpu_duration = []
 Aspeed = -1
