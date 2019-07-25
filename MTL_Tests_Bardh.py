@@ -17,8 +17,8 @@ if __name__ == '__main__':
 
     speed_pred = Predicate('speed',Aspeed,bspeed,False)
     rpm_pred = Predicate('rpm',Arpm,brpm,False)
-    root = Not(And(Finally(0,100,speed_pred), Finally(0,100,rpm_pred)))
-    #root = Until(0,float('inf'),speed_pred,rpm_pred)
+    root = Not(And(Global(0,100,speed_pred), Global(0,100,rpm_pred)))
+    #root = Until(0,19,speed_pred,rpm_pred)
     # root = Finally(1,2.2,Predicate('geese',-1,-1))
 
     data = genfromtxt('data.csv', delimiter=',')
