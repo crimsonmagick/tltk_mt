@@ -139,7 +139,6 @@ class Finally:
         current_time_stamp = self.time_stamps[current_time_step]
         lower_bound = current_time_stamp + self.lower_time_bound
         upper_bound = current_time_stamp + self.upper_time_bound
-        
         #lower_bound_index, upper_bound_index = self.binary_search(self.time_stamps,current_time_step,lower_bound,upper_bound)
         
         if self.lower_time_bound == 0:
@@ -171,8 +170,7 @@ class Finally:
         self.time_stamps = time_stamps
         finally_robustness = []
         max_robustness = float('-inf')
-        #subformula_robustness.reverse()
-        #time_stamps.reverse()
+
         if self.thread_pool == False:
             for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
                 current_time_stamp = time_stamps[current_time_step] 

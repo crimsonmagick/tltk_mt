@@ -15,8 +15,8 @@ if __name__ == '__main__':
     Arpm = 1
     brpm = 4500
 
-    speed_pred = Predicate('speed',Aspeed,bspeed)
-    rpm_pred = Predicate('rpm',Arpm,brpm)
+    speed_pred = Predicate('speed',Aspeed,bspeed,False)
+    rpm_pred = Predicate('rpm',Arpm,brpm,False)
     root = Not(And(Finally(0,100,speed_pred), Finally(0,100,rpm_pred)))
     #root = Until(0,float('inf'),speed_pred,rpm_pred)
     # root = Finally(1,2.2,Predicate('geese',-1,-1))
