@@ -11,7 +11,7 @@ if __name__ == '__main__':
  
     n = 0
     N = 1000000
-    range_list = [10,100,1000,10000,100000,1000000,5000000]
+    range_list = [10,100,1000,10000,100000,1000000,10000000]
     cpu_duration = []
     gpu_duration = []
     Aspeed = -1
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         print('GPU : ', i)
         speed_pred = Predicate('speed',Aspeed,bspeed,'gpu')
         rpm_pred = Predicate('rpm',Arpm,brpm,'gpu')
-        root = Not(And(Finally(0,100,speed_pred,'gpu'), Finally(0,100,rpm_pred,'gpu')))
+        root = Not(And(Finally(0,100,speed_pred,'gpu'), Finally(0,100,rpm_pred,'gpu'),'gpu'),'gpu')
         #root = Until(0,float('inf'),speed_pred,rpm_pred)
         # root = Finally(1,2.2,Predicate('geese',-1,-1))
 

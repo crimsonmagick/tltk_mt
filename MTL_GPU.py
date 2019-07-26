@@ -70,20 +70,6 @@ class Predicate:
             predicate_robustness = optimize_polyhedron_gpu(gpu_A_Matrix,gpu_bound,np.float32(trace))
         return predicate_robustness
         
-    def eval(self, trace,time_stamp):
-        np_value = np.array(trace[self.variable_name])
-        x = cp.Variable(np_value.size)
-       
-        if self.A_Matrix*np_value <= self.bound:                #calculate depth if np_value is in A*x <= b
-            objective = cp.Minimize(cp.norm(x - np_value))
-            constraints = [self.A_Matrix*x >= self.bound]
-            prob = cp.Problem(objective, constraints)
-            return -prob.solve()
-        else:                                                   #calculate distance if np_value is not in A*x <= b
-            objective = cp.Minimize(cp.norm(x - np_value))
-            constraints = [self.A_Matrix*x <= self.bound]
-            prob = cp.Problem(objective, constraints)
-            return prob.solve()
 
 
 class Global:
@@ -286,38 +272,26 @@ class Finally:
         return self.subformula
 
 class Not:
-    def __init__(self,subformula = None):
+    def __init__(self,subformula = None,thread_pool = 'false'):
         self.subformula = subformula
         self.truth_value_history = []
         self.robustness = 0
         self.value = None
-    def eval(self,trace,time_stamp):
-        if self.subformula == None: 
-            print('Each branch of MTL tree needs to be terminated with a proposition',file=sys.stderr)
-            sys.exit()
-        robustness = self.subformula.eval(trace,time_stamp)
-        self.robustness = -1 * robustness
-        if robustness > 0:
-            self.value = False
-        else: 
-            self.value = True
-
-        self.truth_value_history.append(self.value)
-        return self.robustness
+        self.thread_pool = thread_pool
 
     def eval_interval(self,traces,time_stamps): 
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
         not_robustness = []
+        if self.thread_pool == 'false':
+            for robustness in subformula_robustness:
+                not_robustness.append(robustness * -1)
+        elif self.thread_pool == 'gpu':
+            @vectorize(['float32(float32)'], target='cuda')
+            def not_gpu(robustness):
+                return -1*robustness
+            not_robustness = not_gpu(np.float32(subformula_robustness))
+        self.robustness = not_robustness[0]
 
-        for robustness in subformula_robustness:
-            
-            not_robustness.append(robustness * -1)
-        
-            if robustness > 0:
-                self.value = True
-            else:
-                self.value = False
-        self.robustness = -self.subformula.robustness 
                 
         return not_robustness
 
@@ -328,45 +302,32 @@ class Not:
         return self.subformula
 
 class And:
-    def __init__(self,left_subformula = None,right_subformula = None):
+    def __init__(self,left_subformula = None,right_subformula = None,thread_pool = 'false'):
         self.left_subformula = left_subformula
         self.right_subformula = right_subformula
         self.truth_value_history = []
         self.robustness = 0
         self.value = None
+        self.thread_pool = thread_pool
 
-    def eval(self,trace,time_stamp):
-        if self.left_subformula == None or self.right_subformula == None: 
-            print('Each branch of MTL tree needs to be terminated with a proposition',file=sys.stderr)
-            sys.exit()
-        #this could be done in thread pool mtl formula in complex or if more time expensive distance metrics are added
-        left_robustness = self.left_subformula.eval(trace,time_stamp)
-        right_robustness = self.right_subformula.eval(trace,time_stamp)
-
-        if left_robustness > 0 and right_robustness > 0:
-            self.value = True
-        else:
-            self.value = False
-        self.truth_value_history.append(self.value)
-
-        if left_robustness < right_robustness:
-            self.robustness = left_robustness
-        else:
-            self.robustness = right_robustness
-        return self.robustness
     def eval_interval(self,traces,time_stamps):
         left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
         right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
         and_robustness = []
-
-        for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
+        if self.thread_pool == 'false':
+            for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
+                
+                and_robustness.append(min(left_robustness,right_robustness))
             
-            and_robustness.append(min(left_robustness,right_robustness))
-        
-            if left_robustness > 0 and right_robustness > 0:
-                self.value = True
-            else:
-                self.value = False
+                if left_robustness > 0 and right_robustness > 0:
+                    self.value = True
+                else:
+                    self.value = False
+        elif self.thread_pool == 'gpu':
+            @vectorize(['float32(float32,float32)'], target='cuda')
+            def and_gpu(left_robustness,right_robustness):
+                return min(left_robustness,right_robustness)
+            and_robustness = and_gpu(np.float32(left_subformula_robustness),np.float32(right_subformula_robustness))
         self.robustness = min(self.left_subformula.robustness,self.right_subformula.robustness)
         return and_robustness
 
