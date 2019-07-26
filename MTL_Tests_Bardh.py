@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     speed_pred = Predicate('speed',Aspeed,bspeed,'cpu')
     rpm_pred = Predicate('rpm',Arpm,brpm,'cpu')
-    root = Not(And(Finally(0,100,speed_pred,'gpu'), Finally(0,100,rpm_pred,'gpu')))
+    root = Not(And(Finally(0,100,speed_pred,'cpu'), Finally(0,100,rpm_pred,'cpu')))
     #root = Until(0,19,speed_pred,rpm_pred)
     # root = Finally(1,2.2,Predicate('geese',-1,-1))
 
