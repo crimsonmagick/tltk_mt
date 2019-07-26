@@ -85,12 +85,15 @@ class Global:
             lower_bound = current_time_stamp + self.lower_time_bound
             upper_bound = current_time_stamp + self.upper_time_bound
             lower_bound_index = None
-            
-            for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
-                #print(lower_bound,' : ',time_stamp)
-                if lower_bound <= time_stamp:
-                    lower_bound_index = time_stamp_index
-                    break
+            if self.lower_time_bound == 0:
+                lower_bound_index = current_time_step
+            else:
+                
+                for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
+                    #print(lower_bound,' : ',time_stamp)
+                    if lower_bound <= time_stamp:
+                        lower_bound_index = time_stamp_index
+                        break
             
             for time_stamp_index ,time_stamp in reversed(list(enumerate(time_stamps))):          #this is very bad and is just a place holder
                 if time_stamp <= upper_bound:
@@ -142,13 +145,15 @@ class Finally:
             lower_bound_index = None
             if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
                 finally_robustness.append(max(max_robustness,robustness))
-
             else:
-                for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
-                    #print(lower_bound,' : ',time_stamp)
-                    if lower_bound <= time_stamp:
-                        lower_bound_index = time_stamp_index
-                        break
+                if self.lower_time_bound == 0:
+                    lower_bound_index = current_time_step
+                else:
+                    for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
+                        #print(lower_bound,' : ',time_stamp)
+                        if lower_bound <= time_stamp:
+                            lower_bound_index = time_stamp_index
+                            break
 
                 for time_stamp_index ,time_stamp in reversed(list(enumerate(time_stamps))):          #this is very bad and is just a place holder
                     if time_stamp <= upper_bound:
@@ -320,11 +325,13 @@ class Until:
                 lower_bound = current_time_stamp + self.lower_time_bound
                 upper_bound = current_time_stamp + self.upper_time_bound
                 lower_bound_index = None
-                
-                for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
-                    if lower_bound <= time_stamp:
-                        lower_bound_index = time_stamp_index
-                        break
+                if self.lower_time_bound == 0:
+                    lower_bound_index = current_time_step
+                else:
+                    for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
+                        if lower_bound <= time_stamp:
+                            lower_bound_index = time_stamp_index
+                            break
                 
                 for time_stamp_index ,time_stamp in reversed(list(enumerate(time_stamps))):          #this is very bad and is just a place holder
                     if time_stamp <= upper_bound:
