@@ -4,7 +4,7 @@ import numpy as np
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 from numba import vectorize, guvectorize
-from quadprog import solve_qp
+#from quadprog import solve_qp
 # trace[name] <= bound
 # Time bounds inclusive
 # 0 robustness is a failure (will add an option to choose later)
@@ -258,13 +258,13 @@ class Finally:
                         finally_robustness[current_time_step] = max_robustness
                     
             
-        finally_robustness = calculate_sub_interval_gpu(np_lower_time_bound, np_upper_time_bound,np_time_stamps, np_subformula_robustness,finally_robustness)
+        finally_robustness = calculate_sub_interval_gpu(np_lower_time_bound, np_upper_time_bound,np_time_stamps, np_subformula_robustness)
                     
         self.robustness = max(finally_robustness)
         if self.robustness > 0:
             self.value = True
-        finally_robustness.reverse()
-        return  subformula_robustness
+        list(finally_robustness).reverse()
+        return  finally_robustness
         
         
     def add_subformula(self,subformula):
