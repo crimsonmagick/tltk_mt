@@ -14,6 +14,7 @@ import matlab.engine
 #   * eng: matlab engine instance
 #   * model: simulink (for the time being) model (string name)
 #   * simulationTime: user defined simulation time
+#   * inpSignal: input signal to the model
 # OUTPUTS:
 #   * timeStamps: timestamps of simulated trajectory
 #   * internalStates: internal states at the timestamps
