@@ -1,11 +1,4 @@
-from computeInputSignal import ComputeInputSignal
 import numpy as np
-from MTL import *
-import time
-from numpy import genfromtxt
-import matplotlib.pyplot as plt
-from multiprocessing import Pool, freeze_support
-import os
 import matlab.engine
 
 
@@ -20,25 +13,26 @@ import matlab.engine
 #   * internalStates: internal states at the timestamps
 #   * outputs: outputs at the timestamps
 
-def simulateSystem(eng, model, simulationTime, inpSignal):
+def simulate_system(eng, model, simulation_time, inp_signal):
     start = 0
     end = 30
     step = 0.05
-    steptime = (np.arange(start, end+step, step)).tolist()
+    steptime = (np.arange(start, end + step, step)).tolist()
     simopt = eng.simget(model)
-    simTimeArray = matlab.double([0, simulationTime])
-    signalArray = []
+    sim_time_array = matlab.double([0, simulation_time])
+    signal_array = []
     for i in range(len(steptime)):
-        signalArray.append([steptime[i], inpSignal[i]])
+        signal_array.append([steptime[i], inp_signal[i]])
 
-    signalArray = matlab.double(signalArray)
+    signal_array = matlab.double(signal_array)
 
     # Commence simulink model simulation
 
-    timeStamps, internalStates, outputs = eng.sim(model, simTimeArray, [], signalArray, nargout=3)
+    time_stamps, internal_states, outputs = eng.sim(model, sim_time_array, [], signal_array, nargout=3)
 
-    return timeStamps, internalStates, outputs
+    return time_stamps, internal_states, outputs
 
-def initEngine():
+
+def init_engine():
     eng = matlab.engine.start_matlab()
     return eng

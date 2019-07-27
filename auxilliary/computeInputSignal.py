@@ -1,7 +1,6 @@
 from scipy.interpolate import CubicSpline
 from scipy.interpolate import PchipInterpolator
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Compute Input Signal based on control points and interpolation type
 # INPUTS:
@@ -15,23 +14,23 @@ import matplotlib.pyplot as plt
 #   * inputSignals: generated input signals
 
 
-def ComputeInputSignal(interpolationType, cpSamples, inpRange, noControlPoints, simulationTime, step):
+def compute_input_signal(interpolation_type, cp_samples, inp_range, no_control_points, simulation_time, step):
     start = 0
-    end = simulationTime
+    end = simulation_time
     steptime = np.arange(start, end+step, step)
-    timeVector = np.arange(0, simulationTime + 1, (simulationTime / (noControlPoints - 1)))
+    time_vector = np.arange(0, simulation_time + 1, (simulation_time / (no_control_points - 1)))
 
     cs = []
-    if interpolationType == "CubicSpline":
-        cs = CubicSpline(cpSamples, steptime)
-    elif interpolationType == "pchip":
-        cs = PchipInterpolator(timeVector, cpSamples)
+    if interpolation_type == "CubicSpline":
+        cs = CubicSpline(cp_samples, steptime)
+    elif interpolation_type == "pchip":
+        cs = PchipInterpolator(time_vector, cp_samples)
     else:
-        cs = PchipInterpolator(timeVector, cpSamples)
+        cs = PchipInterpolator(time_vector, cp_samples)
     # steptime = query points
     '''
     fig, ax = plt.subplots(figsize=(6.5, 4))
-    ax.plot(timeVector, cpSamples, label='init')
+    ax.plot(time_vector, cpSamples, label='init')
     ax.plot(steptime, cs(steptime), label="S")
     ax.legend(loc='lower left', ncol=2)
     plt.show()

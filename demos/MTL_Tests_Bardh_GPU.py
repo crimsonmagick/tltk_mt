@@ -1,9 +1,8 @@
-from MTL_GPU import *
+import robustness.MTL_GPU as MTL
 import time
 from numpy import genfromtxt
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, freeze_support
-import matplotlib.pyplot as plt
 import os
 
 if __name__ == '__main__':
@@ -26,11 +25,11 @@ if __name__ == '__main__':
         print('------------GPU Threaded--------------')
 
         # predicates
-        speed_pred = Predicate('speed', Aspeed, bspeed, mode)
-        rpm_pred = Predicate('rpm', Arpm, brpm, mode)
+        speed_pred = MTL.Predicate('speed', Aspeed, bspeed, mode)
+        rpm_pred = MTL.Predicate('rpm', Arpm, brpm, mode)
 
         # formula
-        root = Not(And(Finally(0, 100, speed_pred, mode), Finally(0, 100, rpm_pred, mode), mode), mode)
+        root = MTL.Not(MTL.And(MTL.Finally(0, 100, speed_pred, mode), MTL.Finally(0, 100, rpm_pred, mode), mode), mode)
         # root = Not(Finally(0, 100, And(speed_pred, rpm_pred,'gpu'),'gpu'), 'gpu')
 
         traces = {'speed': np.ones(i), 'rpm': np.ones(i)}

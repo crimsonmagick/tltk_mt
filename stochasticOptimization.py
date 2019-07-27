@@ -33,7 +33,7 @@ def sampleFromDistribution(distrib, lo, hi, n):
     return sampValue, sampProb
 
 
-def chooseBernoulliSamples(inpRanges,subDivs,distrib):
+def chooseBernoulliSamples(inpRanges, subDivs, distrib):
     nInputs = len(inpRanges)
     sampleWeight = 1.0
     sample = [0] * nInputs
@@ -41,5 +41,3 @@ def chooseBernoulliSamples(inpRanges,subDivs,distrib):
         n = subDivs[i]
         sample[i], sProb = sampleFromDistribution(distrib[i], inpRanges[i][0], inpRanges[i][1], n)
     return sample
-
-
