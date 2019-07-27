@@ -141,7 +141,7 @@ class Global:
         if self.robustness > 0:
             self.value = True
         globally_robustness.reverse()
-        print(globally_robustness[:5])
+        #print(globally_robustness[:5])
         return globally_robustness
     
     def add_subformula(self,subformula):
@@ -261,7 +261,7 @@ class Finally:
             
         finally_robustness =  list(finally_robustness)
         finally_robustness.reverse()
-        print(finally_robustness[:5])
+        #print(finally_robustness[:5])
         #print(finally_robustness)
         return  finally_robustness
         
