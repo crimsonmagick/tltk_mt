@@ -1,5 +1,8 @@
-import robustness.MTL_GPU as MTL
+import sys
+sys.path.insert(1, '../robustness')
+import MTL_GPU as MTL
 import time
+import numpy as np
 from numpy import genfromtxt
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, freeze_support

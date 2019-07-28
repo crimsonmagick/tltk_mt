@@ -1,4 +1,6 @@
-import auxilliary.MTL_GPU as MTL
+import sys
+sys.path.insert(1, '../robustness')
+import MTL as MTL
 import time
 from numpy import genfromtxt
 import numpy as np
@@ -15,10 +17,10 @@ if __name__ == '__main__':
     Arpm = 1
     brpm = 4500
 
-    speed_pred = MTL.Predicate('speed', Aspeed, bspeed, 'gpu')
-    rpm_pred = MTL.Predicate('rpm', Arpm, brpm, 'gpu')
-    root = MTL.Not(MTL.And(MTL.Finally(0, 100, speed_pred, 'gpu'), MTL.Finally(0, 100, rpm_pred, 'gpu')))
-    # root = Until(0,19,speed_pred,rpm_pred)
+    speed_pred = MTL.Predicate('speed', Aspeed, bspeed)
+    rpm_pred = MTL.Predicate('rpm', Arpm, brpm)
+    root = MTL.Not(MTL.And(MTL.Finally(0, 100, speed_pred), MTL.Finally(0, 100, rpm_pred)))
+    #root = MTL.Until(0,19,speed_pred,rpm_pred)
     # root = Finally(1,2.2,Predicate('geese',-1,-1))
 
     data = genfromtxt('data.csv', delimiter=',')

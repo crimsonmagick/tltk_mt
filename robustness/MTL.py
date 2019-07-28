@@ -85,21 +85,17 @@ class Global:
             lower_bound = current_time_stamp + self.lower_time_bound
             upper_bound = current_time_stamp + self.upper_time_bound
             lower_bound_index = None
-            if self.lower_time_bound == 0:
-                lower_bound_index = current_time_step
+            if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
+                finally_robustness.append(max(max_robustness,robustness))
             else:
+                if self.lower_time_bound == 0:
+                    lower_bound_index = current_time_step
+                else:
+                    lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
+                    lower_bound_index = lower_bound_index + current_time_step
                 
-                for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
-                    #print(lower_bound,' : ',time_stamp)
-                    if lower_bound <= time_stamp:
-                        lower_bound_index = time_stamp_index
-                        break
-            
-            for time_stamp_index ,time_stamp in reversed(list(enumerate(time_stamps))):          #this is very bad and is just a place holder
-                if time_stamp <= upper_bound:
-                    upper_bound_index = time_stamp_index
-                    break
-            
+                upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
+                upper_bound_index = upper_bound_index - 1 + current_time_step
             #print(lower_bound_index ,' : ',upper_bound_index)
                     
             if lower_bound_index == None:
@@ -149,16 +145,12 @@ class Finally:
                 if self.lower_time_bound == 0:
                     lower_bound_index = current_time_step
                 else:
-                    for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
-                        #print(lower_bound,' : ',time_stamp)
-                        if lower_bound <= time_stamp:
-                            lower_bound_index = time_stamp_index
-                            break
+                    lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
+                    lower_bound_index = lower_bound_index + current_time_step
+                
+                upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
+                upper_bound_index = upper_bound_index - 1 + current_time_step
 
-                for time_stamp_index ,time_stamp in reversed(list(enumerate(time_stamps))):          #this is very bad and is just a place holder
-                    if time_stamp <= upper_bound:
-                        upper_bound_index = time_stamp_index
-                        break
 
                 #print(lower_bound_index ,' : ',upper_bound_index)
 
@@ -196,14 +188,9 @@ class Not:
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
         not_robustness = []
 
-        for robustness in subformula_robustness:
-            
-            not_robustness.append(robustness * -1)
+        not_robustness = [i * -1 for i in subformula_robustness]
         
-            if robustness > 0:
-                self.value = True
-            else:
-                self.value = False
+
         self.robustness = -self.subformula.robustness 
                 
         return not_robustness
@@ -325,18 +312,17 @@ class Until:
                 lower_bound = current_time_stamp + self.lower_time_bound
                 upper_bound = current_time_stamp + self.upper_time_bound
                 lower_bound_index = None
+            if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
+                finally_robustness.append(max(max_robustness,robustness))
+            else:
                 if self.lower_time_bound == 0:
                     lower_bound_index = current_time_step
                 else:
-                    for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
-                        if lower_bound <= time_stamp:
-                            lower_bound_index = time_stamp_index
-                            break
+                    lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
+                    lower_bound_index = lower_bound_index + current_time_step
                 
-                for time_stamp_index ,time_stamp in reversed(list(enumerate(time_stamps))):          #this is very bad and is just a place holder
-                    if time_stamp <= upper_bound:
-                        upper_bound_index = time_stamp_index
-                        break
+                upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
+                upper_bound_index = upper_bound_index - 1 + current_time_step
 
                 if lower_bound_index == current_time_step:
                     min_robustness = left_subformula_robustness[lower_bound_index]

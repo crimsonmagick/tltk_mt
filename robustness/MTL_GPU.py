@@ -248,9 +248,8 @@ class Finally:
                     else:
                         max_robustness = subformula_robustness[lower_bound_index]
                         for i in range(lower_bound_index,upper_bound_index+1):
-                            if max_robustness < subformula_robustness[i]:
-                                max_robustness = subformula_robustness[i]
-                        finally_robustness[current_time_step] = max_robustness
+                            if max_robustness < finally_robustness[i]:
+                                finally_robustness[current_time_step] = max_robustness
                     
             
             finally_robustness = calculate_sub_interval_gpu(np_lower_time_bound, np_upper_time_bound,np_time_stamps, np_subformula_robustness)
