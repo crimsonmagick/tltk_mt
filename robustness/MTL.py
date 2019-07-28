@@ -76,7 +76,7 @@ class Global:
 
     def eval_interval(self,traces,time_stamps): 
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
-        finally_robustness = []
+        globally_robustness = []
         max_robustness = float('-inf')
         #subformula_robustness.reverse()
         #time_stamps.reverse()
@@ -99,20 +99,20 @@ class Global:
             #print(lower_bound_index ,' : ',upper_bound_index)
                     
             if lower_bound_index == None:
-                finally_robustness.append(subformula_robustness[-1])
+                globally_robustness.append(subformula_robustness[-1])
             elif lower_bound_index == upper_bound_index:
-                finally_robustness.append(subformula_robustness[lower_bound_index])
+                globally_robustness.append(subformula_robustness[lower_bound_index])
             else:
                 #print(lower_bound_index ,' : ',upper_bound_index)
                 #print(subformula_robustness[lower_bound_index:upper_bound_index+1])
-                finally_robustness.append(min(subformula_robustness[lower_bound_index:upper_bound_index+1]))
+                globally_robustness.append(min(subformula_robustness[lower_bound_index:upper_bound_index+1]))
 
 
-        self.robustness = min(finally_robustness)
+        self.robustness = min(globally_robustness)
         if self.robustness > 0:
             self.value = True
-        finally_robustness.reverse()
-        return finally_robustness
+        globally_robustness.reverse()
+        return globally_robustness
     
     def add_subformula(self,subformula):
         self.subformula = subformula
@@ -168,7 +168,7 @@ class Finally:
         if self.robustness > 0:
             self.value = True
         finally_robustness.reverse()
-        return	subformula_robustness
+        return	finally_robustness
         
         
     def add_subformula(self,subformula):
