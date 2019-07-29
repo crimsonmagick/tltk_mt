@@ -70,87 +70,79 @@ class Predicate:
             predicate_robustness = optimize_polyhedron_gpu(gpu_A_Matrix,gpu_bound,np.float32(trace))
         return predicate_robustness
         
-    def eval(self, trace,time_stamp):
-        np_value = np.array(trace[self.variable_name])
-        x = cp.Variable(np_value.size)
-       
-        if self.A_Matrix*np_value <= self.bound:                #calculate depth if np_value is in A*x <= b
-            objective = cp.Minimize(cp.norm(x - np_value))
-            constraints = [self.A_Matrix*x >= self.bound]
-            prob = cp.Problem(objective, constraints)
-            return -prob.solve()
-        else:                                                   #calculate distance if np_value is not in A*x <= b
-            objective = cp.Minimize(cp.norm(x - np_value))
-            constraints = [self.A_Matrix*x <= self.bound]
-            prob = cp.Problem(objective, constraints)
-            return prob.solve()
 
 
 class Global:
-    def __init__(self,lower_time_bound,upper_time_bound,subformula = None):
+    def __init__(self,lower_time_bound,upper_time_bound,subformula = None,thread_pool = True):
         self.value = True
         self.subformula = subformula
         self.truth_value_history = []
         self.robustness = float('inf')
         self.upper_time_bound = upper_time_bound
         self.lower_time_bound = lower_time_bound
+        self.time_stamps = None
+        self.subformula_robustness = None
+        self.thread_pool = thread_pool
+        
+    def calculate_sub_interval(self, current_time_step):
+        current_time_stamp = self.time_stamps[current_time_step]
+        lower_bound = current_time_stamp + self.lower_time_bound
+        upper_bound = current_time_stamp + self.upper_time_bound
+        #lower_bound_index, upper_bound_index = self.binary_search(self.time_stamps,current_time_step,lower_bound,upper_bound)
+        
+        lower_bound_index, upper_bound_index = np.searchsorted(self.time_stamps[current_time_step:], [lower_bound, upper_bound])
+        lower_bound_index = lower_bound_index + current_time_step
+        upper_bound_index = upper_bound_index - 1 + current_time_step
 
-    def eval(self,trace,time_stamp):
-        if self.subformula == None:
-            print('Each branch of MTL tree needs to be terminated with a proposition',file=sys.stderr)
-            sys.exit()
+        if lower_bound_index == None:
+            return self.subformula_robustness[-1]
+        elif lower_bound_index == upper_bound_index:
+            return self.subformula_robustness[lower_bound_index]
+        else:
+            return min(self.subformula_robustness[lower_bound_index:upper_bound_index+1])
 
-        robustness = self.subformula.eval(trace,time_stamp)
-
-        if robustness <= 0: #If the subformula is ever false then set the global to false
-            self.value = False
-        if self.robustness == float('inf'):
-            self.robustness = robustness
-        elif robustness < self.robustness:
-            self.robustness = robustness
-        self.truth_value_history.append(self.value)
-        return self.robustness
 
     def eval_interval(self,traces,time_stamps): 
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
-        finally_robustness = []
-        max_robustness = float('-inf')
+        self.subformula_robustness = subformula_robustness #Clean this up to be an object field only later
+        self.time_stamps = time_stamps
+        globally_robustness = []
+        min_robustness = float('inf')
         #subformula_robustness.reverse()
         #time_stamps.reverse()
-        for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
-            current_time_stamp = time_stamps[current_time_step] 
-            lower_bound = current_time_stamp + self.lower_time_bound
-            upper_bound = current_time_stamp + self.upper_time_bound
-            lower_bound_index = None
-            
-            for time_stamp_index ,time_stamp in enumerate(time_stamps):          #this is very bad and is just a place holder
-                #print(lower_bound,' : ',time_stamp)
-                if lower_bound <= time_stamp:
-                    lower_bound_index = time_stamp_index
-                    break
-            
-            for time_stamp_index ,time_stamp in reversed(list(enumerate(time_stamps))):          #this is very bad and is just a place holder
-                if time_stamp <= upper_bound:
-                    upper_bound_index = time_stamp_index
-                    break
-            
-            #print(lower_bound_index ,' : ',upper_bound_index)
+        if self.thread_pool == False or (self.lower_time_bound == 0 and self.upper_time_bound == float('inf')):
+            for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
+                if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
+                    globally_robustness.append(min(min_robustness,robustness))
+                    if min_robustness > robustness :
+                            min_robustness = robustness
+                else:
+                    current_time_stamp = time_stamps[current_time_step] 
+                    lower_bound = current_time_stamp + self.lower_time_bound
+                    upper_bound = current_time_stamp + self.upper_time_bound
                     
-            if lower_bound_index == None:
-                finally_robustness.append(subformula_robustness[-1])
-            elif lower_bound_index == upper_bound_index:
-                finally_robustness.append(subformula_robustness[lower_bound_index])
-            else:
-                #print(lower_bound_index ,' : ',upper_bound_index)
-                #print(subformula_robustness[lower_bound_index:upper_bound_index+1])
-                finally_robustness.append(min(subformula_robustness[lower_bound_index:upper_bound_index+1]))
+                    lower_bound_index, upper_bound_index = np.searchsorted(time_stamps[current_time_step:], [lower_bound, upper_bound])
+                    lower_bound_index = lower_bound_index + current_time_step
+                    upper_bound_index = upper_bound_index - 1 + current_time_step
 
+                    if lower_bound_index == None:
+                        globally_robustness.append(subformula_robustness[-1])
+                    elif lower_bound_index == upper_bound_index:
+                        globally_robustness.append(subformula_robustness[lower_bound_index])
+                    else:
+                        globally_robustness.append(min(subformula_robustness[lower_bound_index:upper_bound_index+1]))
+        else:
+            with Pool(cpu_count()) as p:
+                globally_robustness = p.map(self.calculate_sub_interval, range(len(time_stamps)))
+                p.close()
+                p.join()
 
-        self.robustness = min(finally_robustness)
+        self.robustness = min(globally_robustness)
         if self.robustness > 0:
             self.value = True
-        finally_robustness.reverse()
-        return finally_robustness
+        globally_robustness.reverse()
+        #print(globally_robustness[:5])
+        return globally_robustness
     
     def add_subformula(self,subformula):
         self.subformula = subformula
@@ -178,7 +170,6 @@ class Finally:
         lower_bound_index, upper_bound_index = np.searchsorted(self.time_stamps[current_time_step:], [lower_bound, upper_bound])
         lower_bound_index = lower_bound_index + current_time_step
         upper_bound_index = upper_bound_index - 1 + current_time_step
-
         if lower_bound_index == None:
             return self.subformula_robustness[-1]
         elif lower_bound_index == upper_bound_index:
@@ -215,6 +206,7 @@ class Finally:
                         finally_robustness.append(subformula_robustness[lower_bound_index])
                     else:
                         finally_robustness.append(max(subformula_robustness[lower_bound_index:upper_bound_index+1]))
+        
         elif self.thread_pool == 'cpu':
             with Pool(cpu_count()) as p:
                 finally_robustness = p.map(self.calculate_sub_interval, range(len(time_stamps)))
@@ -238,10 +230,13 @@ class Finally:
                     # lower_bound_index = lower_bound_index + current_time_step
                     # upper_bound_index = upper_bound_index - 1 + current_time_step
                     
-                    for time_stamp_index  in range(time_stamps.shape[0]):          #this is very bad and is just a place holder
-                        if lower_bound <= time_stamps[time_stamp_index]:
-                            lower_bound_index = time_stamp_index
-                            break
+                    if lower_time_bound == 0:
+                        lower_bound_index = current_time_step
+                    else:
+                        for time_stamp_index  in range(time_stamps.shape[0]):          #this is very bad and is just a place holder
+                            if lower_bound <= time_stamps[time_stamp_index]:
+                                lower_bound_index = time_stamp_index
+                                break
             
                     for time_stamp_index  in range(time_stamps.shape[0]):          #this is very bad and is just a place holder
                         if time_stamps[time_stamp_index] <= upper_bound:
@@ -253,17 +248,20 @@ class Finally:
                     else:
                         max_robustness = subformula_robustness[lower_bound_index]
                         for i in range(lower_bound_index,upper_bound_index+1):
-                            if max_robustness < subformula_robustness[i]:
-                                max_robustness = subformula_robustness[i]
-                        finally_robustness[current_time_step] = max_robustness
+                            if max_robustness < finally_robustness[i]:
+                                finally_robustness[current_time_step] = max_robustness
                     
             
-        finally_robustness = calculate_sub_interval_gpu(np_lower_time_bound, np_upper_time_bound,np_time_stamps, np_subformula_robustness)
+            finally_robustness = calculate_sub_interval_gpu(np_lower_time_bound, np_upper_time_bound,np_time_stamps, np_subformula_robustness)
                     
         self.robustness = max(finally_robustness)
         if self.robustness > 0:
             self.value = True
-        list(finally_robustness).reverse()
+            
+        finally_robustness =  list(finally_robustness)
+        finally_robustness.reverse()
+        #print(finally_robustness[:5])
+        #print(finally_robustness)
         return  finally_robustness
         
         
@@ -273,38 +271,26 @@ class Finally:
         return self.subformula
 
 class Not:
-    def __init__(self,subformula = None):
+    def __init__(self,subformula = None,thread_pool = 'false'):
         self.subformula = subformula
         self.truth_value_history = []
         self.robustness = 0
         self.value = None
-    def eval(self,trace,time_stamp):
-        if self.subformula == None: 
-            print('Each branch of MTL tree needs to be terminated with a proposition',file=sys.stderr)
-            sys.exit()
-        robustness = self.subformula.eval(trace,time_stamp)
-        self.robustness = -1 * robustness
-        if robustness > 0:
-            self.value = False
-        else: 
-            self.value = True
-
-        self.truth_value_history.append(self.value)
-        return self.robustness
+        self.thread_pool = thread_pool
 
     def eval_interval(self,traces,time_stamps): 
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
         not_robustness = []
+        if self.thread_pool == 'false':
+            for robustness in subformula_robustness:
+                not_robustness.append(robustness * -1)
+        elif self.thread_pool == 'gpu':
+            @vectorize(['float32(float32)'], target='cuda')
+            def not_gpu(robustness):
+                return -1*robustness
+            not_robustness = not_gpu(np.float32(subformula_robustness))
+        self.robustness = not_robustness[0]
 
-        for robustness in subformula_robustness:
-            
-            not_robustness.append(robustness * -1)
-        
-            if robustness > 0:
-                self.value = True
-            else:
-                self.value = False
-        self.robustness = -self.subformula.robustness 
                 
         return not_robustness
 
@@ -315,45 +301,32 @@ class Not:
         return self.subformula
 
 class And:
-    def __init__(self,left_subformula = None,right_subformula = None):
+    def __init__(self,left_subformula = None,right_subformula = None,thread_pool = 'false'):
         self.left_subformula = left_subformula
         self.right_subformula = right_subformula
         self.truth_value_history = []
         self.robustness = 0
         self.value = None
+        self.thread_pool = thread_pool
 
-    def eval(self,trace,time_stamp):
-        if self.left_subformula == None or self.right_subformula == None: 
-            print('Each branch of MTL tree needs to be terminated with a proposition',file=sys.stderr)
-            sys.exit()
-        #this could be done in thread pool mtl formula in complex or if more time expensive distance metrics are added
-        left_robustness = self.left_subformula.eval(trace,time_stamp)
-        right_robustness = self.right_subformula.eval(trace,time_stamp)
-
-        if left_robustness > 0 and right_robustness > 0:
-            self.value = True
-        else:
-            self.value = False
-        self.truth_value_history.append(self.value)
-
-        if left_robustness < right_robustness:
-            self.robustness = left_robustness
-        else:
-            self.robustness = right_robustness
-        return self.robustness
     def eval_interval(self,traces,time_stamps):
         left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
         right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
         and_robustness = []
-
-        for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
+        if self.thread_pool == 'false':
+            for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
+                
+                and_robustness.append(min(left_robustness,right_robustness))
             
-            and_robustness.append(min(left_robustness,right_robustness))
-        
-            if left_robustness > 0 and right_robustness > 0:
-                self.value = True
-            else:
-                self.value = False
+                if left_robustness > 0 and right_robustness > 0:
+                    self.value = True
+                else:
+                    self.value = False
+        elif self.thread_pool == 'gpu':
+            @vectorize(['float32(float32,float32)'], target='cuda')
+            def and_gpu(left_robustness,right_robustness):
+                return min(left_robustness,right_robustness)
+            and_robustness = and_gpu(np.float32(left_subformula_robustness),np.float32(right_subformula_robustness))
         self.robustness = min(self.left_subformula.robustness,self.right_subformula.robustness)
         return and_robustness
 
