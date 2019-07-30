@@ -1,4 +1,5 @@
 import sys
+import backend
 import cvxpy as cp
 import numpy as np
 from multiprocessing import Pool
@@ -188,8 +189,9 @@ class Not:
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
         not_robustness = []
 
-        not_robustness = [i * -1 for i in subformula_robustness]
-        
+        #not_robustness = [i * -1 for i in subformula_robustness]
+        c_subformula_robustness = (ctypes.c_float * len(subformula_robustness))(*subformula_robustness)
+        not_robustness = py_not(subformula_robustness)
 
         self.robustness = -self.subformula.robustness 
                 
