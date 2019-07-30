@@ -7,7 +7,7 @@ cdef extern from "backend.h":
     void c_not(float* robustness,long length)
 
 cdef extern from "backend.h":
-    void c_or(float* robustness,long length)
+    void c_or(float* left_robustness,float* right_robustness,long length)
 
 cdef extern from "backend.h":
     void c_and(float* left_robustness,float* right_robustness,long length)
