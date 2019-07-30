@@ -1,9 +1,11 @@
 import sys
 import backend
+import ctypes
 import cvxpy as cp
 import numpy as np
 from multiprocessing import Pool
 from multiprocessing import cpu_count
+from time import time
 # trace[name] <= bound
 # Time bounds inclusive
 # 0 robustness is a failure (will add an option to choose later)
@@ -188,13 +190,14 @@ class Not:
     def eval_interval(self,traces,time_stamps): 
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
         not_robustness = []
-
+        # t0 = time()
         #not_robustness = [i * -1 for i in subformula_robustness]
-        c_subformula_robustness = (ctypes.c_float * len(subformula_robustness))(*subformula_robustness)
-        not_robustness = py_not(subformula_robustness)
-
+        #c_subformula_robustness = (ctypes.c_float * len(subformula_robustness))(*subformula_robustness)
+        not_robustness = backend.py_not(subformula_robustness)
+        # t1 = time()
+        # print('Not time: ', t1 - t0)
         self.robustness = -self.subformula.robustness 
-                
+        
         return not_robustness
 
 
@@ -216,15 +219,16 @@ class And:
         left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
         right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
         and_robustness = []
-
-        for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
+        # t0 = time()
+        #for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
             
-            and_robustness.append(min(left_robustness,right_robustness))
+        #    and_robustness.append(min(left_robustness,right_robustness))
+            
+        #c_left_subformula_robustness = (ctypes.c_float * len(left_subformula_robustness))(*left_subformula_robustness)
+        and_robustness = backend.py_and(left_subformula_robustness,right_subformula_robustness)
+        # t1 = time()
+        # print('And time: ',t1-t0)
         
-            if left_robustness > 0 and right_robustness > 0:
-                self.value = True
-            else:
-                self.value = False
         self.robustness = min(self.left_subformula.robustness,self.right_subformula.robustness)
         return and_robustness
 
@@ -240,15 +244,16 @@ class Or:
         left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
         right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
         or_robustness = []
-
-        for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
+        # t0 = time()
+        # for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
             
-            or_robustness.append(max(left_robustness,right_robustness))
+            # or_robustness.append(max(left_robustness,right_robustness))
+        or_robustness = backend.py_and(left_subformula_robustness,right_subformula_robustness)
         
-            if left_robustness > 0 or right_robustness > 0:
-                self.value = True
-            else:
-                self.value = False
+        # t1 = time()
+        # print('Or time: ', t1 - t0)
+        
+        
         self.robustness = max(self.left_subformula.robustness,self.right_subformula.robustness)
         return or_robustness
 
