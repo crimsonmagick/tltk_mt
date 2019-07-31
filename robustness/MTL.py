@@ -137,6 +137,7 @@ class Finally:
         max_robustness = float('-inf')
         #subformula_robustness.reverse()
         #time_stamps.reverse()
+        t0 = time()
         for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
             current_time_stamp = time_stamps[current_time_step] 
             lower_bound = current_time_stamp + self.lower_time_bound
@@ -166,8 +167,10 @@ class Finally:
                     #print(subformula_robustness[lower_bound_index:upper_bound_index+1])
                     finally_robustness.append(max(subformula_robustness[lower_bound_index:upper_bound_index+1]))
 
-
+        t1 = time()
+        print('Finally time:', t1 - t0)
         self.robustness = max(finally_robustness)
+        
         if self.robustness > 0:
             self.value = True
         finally_robustness.reverse()
@@ -244,14 +247,14 @@ class Or:
         left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
         right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
         or_robustness = []
-        # t0 = time()
+        t0 = time()
         # for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
             
             # or_robustness.append(max(left_robustness,right_robustness))
         or_robustness = backend.py_and(left_subformula_robustness,right_subformula_robustness)
         
-        # t1 = time()
-        # print('Or time: ', t1 - t0)
+        t1 = time()
+        print('Or time: ', t1 - t0)
         
         
         self.robustness = max(self.left_subformula.robustness,self.right_subformula.robustness)
