@@ -13,8 +13,8 @@ void c_and(float* left_robustness, float* right_robustness, long length);
 // Auxiliary functions
 
 long search_sorted(float* time_stamps,float time,long start_lower_index,long length);
-float find_min(float* array, long length);
-float find_max(float* array, long length);
+long find_min(float* array, long length);
+long find_max(float* array, long length);
 
 #endif
 

@@ -50,26 +50,32 @@ long search_sorted(float* time_stamps,float time,long start_lower_index,long len
     return mid_index;
 }
 
-float find_min(float* array, long length){
-	int i;
+long find_min(float* array, long length){
+	long i, index;
 	float min;
 	min = *array;
-	for (i = 0; i < length; i++){
-		if (*(array + i) < min)
+	index = 0;
+	for (i = 1; i < length; i++){
+		if (*(array + i) < min){
+			index = i;
 			min = *(array + i);
+		}
 	}
-	return min;
+	return index;
 }
 
-float find_max(float* array, long length){
-	int i;
+long find_max(float* array, long length){
+	long i, index;
 	float max;
 	max = *array;
-	for (i = 0; i < length; i++){
-		if (*(array + i) > max)
+	index = 0;
+	for (i = 1; i < length; i++){
+		if (*(array + i) > max){
+			index = i;
 			max = *(array + i);
+		}
 	}
-	return max;
+	return index;
 }
 
 // In case we can do a min-max simultaneously,
@@ -100,8 +106,8 @@ int main(){
     float tst[5] = {1,3,6,7,9};
     long spot = search_sorted(tst,7,0,5);
     printf("%ld\n",spot);
-	printf("%f\n",find_min(tst, 5));
-	printf("%f\n",find_max(tst, 5));
+	printf("%ld\n",find_min(tst, 5));
+	printf("%ld\n",find_max(tst, 5));
 	minmax res = find_min_max(tst, 5);
 	printf("%f %f\n", res.min, res.max);
 }
