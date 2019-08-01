@@ -30,6 +30,7 @@ void c_and(float* left_robustness, float* right_robustness, long length){
     }
 }
 
+/*
 long search_sorted(float* time_stamps,float time,long start_lower_index,long length){
     long lower_index = start_lower_index;
     long upper_index = length;
@@ -37,6 +38,8 @@ long search_sorted(float* time_stamps,float time,long start_lower_index,long len
     int flag = 0;
     while(flag == 0){
         mid_index = (lower_index + upper_index) / 2; //Rounds down to lower index if odd
+        printf("%ld\n", mid_index);
+        system("pause");
         if(time < *(time_stamps + mid_index)) {
             upper_index = mid_index;
         }
@@ -48,6 +51,28 @@ long search_sorted(float* time_stamps,float time,long start_lower_index,long len
         }
     }
     return mid_index;
+}*/
+
+// search sorted attempt (Rania 8/1)
+
+long search_sorted(float* time_stamps,float time,long start_lower_index,long length){
+	long lower_index = start_lower_index;
+   	long upper_index = length - 1;
+   	
+   	long middle = (lower_index + upper_index) / 2;
+ 
+   	while (lower_index <= upper_index) {
+      	if (*(time_stamps + middle) < time)
+         	lower_index = middle + 1;    
+      	else if (*(time_stamps + middle) == time) {
+         	break;
+      	}
+      	else
+         	upper_index = middle - 1;
+ 
+      	middle = (lower_index + upper_index)/2;
+   	}
+   	return middle;
 }
 
 long find_min(float* array, long length){
@@ -104,10 +129,11 @@ minmax find_min_max(float* array, long length){
 
 int main(){
     float tst[5] = {1,3,6,7,9};
-    long spot = search_sorted(tst,7,0,5);
+    long spot = search_sorted(tst,5.9,0,5);
     printf("%ld\n",spot);
+    /*
 	printf("%ld\n",find_min(tst, 5));
 	printf("%ld\n",find_max(tst, 5));
 	minmax res = find_min_max(tst, 5);
-	printf("%f %f\n", res.min, res.max);
+	printf("%f %f\n", res.min, res.max); */
 }
