@@ -38,8 +38,6 @@ long search_sorted(float* time_stamps,float time,long start_lower_index,long len
     int flag = 0;
     while(flag == 0){
         mid_index = (lower_index + upper_index) / 2; //Rounds down to lower index if odd
-        printf("%ld\n", mid_index);
-        system("pause");
         if(time < *(time_stamps + mid_index)) {
             upper_index = mid_index;
         }
