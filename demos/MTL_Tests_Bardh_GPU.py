@@ -32,7 +32,7 @@ if __name__ == '__main__':
         rpm_pred = MTL.Predicate('rpm', Arpm, brpm, mode)
 
         # formula
-        root = MTL.Not(MTL.And(MTL.Finally(0, 100, speed_pred, mode), MTL.Finally(0, 100, rpm_pred, mode), mode), mode)
+        root = MTL.Not(MTL.And(MTL.Finally(0, 100, speed_pred, mode), MTL.Finally(0, 100, rpm_pred,mode), mode), mode)
         # root = Not(Finally(0, 100, And(speed_pred, rpm_pred,'gpu'),'gpu'), 'gpu')
 
         traces = {'speed': np.ones(i), 'rpm': np.ones(i)}

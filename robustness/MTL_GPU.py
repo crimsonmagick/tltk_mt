@@ -242,7 +242,21 @@ class Finally:
                         if time_stamps[time_stamp_index] <= upper_bound:
                             upper_bound_index = time_stamp_index
                             break
-                    
+                    #lower_search_index = np.int64(0)
+                    # upper_search_index = finally_robustness.shape[0] - 1
+                    # while True:
+                        # search_index = np.int64((lower_search_index + upper_search_index)/2)
+                        
+                        # if upper_bound <= finally_robustness[search_index]:
+                            # if search_index - 1 >= 0:
+                                # if finally_robustness[search_index - 1] < upper_bound:
+                                    # upper_bound_index = search_index
+                            # else:
+                                # upper_search_index = search_index
+                        # else:
+                            # lower_search_index = search_index
+                             
+                             
                     if lower_bound_index == upper_bound_index:
                         finally_robustness[current_time_step] = subformula_robustness[lower_bound_index]
                     else:
