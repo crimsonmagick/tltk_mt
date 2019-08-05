@@ -1,5 +1,6 @@
 from falsify import falsify
 import robustness.MTL_GPU as MTL
+import numpy as np
 
 model = 'sldemo_autotrans_mod01'
 
@@ -24,6 +25,8 @@ rpm_pred = MTL.Predicate(pred_tags[1], Arpm, brpm, mode)
 
 predicates = [pred_tags, speed_pred, rpm_pred]
 
+cp_samples = np.random.uniform(low=inp_range[0], high=inp_range[1], size=(2,))
+
 root = MTL.Not((MTL.Finally(0, 30, speed_pred, mode)))
 
-results = falsify(model, step, inp_range, simulation_time, interpolation, predicates, root)
+results = falsify(model, step, inp_range, simulation_time, interpolation, cp_samples, predicates, root)

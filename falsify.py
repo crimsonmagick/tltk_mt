@@ -40,14 +40,12 @@ def sim_and_return_rob(z, *params):
     return rt.robustness
 
 
-def falsify(model, step, inp_range, simulation_time, interpolation, predicates, root):
+def falsify(model, step, inp_range, simulation_time, interpolation, cp_samples, predicates, root):
 
     # Initialize MATLAB engine
     engine = systemSimulator.init_engine()
 
     params = (model, step, inp_range, simulation_time, interpolation, predicates, root, engine)
-
-    cp_samples = np.random.uniform(low=inp_range[0], high=inp_range[1], size=(2,))
 
     my_opt = {'maxiter': 100, 'disp': True}
     res2 = minimize(sim_and_return_rob, cp_samples, args=params, method='Nelder-Mead', options=my_opt)
