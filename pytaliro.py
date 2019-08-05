@@ -1,8 +1,8 @@
-from auxilliary import systemSimulator
-from auxilliary import computeInputSignal
-import stochasticOptimization
-from scipy.optimize import minimize
 import numpy as np
+from scipy.optimize import minimize
+
+import pytaliro.auxilliary.computeInputSignal as computeInputSignal
+import pytaliro.auxilliary.systemSimulator as systemSimulator
 
 
 def sim_and_return_rob(z, *params):
@@ -59,5 +59,4 @@ def falsify(model, step, inp_range, simulation_time, interpolation, cp_samples, 
     res1 = stochasticOptimization.stochastic_optimizer(sim_and_return_rob, cp_samples, *params, options=my_opt)
     print(res1)
     '''
-
 
