@@ -1,13 +1,16 @@
 import numpy as np
 from scipy.optimize import minimize
 
-import pytaliro.auxilliary.computeInputSignal as computeInputSignal
-import pytaliro.auxilliary.systemSimulator as systemSimulator
+import auxilliary.computeInputSignal as computeInputSignal
+import auxilliary.systemSimulator as systemSimulator
 
 
 def sim_and_return_rob(z, *params):
     cur_sample = z
-    model, step, inp_range, simulation_time, interpolation, predicates, rt, eng = params
+    model, opt, interpolation, predicates, rt, eng = params
+    step = opt[1]
+    inp_range = opt[2]
+    simulation_time = opt[3]
     predicate_tags = predicates[0]
     for i in range(0, len(cur_sample)):
         cur_sample[i] = min(max(inp_range[0], cur_sample[i]), inp_range[1])
@@ -16,7 +19,9 @@ def sim_and_return_rob(z, *params):
                                                      inp_range, len(cur_sample), simulation_time, step)
 
     # Simulate the model
-    time_stamps, internal_states, output = systemSimulator.simulate_system(eng, model, simulation_time, step, signal)
+    if opt[0] == 'simulink':
+        time_stamps, internal_states, output = systemSimulator.simulate_system(eng, model, simulation_time,
+                                                                               step, signal)
 
     # How many predicates?
     no_predicates = len(predicates) - 1
@@ -40,12 +45,11 @@ def sim_and_return_rob(z, *params):
     return rt.robustness
 
 
-def falsify(model, step, inp_range, simulation_time, interpolation, cp_samples, predicates, root):
+def falsify(model, interpolation, cp_samples, predicates, root, opt):
 
     # Initialize MATLAB engine
     engine = systemSimulator.init_engine()
-
-    params = (model, step, inp_range, simulation_time, interpolation, predicates, root, engine)
+    params = (model, opt, interpolation, predicates, root, engine)
 
     my_opt = {'maxiter': 100, 'disp': True}
     res2 = minimize(sim_and_return_rob, cp_samples, args=params, method='Nelder-Mead', options=my_opt)
