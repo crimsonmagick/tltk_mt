@@ -1,6 +1,4 @@
 import random
-from auxilliary import computeInputSignal, systemSimulator
-import numpy as np
 
 
 def sample_from_distribution(distribution, lo, hi, n):

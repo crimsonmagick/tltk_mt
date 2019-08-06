@@ -15,9 +15,15 @@ float* c_global(float lower_time_bound, float upper_time_bound, float* robustnes
 // Auxiliary functions
 
 long search_sorted(float* time_stamps,float time,long start_lower_index,long length);
+<<<<<<< HEAD
 long find_min(float* array, long start_index, long end_index);
 long find_max(float* array, long start_index, long end_index);
 
+=======
+long find_min(float* array, long length);
+long find_max(float* array, long length);
+minmax find_min_max(float* array, long length);
+>>>>>>> 88b0e505fefb0afa4cdabf5ef68eb257d728420b
 
 #endif
 
