@@ -81,36 +81,40 @@ class Global:
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
         globally_robustness = []
         max_robustness = float('-inf')
+        
         #subformula_robustness.reverse()
         #time_stamps.reverse()
-        for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
-            current_time_stamp = time_stamps[current_time_step] 
-            lower_bound = current_time_stamp + self.lower_time_bound
-            upper_bound = current_time_stamp + self.upper_time_bound
-            lower_bound_index = None
-            if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
-                finally_robustness.append(max(max_robustness,robustness))
-            else:
-                if self.lower_time_bound == 0:
-                    lower_bound_index = current_time_step
-                else:
-                    lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
-                    lower_bound_index = lower_bound_index + current_time_step
+        t0 = time()
+        globally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,subformula_robustness,list(time_stamps))
+        # for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
+            # current_time_stamp = time_stamps[current_time_step] 
+            # lower_bound = current_time_stamp + self.lower_time_bound
+            # upper_bound = current_time_stamp + self.upper_time_bound
+            # lower_bound_index = None
+            # if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
+                # finally_robustness.append(max(max_robustness,robustness))
+            # else:
+                # if self.lower_time_bound == 0:
+                    # lower_bound_index = current_time_step
+                # else:
+                    # lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
+                    # lower_bound_index = lower_bound_index + current_time_step
                 
-                upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
-                upper_bound_index = upper_bound_index - 1 + current_time_step
-            #print(lower_bound_index ,' : ',upper_bound_index)
+                # upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
+                # upper_bound_index = upper_bound_index - 1 + current_time_step
+            # #print(lower_bound_index ,' : ',upper_bound_index)
                     
-            if lower_bound_index == None:
-                globally_robustness.append(subformula_robustness[-1])
-            elif lower_bound_index == upper_bound_index:
-                globally_robustness.append(subformula_robustness[lower_bound_index])
-            else:
-                #print(lower_bound_index ,' : ',upper_bound_index)
-                #print(subformula_robustness[lower_bound_index:upper_bound_index+1])
-                globally_robustness.append(min(subformula_robustness[lower_bound_index:upper_bound_index+1]))
+            # if lower_bound_index == None:
+                # globally_robustness.append(subformula_robustness[-1])
+            # elif lower_bound_index == upper_bound_index:
+                # globally_robustness.append(subformula_robustness[lower_bound_index])
+            # else:
+                # #print(lower_bound_index ,' : ',upper_bound_index)
+                # #print(subformula_robustness[lower_bound_index:upper_bound_index+1])
+                # globally_robustness.append(min(subformula_robustness[lower_bound_index:upper_bound_index+1]))
 
-
+        t1 = time()
+        print("Global time: ", t1 - t0)
         self.robustness = min(globally_robustness)
         if self.robustness > 0:
             self.value = True
@@ -138,34 +142,35 @@ class Finally:
         #subformula_robustness.reverse()
         #time_stamps.reverse()
         t0 = time()
-        for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
-            current_time_stamp = time_stamps[current_time_step] 
-            lower_bound = current_time_stamp + self.lower_time_bound
-            upper_bound = current_time_stamp + self.upper_time_bound
-            lower_bound_index = None
-            if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
-                finally_robustness.append(max(max_robustness,robustness))
-            else:
-                if self.lower_time_bound == 0:
-                    lower_bound_index = current_time_step
-                else:
-                    lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
-                    lower_bound_index = lower_bound_index + current_time_step
+        finally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,subformula_robustness,list(time_stamps))
+        # for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
+            # current_time_stamp = time_stamps[current_time_step] 
+            # lower_bound = current_time_stamp + self.lower_time_bound
+            # upper_bound = current_time_stamp + self.upper_time_bound
+            # lower_bound_index = None
+            # if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
+                # finally_robustness.append(max(max_robustness,robustness))
+            # else:
+                # if self.lower_time_bound == 0:
+                    # lower_bound_index = current_time_step
+                # else:
+                    # lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
+                    # lower_bound_index = lower_bound_index + current_time_step
                 
-                upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
-                upper_bound_index = upper_bound_index - 1 + current_time_step
+                # upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
+                # upper_bound_index = upper_bound_index - 1 + current_time_step
 
 
-                #print(lower_bound_index ,' : ',upper_bound_index)
+                # #print(lower_bound_index ,' : ',upper_bound_index)
 
-                if lower_bound_index == None:
-                    finally_robustness.append(subformula_robustness[-1])
-                elif lower_bound_index == upper_bound_index:
-                    finally_robustness.append(subformula_robustness[lower_bound_index])
-                else:
-                    #print(lower_bound_index ,' : ',upper_bound_index)
-                    #print(subformula_robustness[lower_bound_index:upper_bound_index+1])
-                    finally_robustness.append(max(subformula_robustness[lower_bound_index:upper_bound_index+1]))
+                # if lower_bound_index == None:
+                    # finally_robustness.append(subformula_robustness[-1])
+                # elif lower_bound_index == upper_bound_index:
+                    # finally_robustness.append(subformula_robustness[lower_bound_index])
+                # else:
+                    # #print(lower_bound_index ,' : ',upper_bound_index)
+                    # #print(subformula_robustness[lower_bound_index:upper_bound_index+1])
+                    # finally_robustness.append(max(subformula_robustness[lower_bound_index:upper_bound_index+1]))
 
         t1 = time()
         print('Finally time:', t1 - t0)

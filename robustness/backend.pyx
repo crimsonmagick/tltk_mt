@@ -12,6 +12,12 @@ cdef extern from "backend.h":
 cdef extern from "backend.h":
     void c_and(float* left_robustness,float* right_robustness,long length)
 
+cdef extern from "backend.h":
+    float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
+
+cdef extern from "backend.h":
+    float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
+
 #def py_not(float[::1] robustness) -> float[::1]:
 def py_not(list robustness) -> float[::1]:
     cdef float * c_robustness
@@ -87,3 +93,55 @@ def py_or(list left_robustness,list right_robustness) -> float[::1]:
         free(c_right_robustness)
     
     return left_robustness
+
+
+def py_finally(float lower_time_bound,float upper_time_bound,list robustness,list time_stamps) -> float[::1]:
+    cdef float * c_robustness
+    cdef float * c_time_stamps
+    cdef float * c_results
+    
+    c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))
+    c_time_stamps = <float *>malloc(len(time_stamps)*cython.sizeof(float))
+    
+    for i in xrange(len(robustness)): #Sure this can be done better
+        c_robustness[i] = robustness[i]
+        c_time_stamps[i] = time_stamps[i]
+    
+    c_results = c_finally(lower_time_bound,upper_time_bound,c_robustness,c_time_stamps,len(robustness))
+    
+    for i in xrange(len(robustness)): #Same here
+        robustness[i] = c_results[i]
+        
+    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
+    
+    with nogil:
+        free(c_robustness)
+        free(c_time_stamps)
+        free(c_results)
+    return robustness
+
+def py_global(float lower_time_bound,float upper_time_bound,list robustness,list time_stamps) -> float[::1]:
+    cdef float * c_robustness
+    cdef float * c_time_stamps
+    cdef float * c_results
+    
+    c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))
+    c_time_stamps = <float *>malloc(len(time_stamps)*cython.sizeof(float))
+    
+    for i in xrange(len(robustness)): #Sure this can be done better
+        c_robustness[i] = robustness[i]
+        c_time_stamps[i] = time_stamps[i]
+    
+    c_results = c_global(lower_time_bound,upper_time_bound,c_robustness,c_time_stamps,len(robustness))
+    
+    for i in xrange(len(robustness)): #Same here
+        robustness[i] = c_results[i]
+        
+    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
+    
+    with nogil:
+        free(c_robustness)
+        free(c_time_stamps)
+        free(c_results)
+    return robustness
+
