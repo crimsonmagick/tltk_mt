@@ -18,6 +18,9 @@ cdef extern from "backend.h":
 cdef extern from "backend.h":
     float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 
+cdef extern from "backend.h":
+    void c_one_dim_pred(float* traces, float A, float bound,long length);
+
 #def py_not(float[::1] robustness) -> float[::1]:
 def py_not(list robustness) -> float[::1]:
     cdef float * c_robustness
@@ -143,5 +146,28 @@ def py_global(float lower_time_bound,float upper_time_bound,list robustness,list
         free(c_robustness)
         free(c_time_stamps)
         free(c_results)
+    return robustness
+
+def py_one_dim_pred(list robustness, float A, float bound) -> float[::1]:
+    cdef float * c_robustness
+    c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))
+#    cdef array.array c_array_robustness = array.array('f',robustness)
+#    cdef float[:] c_robustness = c_array_robustness
+    if c_robustness is NULL:
+        raise MemoryError()
+    
+    for i in xrange(len(robustness)): #Sure this can be done better
+        c_robustness[i] = robustness[i]
+    
+    c_one_dim_pred(c_robustness,A,bound,len(robustness))
+    
+    for i in xrange(len(robustness)): #Same here
+        robustness[i] = c_robustness[i]
+    
+    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
+    
+    with nogil:
+        free(c_robustness)
+    
     return robustness
 

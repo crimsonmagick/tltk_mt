@@ -107,24 +107,24 @@ long find_max(float* array, long start_index, long end_index){
 // It is much faster but too situational. I am adding it just in case.
 // Feel free to erase it (Rania 7/31)
 
-minmax find_min_max(float* array, long length){
-    minmax results;
-    int i;
-    if (*array > *(array+1)){
-        results.min = *(array + 1);
-        results.max = *array;
-    }else{
-        results.max = *(array + 1);
-        results.min = *array;
-    }
-    for (i = 0; i < length; i++){
-        if (*(array + i) > results.max)
-            results.max = *(array + i);
-        else if (*(array + i) < results.min)
-            results.min = *(array + i);
-    }
-    return results;
-}
+//minmax find_min_max(float* array, long length){
+    //minmax results;
+    //int i;
+    //if (*array > *(array+1)){
+        //results.min = *(array + 1);
+        //results.max = *array;
+    //}else{
+        //results.max = *(array + 1);
+        //results.min = *array;
+    //}
+    //for (i = 0; i < length; i++){
+        //if (*(array + i) > results.max)
+            //results.max = *(array + i);
+        //else if (*(array + i) < results.min)
+            //results.min = *(array + i);
+    //}
+    //return results;
+//}
 
 float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length){
     long i;
@@ -223,6 +223,13 @@ float* c_global(float lower_time_bound, float upper_time_bound, float* robustnes
         }
     }
     return global_robustness;
+}
+
+void c_one_dim_pred(float* traces, float A, float bound,long length){
+    long i;
+    for(i = 0; i < length; i++){
+        *(traces + i)  =  *(traces + i) * A - bound;
+    }
 }
 
 

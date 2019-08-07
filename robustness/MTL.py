@@ -12,7 +12,7 @@ from time import time
 
 
 class Predicate:
-    def __init__(self,variable_name,A_Matrix,bound,thread_pool = True):
+    def __init__(self,variable_name,A_Matrix,bound,thread_pool = False):
         self.variable_name = variable_name
         self.value = None
         self.truth_value_history = []
@@ -43,24 +43,32 @@ class Predicate:
         predicate_robustness = []
         np_A_Matrix = np.array(self.A_Matrix)
         if self.thread_pool == False:
-            for value in trace:
-                np_value = np.array(value)
-                x = cp.Variable(np_value.size)
-                objective = cp.Minimize(cp.norm(x - np_value))
-                if np_value.size == 1 and np_A_Matrix.size == 1:
-                    return trace * self.A_Matrix - self.bound
-                if (self.A_Matrix*np_value <= self.bound).all():            #calculate depth if np_value is in A*x <= b
-                    constraints = [self.A_Matrix*x >= self.bound]
-                    prob = cp.Problem(objective, constraints)
-                    predicate_robustness.append(-prob.solve(solver=cp.ECOS)) #ECOS has fastest time of ones tested. Going to add this as an argument eventually
-                else:                                               #calculate distance if np_value is not in A*x <= b
-                    constraints = [self.A_Matrix*x <= self.bound]
-                    prob = cp.Problem(objective, constraints)
-                    predicate_robustness.append(prob.solve(solver=cp.ECOS))
+            if (not isinstance(trace[0],list)) and (not isinstance(self.A_Matrix, list)):
+                predicate_robustness = backend.py_one_dim_pred(list(trace), self.A_Matrix, self.bound)
+            else:
+                for value in trace:
+                    np_value = np.array(value)
+                    # if np_value.size == 1 and np_A_Matrix.size == 1:
+                        # predicate_robustness.append(value * self.A_Matrix - self.bound)
+                    if (self.A_Matrix*np_value <= self.bound).all():            #calculate depth if np_value is in A*x <= b
+                        x = cp.Variable(np_value.size)
+                        objective = cp.Minimize(cp.norm(x - np_value))
+                        constraints = [self.A_Matrix*x >= self.bound]
+                        prob = cp.Problem(objective, constraints)
+                        predicate_robustness.append(-prob.solve(solver=cp.ECOS)) #ECOS has fastest time of ones tested. Going to add this as an argument eventually
+                    else:                                               #calculate distance if np_value is not in A*x <= b
+                        x = cp.Variable(np_value.size)
+                        objective = cp.Minimize(cp.norm(x - np_value))
+                        constraints = [self.A_Matrix*x <= self.bound]
+                        prob = cp.Problem(objective, constraints)
+                        predicate_robustness.append(prob.solve(solver=cp.ECOS))
         else:
                                                                     #I wanted to pass the Pool() as an argument but that weirdly causes an error. I then tryied making the thread pool in the object init but the same error happens. Not sure how to make the thread pool creation only happen once if the object is used more than once
             with Pool(cpu_count()) as p:
+                t0 = time()
                 predicate_robustness = p.map(self.optimize_polyhedron, trace)
+                t1 = time()
+                print('Predicate time: ', t1 - t0)
                 p.close()
                 p.join()
         return predicate_robustness
@@ -85,7 +93,7 @@ class Global:
         #subformula_robustness.reverse()
         #time_stamps.reverse()
         t0 = time()
-        globally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,subformula_robustness,list(time_stamps))
+        globally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         # for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
             # current_time_stamp = time_stamps[current_time_step] 
             # lower_bound = current_time_stamp + self.lower_time_bound
@@ -142,7 +150,7 @@ class Finally:
         #subformula_robustness.reverse()
         #time_stamps.reverse()
         t0 = time()
-        finally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,subformula_robustness,list(time_stamps))
+        finally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         # for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
             # current_time_stamp = time_stamps[current_time_step] 
             # lower_bound = current_time_stamp + self.lower_time_bound
