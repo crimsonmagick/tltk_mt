@@ -93,7 +93,7 @@ class Global:
         #subformula_robustness.reverse()
         #time_stamps.reverse()
         t0 = time()
-        globally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+        globally_robustness = backend.py_global(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         # for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
             # current_time_stamp = time_stamps[current_time_step] 
             # lower_bound = current_time_stamp + self.lower_time_bound

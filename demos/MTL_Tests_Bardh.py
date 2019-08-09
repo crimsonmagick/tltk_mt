@@ -19,9 +19,9 @@ if __name__ == '__main__':
 
     speed_pred = MTL.Predicate('speed', Aspeed, bspeed)
     rpm_pred = MTL.Predicate('rpm', Arpm, brpm)
-    root = MTL.Not(MTL.And(MTL.Finally(0, float('inf'), speed_pred), MTL.Finally(0, 100, rpm_pred)))
+    #root = MTL.Not(MTL.And(MTL.Finally(0, float('inf'), speed_pred), MTL.Finally(0, float('inf'), rpm_pred)))
     #root = MTL.Finally(0,100,MTL.Predicate('rpm', Arpm, brpm))
-    #root = MTL.Global(0, 100, speed_pred)
+    root = MTL.Global(0, 100, speed_pred)
     #root = MTL.Until(0,19,speed_pred,rpm_pred)
     #root = Finally(1,2.2,Predicate('geese',-1,-1))
 
