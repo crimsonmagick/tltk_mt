@@ -19,6 +19,9 @@ cdef extern from "backend.h":
     float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 
 cdef extern from "backend.h":
+    float* c_until(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
+
+cdef extern from "backend.h":
     void c_one_dim_pred(float* traces, float A, float bound,long length);
 
 #def py_not(float[::1] robustness) -> float[::1]:
@@ -147,6 +150,40 @@ def py_global(float lower_time_bound,float upper_time_bound,list robustness,list
         free(c_time_stamps)
         free(c_results)
     return robustness
+
+
+def py_until(float lower_time_bound,float upper_time_bound,list left_robustness,list right_robustness,list time_stamps) -> float[::1]:
+    cdef float * c_left_robustness
+    cdef float * c_right_robustness
+    cdef float * c_time_stamps
+    cdef float * c_results
+    
+    c_left_robustness = <float *>malloc(len(left_robustness)*cython.sizeof(float))
+    c_right_robustness = <float *>malloc(len(right_robustness)*cython.sizeof(float))
+    c_time_stamps = <float *>malloc(len(time_stamps)*cython.sizeof(float))
+    
+    for i in xrange(len(left_robustness)): #Sure this can be done better
+        c_left_robustness[i] = left_robustness[i]
+        c_right_robustness[i] = right_robustness[i]
+        c_time_stamps[i] = time_stamps[i]
+    
+    c_results = c_until(lower_time_bound,upper_time_bound,c_left_robustness,c_right_robustness,c_time_stamps,len(left_robustness))
+    
+    for i in xrange(len(left_robustness)): #Same here
+        left_robustness[i] = c_results[i]
+        
+    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
+    
+    with nogil:
+        free(c_left_robustness)
+        free(c_right_robustness)
+        free(c_time_stamps)
+        free(c_results)
+        
+    return left_robustness
+
+
+
 
 def py_one_dim_pred(list robustness, float A, float bound) -> float[::1]:
     cdef float * c_robustness

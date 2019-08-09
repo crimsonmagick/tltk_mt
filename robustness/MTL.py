@@ -319,45 +319,45 @@ class Until:
         left_subformula_robustness_history = []
         inner_formula_min = []
         last_robustness = float('-inf')
-
-        if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
-            for left_robustness,right_robustness in reversed(list(zip(left_subformula_robustness,right_subformula_robustness))):
-                last_robustness = max(min(last_robustness,left_robustness),right_robustness)
-                until_robustness.insert(0,last_robustness)
-            self.robustness = until_robustness[0]
-        else:
-            for current_time_step,data in reversed(list((enumerate(zip(left_subformula_robustness,time_stamps))))):
-            #for current_index,left_robustness in enumerate(list(reversed(list(zip(left_subformula_robustness,right_subformula_robustness,time_stamps))))):
+        until_robustness = backend.py_until(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
+        # if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
+            # for left_robustness,right_robustness in reversed(list(zip(left_subformula_robustness,right_subformula_robustness))):
+                # last_robustness = max(min(last_robustness,left_robustness),right_robustness)
+                # until_robustness.insert(0,last_robustness)
+            # self.robustness = until_robustness[0]
+        # else:
+            # for current_time_step,data in reversed(list((enumerate(zip(left_subformula_robustness,time_stamps))))):
+            # #for current_index,left_robustness in enumerate(list(reversed(list(zip(left_subformula_robustness,right_subformula_robustness,time_stamps))))):
                 
-                left_robustness,current_time_stamp = data
+                # left_robustness,current_time_stamp = data
 
-                current_time_stamp = time_stamps[current_time_step] 
-                lower_bound = current_time_stamp + self.lower_time_bound
-                upper_bound = current_time_stamp + self.upper_time_bound
-                lower_bound_index = None
-            if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
-                finally_robustness.append(max(max_robustness,robustness))
-            else:
-                if self.lower_time_bound == 0:
-                    lower_bound_index = current_time_step
-                else:
-                    lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
-                    lower_bound_index = lower_bound_index + current_time_step
+                # current_time_stamp = time_stamps[current_time_step] 
+                # lower_bound = current_time_stamp + self.lower_time_bound
+                # upper_bound = current_time_stamp + self.upper_time_bound
+                # lower_bound_index = None
+            # if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
+                # finally_robustness.append(max(max_robustness,robustness))
+            # else:
+                # if self.lower_time_bound == 0:
+                    # lower_bound_index = current_time_step
+                # else:
+                    # lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
+                    # lower_bound_index = lower_bound_index + current_time_step
                 
-                upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
-                upper_bound_index = upper_bound_index - 1 + current_time_step
+                # upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
+                # upper_bound_index = upper_bound_index - 1 + current_time_step
 
-                if lower_bound_index == current_time_step:
-                    min_robustness = left_subformula_robustness[lower_bound_index]
-                else:
-                    min_robustness = min(left_subformula_robustness[current_time_step:lower_bound_index+1])
+                # if lower_bound_index == current_time_step:
+                    # min_robustness = left_subformula_robustness[lower_bound_index]
+                # else:
+                    # min_robustness = min(left_subformula_robustness[current_time_step:lower_bound_index+1])
                     
                 
-                for left_robustness_bounded ,right_robustness_bounded in zip(left_subformula_robustness[lower_bound_index:upper_bound_index+1],right_subformula_robustness[lower_bound_index:upper_bound_index+1]):
-                    last_robustness = max(last_robustness,min(right_robustness_bounded,min_robustness))
-                    min_robustness = min(min_robustness,left_robustness_bounded)
-                until_robustness.insert(0,last_robustness)
-                last_robustness = float('-inf')
+                # for left_robustness_bounded ,right_robustness_bounded in zip(left_subformula_robustness[lower_bound_index:upper_bound_index+1],right_subformula_robustness[lower_bound_index:upper_bound_index+1]):
+                    # last_robustness = max(last_robustness,min(right_robustness_bounded,min_robustness))
+                    # min_robustness = min(min_robustness,left_robustness_bounded)
+                # until_robustness.insert(0,last_robustness)
+                # last_robustness = float('-inf')
 
         self.robustness = until_robustness[0]
         return until_robustness

@@ -11,6 +11,7 @@ void c_or(float* left_robustness, float* right_robustness, long length);
 void c_and(float* left_robustness, float* right_robustness, long length);
 float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
+float* c_until(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
 void c_one_dim_pred(float* traces, float A, float bound,long length);
 // Auxiliary functions
 
