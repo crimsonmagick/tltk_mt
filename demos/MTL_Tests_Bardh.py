@@ -14,15 +14,15 @@ if __name__ == '__main__':
     Aspeed = -1
     bspeed = -120
 
-    Arpm = 1
-    brpm = 4500
+    Arpm = [1, 1]
+    brpm = [4500, 4500]
 
     speed_pred = MTL.Predicate('speed', Aspeed, bspeed)
     rpm_pred = MTL.Predicate('rpm', Arpm, brpm)
     #root = MTL.Not(MTL.And(MTL.Finally(0, float('inf'), speed_pred), MTL.Finally(0, float('inf'), rpm_pred)))
     #root = MTL.Finally(0,100,MTL.Predicate('rpm', Arpm, brpm))
     #root = MTL.Global(0, 100, speed_pred)
-    root = MTL.Until(0,19,speed_pred,rpm_pred)
+    root = rpm_pred
     #root = Finally(1,2.2,Predicate('geese',-1,-1))
 
     data = genfromtxt('data.csv', delimiter=',')
@@ -39,13 +39,13 @@ if __name__ == '__main__':
     traces = {'speed': speedData, 'rpm': rpmData}
     #traces = {'data' : data}
     time_stamps = timeData
-    i = 1000000
-    #traces = {'speed': np.ones(i), 'rpm': np.ones(i)}
-    #time_stamps = np.arange(1, i + 1)
+    i = 10
+    traces = {'speed': np.ones(i), 'rpm': np.ones(i)}
+    time_stamps = np.arange(1, i + 1)
     times = []
    
     t0 = time.time()
-    root.eval_interval(traces, time_stamps)
+    print(root.eval_interval(traces, time_stamps))
     t1 = time.time()
 
     print('Run time: ', t1 - t0)
