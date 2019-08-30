@@ -3,8 +3,7 @@
 #include <time.h>
 #include <math.h>
 #include "backend.h"
-
-
+#include "gpubackend.h"
 
 void  c_not(float* robustness,long length){
     long i;
@@ -298,17 +297,17 @@ float* c_until(float lower_time_bound, float upper_time_bound, float* left_robus
 
 int main(){
     float tst[5] = {-1,-1,6,2,4};
-    float tst2[5] = {-1,-1,3,3,2};
-    float time[5] = {1,2,3,4,5};
+    //float tst2[5] = {-1,-1,3,3,2};
+    //float time[5] = {1,2,3,4,5};
     /*long spot = search_sorted(tst,5.9,0,5);
     printf("%ld\n",spot);*/
-    float upper_bound = 1;
-    float* robustness;
-    robustness =  c_until(0,upper_bound,tst,tst2,time,5);
-    int i;
-    for(i = 0; i < 5; i++){
-        printf("%f ",robustness[i]);
-    }
+    //float upper_bound = 1;
+    //float* robustness;
+    predicate_setup(tst,1,0,5);
+    //int i;
+    //for(i = 0; i < 5; i++){
+        //printf("%f ",robustness[i]);
+    //}
     printf("\n");
     //printf("%ld\n",find_min(tst, 5));
     //printf("%ld\n",find_max(tst, 5));
