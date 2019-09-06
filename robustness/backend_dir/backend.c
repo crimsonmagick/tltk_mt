@@ -296,22 +296,23 @@ float* c_until(float lower_time_bound, float upper_time_bound, float* left_robus
 
 
 int main(){
-    float tst[5] = {-1,-1,6,2,4};
-    //float tst2[5] = {-1,-1,3,3,2};
-    //float time[5] = {1,2,3,4,5};
-    /*long spot = search_sorted(tst,5.9,0,5);
-    printf("%ld\n",spot);*/
-    //float upper_bound = 1;
-    //float* robustness;
-    predicate_setup(tst,1,0,5);
-    //int i;
-    //for(i = 0; i < 5; i++){
-        //printf("%f ",robustness[i]);
-    //}
-    printf("\n");
-    //printf("%ld\n",find_min(tst, 5));
-    //printf("%ld\n",find_max(tst, 5));
-    //minmax res = find_min_max(tst, 5);
-    //printf("%f %f\n", res.min, res.max); 
-    return 0;
+    long length = 100000000;
+    float *traces = (float*)malloc(length*sizeof(float)); 
+    float *time_stamps = (float*)malloc(length*sizeof(float));
+    long i;
+    double time_spent = 0;
+    for(i = 0; i < length;i++){
+        traces[i] = 2;
+        time_stamps[i] = i;
+    }
+    traces[30] = 100;
+    clock_t begin = clock();
+    //predicate_setup(traces, 2.0f, 0.0f,length);
+    float * results;
+    results = c_finally(0,100,traces,time_stamps,length);
+    clock_t end = clock();
+    time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("%g\n",time_spent);
+    //results[0] = 3.0f;
+    printf("%f\n", results[29]);
 }
