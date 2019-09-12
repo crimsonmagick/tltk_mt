@@ -145,6 +145,45 @@ __global__  void gpu_global_kernal(long length,long sub_length,float lower_time_
     }
 }
 
+__global__  void gpu_until_kernal(long length,long sub_length,float lower_time_bound,float upper_time_bound ,float* left_robustness,float* right_robustness, float* time_stamps, float* until_robustness){
+    long current_time_step;
+    long start_time_step = (blockIdx.x*blockDim.x + threadIdx.x) * sub_length;
+     float last_robustness = -INFINITY;
+    if (start_time_step < length){
+        for(current_time_step = 0; current_time_step < sub_length && (current_time_step + start_time_step) < length; current_time_step++){
+            float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
+            float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
+            long lower_bound_index;
+            if(lower_time_bound == 0){
+                lower_bound_index = current_time_step;
+            }
+            else{
+                lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
+            }
+            long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
+            
+            float min_robustness;
+            
+            if(lower_bound_index == current_time_step){
+                min_robustness = *(left_robustness+lower_bound_index);
+            }
+            else{
+                long min_robustness_index;
+                min_robustness_index = find_min(left_robustness,current_time_step,lower_bound_index);
+                min_robustness = *(left_robustness + min_robustness_index);
+            }
+            long bounded_index;
+            
+            for(bounded_index = lower_bound_index; bounded_index <= upper_bound_index; bounded_index++){
+                    last_robustness = max(last_robustness,min(right_robustness[bounded_index],min_robustness));
+                    min_robustness = min(min_robustness,left_robustness[bounded_index]);
+            }
+            *(until_robustness + current_time_step) = last_robustness;
+            last_robustness = -INFINITY;
+        }
+    }
+}
+
 void predicate_setup(float* cpu_traces, float A, float bound,long length){
     float *gpu_traces;
     if(cudaMalloc(&gpu_traces, length*sizeof(float)) != cudaSuccess)
@@ -295,6 +334,49 @@ void c_global_gpu(float* cpu_traces, float* cpu_time_stamps, float* results,floa
     cudaFree(gpu_traces);
     cudaFree(gpu_time_stamps);
 }
+
+float* c_until_gpu(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps,float* results, long length){
+    float *gpu_left_robustness;
+    float *gpu_right_robustness;
+    float *gpu_time_stamps;
+    float *gpu_results;
+    
+    if(cudaMalloc(&gpu_left_robustness, length*sizeof(float)) != cudaSuccess)
+        perror("GPU MEM ERROR");
+        
+    if(cudaMalloc(&gpu_right_robustness, length*sizeof(float)) != cudaSuccess)
+        perror("GPU MEM ERROR");
+
+    if(cudaMalloc(&gpu_time_stamps, length*sizeof(float)) != cudaSuccess)
+        perror("GPU MEM ERROR");
+
+    if(cudaMalloc(&gpu_results, length*sizeof(float)) != cudaSuccess)
+        perror("GPU MEM ERROR");
+
+    cudaMemcpy(gpu_results, results, length*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_left_robustness, left_robustness, length*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_right_robustness, right_robustness, length*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_time_stamps, time_stamps, length*sizeof(float), cudaMemcpyHostToDevice);
+    
+    long blocks = (length / gpu_blocks) + 1; //divide by 1024 to the 5.2 compute standard of my 980ti and add 1 encase the division rounded down
+    long sub_length = (blocks / gpu_blocks) + 1;
+    if(blocks > gpu_blocks){
+        blocks = gpu_blocks;
+    }
+    
+    //gpu_untill_kernal<<<blocks, threads>>>
+    
+    if(cudaMemcpy(results, gpu_results, length*sizeof(float), cudaMemcpyDeviceToHost) != cudaSuccess)
+        perror("GPU COPY ERROR");
+
+    cudaFree(gpu_results);
+    cudaFree(gpu_left_robustness);
+    cudaFree(gpu_right_robustness);
+    cudaFree(gpu_time_stamps);
+    
+    return results;
+}
+
 
 int main(){
     long length = 10000000;
