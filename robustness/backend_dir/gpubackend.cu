@@ -63,7 +63,7 @@ __global__ void predicate(long length,long sub_length,float a,float bound,float 
     }
 }
 
-__global__ void gpu_or_kernal(long length,long sub_length,float *left_robustness, float *right_robustness){
+extern "C" __global__ void gpu_or_kernal(long length,long sub_length,float *left_robustness, float *right_robustness){
     long start_time_step = (blockIdx.x*blockDim.x + threadIdx.x) * sub_length;
     long current_time_step;
     if (start_time_step < length){ 
@@ -228,10 +228,11 @@ void c_and_gpu(float* left_robustness, float* right_robustness, long length){
     cudaFree(gpu_right_robustness);
 }
 
-void c_or_gpu(float* left_robustness, float* right_robustness, long length){
+extern "C"{ void c_or_gpu(float* left_robustness, float* right_robustness, long length){
     float *gpu_left_robustness; 
     float *gpu_right_robustness;
-    
+
+
     if(cudaMalloc(&gpu_left_robustness, length*sizeof(float)) != cudaSuccess)
         perror("GPU MEM ERROR");
     
@@ -251,10 +252,11 @@ void c_or_gpu(float* left_robustness, float* right_robustness, long length){
 
     cudaMemcpy(left_robustness, gpu_left_robustness, length*sizeof(float), cudaMemcpyDeviceToHost);
     
+    
     cudaFree(gpu_left_robustness);
     cudaFree(gpu_right_robustness);
 }
-
+}
 
 void c_finally_gpu(float* cpu_traces, float* cpu_time_stamps, float* results,float lower_time_bound, float upper_time_bound,long length){
     float *gpu_traces;
@@ -364,7 +366,7 @@ float* c_until_gpu(float lower_time_bound, float upper_time_bound, float* left_r
         blocks = gpu_blocks;
     }
     
-    //gpu_untill_kernal<<<blocks, threads>>>
+    gpu_until_kernal<<<blocks, gpu_threads>>>(length,sub_length,lower_time_bound,upper_time_bound,gpu_left_robustness, gpu_right_robustness, gpu_time_stamps,gpu_results);
     
     if(cudaMemcpy(results, gpu_results, length*sizeof(float), cudaMemcpyDeviceToHost) != cudaSuccess)
         perror("GPU COPY ERROR");
@@ -377,21 +379,29 @@ float* c_until_gpu(float lower_time_bound, float upper_time_bound, float* left_r
     return results;
 }
 
+void test(){
+    printf("gpu testsetests\n");
+}
 
 int main(){
-    long length = 10000000;
+    long length = 3;
     float *left_traces = (float*)malloc(length*sizeof(float));
     float *right_traces = (float*)malloc(length*sizeof(float));
-    float *time_stamps = (float*)malloc(length*sizeof(float));
-    float *results = (float*)malloc(length*sizeof(float));
-    long i;
+    //float *time_stamps = (float*)malloc(length*sizeof(float));
+    //float *results = (float*)malloc(length*sizeof(float));
+    //long i;
     double time_spent = 0;
-    for(i = 0; i < length;i++){
-        left_traces[i] = 2;
-        right_traces[i] = 1;
-        time_stamps[i] = i;
-    }
-    left_traces[30] = -1;
+    //for(i = 0; i < length;i++){
+        //left_traces[i] = 2;
+        //right_traces[i] = 1;
+        //time_stamps[i] = i;
+    //}
+    left_traces[0] = 1;
+    left_traces[1] = 2;
+    left_traces[2] = 1;
+    right_traces[0] = 2;
+    right_traces[1] = 1;
+    right_traces[2] = 2;
     clock_t begin = clock();
     //predicate_setup(traces, 2.0f, 0.0f,length);
     c_or_gpu(left_traces,right_traces,length);
@@ -399,5 +409,7 @@ int main(){
     time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
     printf("%g\n",time_spent);
     //results[0] = 3.0f;
-    printf("%f\n", left_traces[75923]);
+    int i;
+    for(i = 0; i < length; i++)
+        printf("%f, ", left_traces[1]);
 }

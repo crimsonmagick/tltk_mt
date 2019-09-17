@@ -10,3 +10,4 @@ $(LIB_DIR)/libbackend.a:
 
 clean:
 	rm *.so
+
