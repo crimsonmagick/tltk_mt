@@ -23,8 +23,37 @@ cdef extern from "backend.h":
 
 cdef extern from "backend.h":
     void c_one_dim_pred(float* traces, float A, float bound,long length);
+    
+#cdef extern from "gpubackend.h":
+#    void c_or_gpu(float* left_robustness,float* right_robustness,long length)
 
-#def py_not(float[::1] robustness) -> float[::1]:
+#def py_or_gpu(list left_robustness,list right_robustness) -> float[::1]:
+#    cdef float * c_left_robustness
+#    cdef float * c_right_robustness
+    
+#    c_left_robustness = <float *>malloc(len(left_robustness)*cython.sizeof(float))
+#    c_right_robustness = <float *>malloc(len(left_robustness)*cython.sizeof(float))
+    
+#    if c_left_robustness is NULL or c_right_robustness is NULL:
+#        raise MemoryError()
+        
+#    for i in xrange(len(left_robustness)): #Sure this can be done better
+#        c_left_robustness[i] = left_robustness[i]
+#        c_right_robustness[i] = right_robustness[i]
+    
+#    c_or_gpu(c_left_robustness,c_right_robustness,len(left_robustness))
+    
+#    for i in xrange(len(left_robustness)): #Same here
+#        left_robustness[i] = c_left_robustness[i]
+#    #list_results = np.ndarray((len(left_robustness), ), 'f', c_left_robustness, order='C')
+##    left_robustness = c_left_robustness[:len(left_robustness)]
+#    with nogil:
+#        free(c_left_robustness)
+#        free(c_right_robustness)
+    
+#    return left_robustness
+
+
 def py_not(list robustness) -> float[::1]:
     cdef float * c_robustness
     c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))

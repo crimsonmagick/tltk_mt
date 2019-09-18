@@ -3,7 +3,6 @@
 #include <time.h>
 #include <math.h>
 #include "backend.h"
-#include "gpubackend.h"
 
 void  c_not(float* robustness,long length){
     long i;
@@ -296,23 +295,28 @@ float* c_until(float lower_time_bound, float upper_time_bound, float* left_robus
 
 
 int main(){
-    long length = 100000000;
-    float *traces = (float*)malloc(length*sizeof(float)); 
+    long length = 10000000;
+    float *left_traces = (float*)malloc(length*sizeof(float));
+    float *right_traces = (float*)malloc(length*sizeof(float));
     float *time_stamps = (float*)malloc(length*sizeof(float));
+    //float *results = (float*)malloc(length*sizeof(float));
     long i;
     double time_spent = 0;
     for(i = 0; i < length;i++){
-        traces[i] = 2;
+        left_traces[i] = 1;
+        right_traces[i] = 2;
         time_stamps[i] = i;
     }
-    traces[30] = 100;
+
     clock_t begin = clock();
     //predicate_setup(traces, 2.0f, 0.0f,length);
-    float * results;
-    results = c_finally(0,100,traces,time_stamps,length);
+    c_or(left_traces,right_traces,length);
     clock_t end = clock();
     time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
     printf("%g\n",time_spent);
     //results[0] = 3.0f;
-    printf("%f\n", results[29]);
+
+
+    printf("%f\n", left_traces[1]);
 }
+

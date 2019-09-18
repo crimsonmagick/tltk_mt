@@ -1,5 +1,6 @@
 import sys
 import backend
+import gpubackend
 import ctypes
 import cvxpy as cp
 import numpy as np
@@ -249,12 +250,13 @@ class And:
         return and_robustness
 
 class Or:
-    def __init__(self,left_subformula = None,right_subformula = None):
+    def __init__(self,left_subformula = None,right_subformula = None, process_type = "cpu"):
         self.left_subformula = left_subformula
         self.right_subformula = right_subformula
         self.truth_value_history = []
         self.robustness = 0
         self.value = None
+        self.process_type = process_type
 
     def eval_interval(self,traces,time_stamps): 
         left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
@@ -264,7 +266,10 @@ class Or:
         # for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
             
             # or_robustness.append(max(left_robustness,right_robustness))
-        or_robustness = backend.py_and(left_subformula_robustness,right_subformula_robustness)
+        if self.process_type == "cpu":
+            or_robustness = backend.py_or(left_subformula_robustness,right_subformula_robustness)
+        else:
+            or_robustness = gpubackend.c_gpu_or(left_subformula_robustness,right_subformula_robustness)
         
         t1 = time()
         print('Or time: ', t1 - t0)
