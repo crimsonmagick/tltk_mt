@@ -11,9 +11,8 @@ from time import time
 # Time bounds inclusive
 # 0 robustness is a failure (will add an option to choose later)
 
-
 class Predicate:
-    def __init__(self,variable_name,A_Matrix,bound,thread_pool = False):
+    def __init__(self,variable_name,A_Matrix,bound,process_type = 'cpu',thread_pool = False):
         self.variable_name = variable_name
         self.value = None
         self.truth_value_history = []
@@ -21,6 +20,7 @@ class Predicate:
         self.robustness = 0
         self.A_Matrix = A_Matrix
         self.thread_pool = thread_pool
+        self.process_type = process_type
         
     def optimize_polyhedron(self,trace):
         np_value = np.array(trace)
@@ -45,7 +45,10 @@ class Predicate:
         np_A_Matrix = np.array(self.A_Matrix)
         if self.thread_pool == False:
             if (not isinstance(trace[0],list)) and (not isinstance(self.A_Matrix, list)):
-                predicate_robustness = backend.py_one_dim_pred(list(trace), self.A_Matrix, self.bound)
+                if self.process_type == 'cpu':
+                    predicate_robustness = backend.py_one_dim_pred(list(trace), self.A_Matrix, self.bound)
+                else:
+                    predicate_robustness = gpubackend.py_one_dim_pred_gpu(list(trace), self.A_Matrix, self.bound)   
             else:
                 for value in trace:
                     np_value = np.array(value)
@@ -77,14 +80,14 @@ class Predicate:
 
 
 class Global:
-    def __init__(self,lower_time_bound,upper_time_bound,subformula = None):
+    def __init__(self,lower_time_bound,upper_time_bound,subformula = None, process_type = 'cpu'):
         self.value = True
         self.subformula = subformula
         self.truth_value_history = []
         self.robustness = float('inf')
         self.upper_time_bound = upper_time_bound
         self.lower_time_bound = lower_time_bound
-
+        self.process_type = process_type
 
     def eval_interval(self,traces,time_stamps): 
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
@@ -94,34 +97,13 @@ class Global:
         #subformula_robustness.reverse()
         #time_stamps.reverse()
         t0 = time()
-        globally_robustness = backend.py_global(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
-        # for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
-            # current_time_stamp = time_stamps[current_time_step] 
-            # lower_bound = current_time_stamp + self.lower_time_bound
-            # upper_bound = current_time_stamp + self.upper_time_bound
-            # lower_bound_index = None
-            # if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
-                # finally_robustness.append(max(max_robustness,robustness))
-            # else:
-                # if self.lower_time_bound == 0:
-                    # lower_bound_index = current_time_step
-                # else:
-                    # lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
-                    # lower_bound_index = lower_bound_index + current_time_step
-                
-                # upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
-                # upper_bound_index = upper_bound_index - 1 + current_time_step
-            # #print(lower_bound_index ,' : ',upper_bound_index)
-                    
-            # if lower_bound_index == None:
-                # globally_robustness.append(subformula_robustness[-1])
-            # elif lower_bound_index == upper_bound_index:
-                # globally_robustness.append(subformula_robustness[lower_bound_index])
-            # else:
-                # #print(lower_bound_index ,' : ',upper_bound_index)
-                # #print(subformula_robustness[lower_bound_index:upper_bound_index+1])
-                # globally_robustness.append(min(subformula_robustness[lower_bound_index:upper_bound_index+1]))
-
+        
+        
+        if self.process_type == 'cpu':
+            globally_robustness = backend.py_global(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+        else:
+            print("global GPU computation")
+            globally_robustness = gpubackend.py_global_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         t1 = time()
         print("Global time: ", t1 - t0)
         self.robustness = min(globally_robustness)
@@ -136,13 +118,13 @@ class Global:
         return self.subformula
 
 class Finally:
-    def __init__(self,lower_time_bound,upper_time_bound,subformula = None,start_value = False):
-        self.value = start_value
+    def __init__(self,lower_time_bound,upper_time_bound,subformula = None, process_type = 'cpu'):
         self.subformula = subformula
         self.truth_value_history = []
         self.robustness = float('-inf')
         self.upper_time_bound = upper_time_bound
         self.lower_time_bound = lower_time_bound
+        self.process_type = process_type
 
     def eval_interval(self,traces,time_stamps): 
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
@@ -151,35 +133,12 @@ class Finally:
         #subformula_robustness.reverse()
         #time_stamps.reverse()
         t0 = time()
-        finally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
-        # for current_time_step,robustness in reversed(list(enumerate(subformula_robustness))):
-            # current_time_stamp = time_stamps[current_time_step] 
-            # lower_bound = current_time_stamp + self.lower_time_bound
-            # upper_bound = current_time_stamp + self.upper_time_bound
-            # lower_bound_index = None
-            # if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
-                # finally_robustness.append(max(max_robustness,robustness))
-            # else:
-                # if self.lower_time_bound == 0:
-                    # lower_bound_index = current_time_step
-                # else:
-                    # lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
-                    # lower_bound_index = lower_bound_index + current_time_step
-                
-                # upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
-                # upper_bound_index = upper_bound_index - 1 + current_time_step
-
-
-                # #print(lower_bound_index ,' : ',upper_bound_index)
-
-                # if lower_bound_index == None:
-                    # finally_robustness.append(subformula_robustness[-1])
-                # elif lower_bound_index == upper_bound_index:
-                    # finally_robustness.append(subformula_robustness[lower_bound_index])
-                # else:
-                    # #print(lower_bound_index ,' : ',upper_bound_index)
-                    # #print(subformula_robustness[lower_bound_index:upper_bound_index+1])
-                    # finally_robustness.append(max(subformula_robustness[lower_bound_index:upper_bound_index+1]))
+        if self.process_type == 'cpu':
+            print("finally CPU computation")
+            finally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+        else:
+            print("finally GPU computation")
+            finally_robustness = gpubackend.py_finally_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
 
         t1 = time()
         print('Finally time:', t1 - t0)
@@ -188,6 +147,7 @@ class Finally:
         if self.robustness > 0:
             self.value = True
         finally_robustness.reverse()
+
         return	finally_robustness
         
         
@@ -197,11 +157,12 @@ class Finally:
         return self.subformula
 
 class Not:
-    def __init__(self,subformula = None):
+    def __init__(self,subformula = None, process_type = "cpu"):
         self.subformula = subformula
         self.truth_value_history = []
         self.robustness = 0
         self.value = None
+        self.process_type = process_type
 
 
     def eval_interval(self,traces,time_stamps): 
@@ -210,9 +171,14 @@ class Not:
         # t0 = time()
         #not_robustness = [i * -1 for i in subformula_robustness]
         #c_subformula_robustness = (ctypes.c_float * len(subformula_robustness))(*subformula_robustness)
-        not_robustness = backend.py_not(subformula_robustness)
+        # not_robustness = backend.py_not(subformula_robustness)
         # t1 = time()
         # print('Not time: ', t1 - t0)
+        if self.process_type == "cpu":
+            not_robustness = backend.py_not(subformula_robustness)
+        else:
+            print("GPU for NOT")
+            not_robustness = gpubackend.py_not_gpu(subformula_robustness)
         self.robustness = -self.subformula.robustness 
         
         return not_robustness
@@ -224,12 +190,13 @@ class Not:
         return self.subformula
 
 class And:
-    def __init__(self,left_subformula = None,right_subformula = None):
+    def __init__(self,left_subformula = None,right_subformula = None, process_type = 'cpu'):
         self.left_subformula = left_subformula
         self.right_subformula = right_subformula
         self.truth_value_history = []
         self.robustness = 0
         self.value = None
+        self.process_type = process_type
 
 
     def eval_interval(self,traces,time_stamps):
@@ -242,10 +209,13 @@ class And:
         #    and_robustness.append(min(left_robustness,right_robustness))
             
         #c_left_subformula_robustness = (ctypes.c_float * len(left_subformula_robustness))(*left_subformula_robustness)
-        and_robustness = backend.py_and(left_subformula_robustness,right_subformula_robustness)
         # t1 = time()
         # print('And time: ',t1-t0)
-        
+        if self.process_type == "cpu":
+            and_robustness = backend.py_and(left_subformula_robustness,right_subformula_robustness)
+        else:
+            print("GPU for AND")
+            and_robustness = gpubackend.py_and_gpu(left_subformula_robustness,right_subformula_robustness)
         self.robustness = min(self.left_subformula.robustness,self.right_subformula.robustness)
         return and_robustness
 
@@ -269,7 +239,8 @@ class Or:
         if self.process_type == "cpu":
             or_robustness = backend.py_or(left_subformula_robustness,right_subformula_robustness)
         else:
-            or_robustness = gpubackend.c_gpu_or(left_subformula_robustness,right_subformula_robustness)
+            print("GPU for OR")
+            or_robustness = gpubackend.py_or_gpu(left_subformula_robustness,right_subformula_robustness)
         
         t1 = time()
         print('Or time: ', t1 - t0)
@@ -279,13 +250,13 @@ class Or:
         return or_robustness
 
 class Implication:
-    def __init__(self,left_subformula = None,right_subformula = None):
+    def __init__(self,left_subformula = None,right_subformula = None, process_type = 'cpu'):
         self.left_subformula = left_subformula
         self.right_subformula = right_subformula
         self.truth_value_history = []
         self.robustness = 0
         self.value = None
-
+        self.process_type = process_type
 
     def eval_interval(self,traces,time_stamps): 
         left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
@@ -324,46 +295,11 @@ class Until:
         left_subformula_robustness_history = []
         inner_formula_min = []
         last_robustness = float('-inf')
-        until_robustness = backend.py_until(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
-        # if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
-            # for left_robustness,right_robustness in reversed(list(zip(left_subformula_robustness,right_subformula_robustness))):
-                # last_robustness = max(min(last_robustness,left_robustness),right_robustness)
-                # until_robustness.insert(0,last_robustness)
-            # self.robustness = until_robustness[0]
-        # else:
-            # for current_time_step,data in reversed(list((enumerate(zip(left_subformula_robustness,time_stamps))))):
-            # #for current_index,left_robustness in enumerate(list(reversed(list(zip(left_subformula_robustness,right_subformula_robustness,time_stamps))))):
-                
-                # left_robustness,current_time_stamp = data
-
-                # current_time_stamp = time_stamps[current_time_step] 
-                # lower_bound = current_time_stamp + self.lower_time_bound
-                # upper_bound = current_time_stamp + self.upper_time_bound
-                # lower_bound_index = None
-            # if self.lower_time_bound == 0 and self.upper_time_bound == float('inf'):
-                # finally_robustness.append(max(max_robustness,robustness))
-            # else:
-                # if self.lower_time_bound == 0:
-                    # lower_bound_index = current_time_step
-                # else:
-                    # lower_bound_index = np.searchsorted(time_stamps[current_time_step:], lower_bound)
-                    # lower_bound_index = lower_bound_index + current_time_step
-                
-                # upper_bound_index = np.searchsorted(time_stamps[current_time_step:], upper_bound)
-                # upper_bound_index = upper_bound_index - 1 + current_time_step
-
-                # if lower_bound_index == current_time_step:
-                    # min_robustness = left_subformula_robustness[lower_bound_index]
-                # else:
-                    # min_robustness = min(left_subformula_robustness[current_time_step:lower_bound_index+1])
-                    
-                
-                # for left_robustness_bounded ,right_robustness_bounded in zip(left_subformula_robustness[lower_bound_index:upper_bound_index+1],right_subformula_robustness[lower_bound_index:upper_bound_index+1]):
-                    # last_robustness = max(last_robustness,min(right_robustness_bounded,min_robustness))
-                    # min_robustness = min(min_robustness,left_robustness_bounded)
-                # until_robustness.insert(0,last_robustness)
-                # last_robustness = float('-inf')
-
+        if self.process_type == "cpu":
+            until_robustness = until_robustness = backend.py_until(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
+        else:
+            print("GPU for Until")
+            until_robustness = gpubackend.py_until_gpu(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
         self.robustness = until_robustness[0]
         return until_robustness
 

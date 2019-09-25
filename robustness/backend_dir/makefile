@@ -13,5 +13,4 @@ clean:
 
 gpu:
 	nvcc -shared -o libgpubackend.so gpubackend.cu --compiler-options '-fPIC'
-gpu_test:
-	nvcc -Xcompiler -fPIC -shared -o libgpubackend.so gpubackend.cu
+

@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <time.h>
-extern "C"{
 #include "gpubackend.h"
-}
 const int gpu_threads = 1024;
 const int gpu_blocks = 1024;
 
@@ -65,7 +63,7 @@ __global__ void predicate(long length,long sub_length,float a,float bound,float 
     }
 }
 
-extern "C" __global__ void gpu_or_kernal(long length,long sub_length,float *left_robustness, float *right_robustness){
+__global__ void gpu_or_kernal(long length,long sub_length,float *left_robustness, float *right_robustness){
     long start_time_step = (blockIdx.x*blockDim.x + threadIdx.x) * sub_length;
     long current_time_step;
     if (start_time_step < length){ 
@@ -150,14 +148,14 @@ __global__  void gpu_global_kernal(long length,long sub_length,float lower_time_
 __global__  void gpu_until_kernal(long length,long sub_length,float lower_time_bound,float upper_time_bound ,float* left_robustness,float* right_robustness, float* time_stamps, float* until_robustness){
     long current_time_step;
     long start_time_step = (blockIdx.x*blockDim.x + threadIdx.x) * sub_length;
-     float last_robustness = -INFINITY;
+    float last_robustness = -INFINITY;
     if (start_time_step < length){
         for(current_time_step = 0; current_time_step < sub_length && (current_time_step + start_time_step) < length; current_time_step++){
-            float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
-            float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
+            float lower_bound = *(time_stamps + (current_time_step + start_time_step)) + lower_time_bound;
+            float upper_bound = *(time_stamps + (current_time_step + start_time_step)) + upper_time_bound;
             long lower_bound_index;
             if(lower_time_bound == 0){
-                lower_bound_index = current_time_step;
+                lower_bound_index = (current_time_step + start_time_step);
             }
             else{
                 lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
@@ -186,6 +184,16 @@ __global__  void gpu_until_kernal(long length,long sub_length,float lower_time_b
     }
 }
 
+__global__ void gpu_not_kernal(long length, long sub_length, float* robustness){
+    long current_time_step;
+    long start_time_step = (blockIdx.x*blockDim.x + threadIdx.x) * sub_length;
+    if (start_time_step < length){
+        for(current_time_step = 0; current_time_step < sub_length && (current_time_step + start_time_step) < length; current_time_step++){
+            *(robustness + (current_time_step + start_time_step)) = -1 * *(robustness + (current_time_step + start_time_step));
+        }
+    }
+}
+
 void predicate_setup(float* cpu_traces, float A, float bound,long length){
     float *gpu_traces;
     if(cudaMalloc(&gpu_traces, length*sizeof(float)) != cudaSuccess)
@@ -203,6 +211,26 @@ void predicate_setup(float* cpu_traces, float A, float bound,long length){
     cudaFree(gpu_traces);
 }
 
+void c_not_gpu(float* robustness, long length){
+    float *gpu_robustness;
+    
+    if(cudaMalloc(&gpu_robustness, length*sizeof(float)) != cudaSuccess)
+        perror("GPU MEM ERROR");
+
+    long blocks = (length / gpu_blocks) + 1; //divide by 1024 to the 5.2 compute standard of my 980ti and add 1 encase the division rounded down
+    long sub_length = (blocks / gpu_blocks) + 1;
+    if(blocks > gpu_blocks){
+        blocks = gpu_blocks;
+    }
+    
+    cudaMemcpy(gpu_robustness, robustness, length*sizeof(float), cudaMemcpyHostToDevice);
+    
+    gpu_not_kernal<<<blocks, gpu_threads>>>(length, sub_length, gpu_robustness);
+    
+    cudaMemcpy(robustness, gpu_robustness, length*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaFree(gpu_robustness);
+    
+}
 void c_and_gpu(float* left_robustness, float* right_robustness, long length){
     float *gpu_left_robustness; 
     float *gpu_right_robustness;
@@ -230,7 +258,7 @@ void c_and_gpu(float* left_robustness, float* right_robustness, long length){
     cudaFree(gpu_right_robustness);
 }
 
-extern "C"{ void c_or_gpu(float* left_robustness, float* right_robustness, long length){
+void c_or_gpu(float* left_robustness, float* right_robustness, long length){
     float *gpu_left_robustness; 
     float *gpu_right_robustness;
 
@@ -257,7 +285,6 @@ extern "C"{ void c_or_gpu(float* left_robustness, float* right_robustness, long 
     
     cudaFree(gpu_left_robustness);
     cudaFree(gpu_right_robustness);
-}
 }
 
 void c_finally_gpu(float* cpu_traces, float* cpu_time_stamps, float* results,float lower_time_bound, float upper_time_bound,long length){
@@ -383,11 +410,11 @@ float* c_until_gpu(float lower_time_bound, float upper_time_bound, float* left_r
 
 
 int main(){
-    long length = 50000000;
+    long length = 500000000;
     float *left_traces = (float*)malloc(length*sizeof(float));
     float *right_traces = (float*)malloc(length*sizeof(float));
     float *time_stamps = (float*)malloc(length*sizeof(float));
-    //float *results = (float*)malloc(length*sizeof(float));
+    float *results = (float*)malloc(length*sizeof(float));
     long i;
     double time_spent = 0;
     for(i = 0; i < length;i++){
@@ -395,10 +422,10 @@ int main(){
         right_traces[i] = 2;
         time_stamps[i] = i;
     }
-
+    printf("Finally\n");
     clock_t begin = clock();
     //predicate_setup(traces, 2.0f, 0.0f,length);
-    c_or_gpu(left_traces,right_traces,length);
+    c_finally_gpu(left_traces,time_stamps, results, 0.0f, 100.0f, length);
     clock_t end = clock();
     time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
     printf("%g\n",time_spent);
