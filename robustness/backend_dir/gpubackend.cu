@@ -410,7 +410,7 @@ float* c_until_gpu(float lower_time_bound, float upper_time_bound, float* left_r
 
 
 int main(){
-    long length = 500000000;
+    long length = 100000000;
     float *left_traces = (float*)malloc(length*sizeof(float));
     float *right_traces = (float*)malloc(length*sizeof(float));
     float *time_stamps = (float*)malloc(length*sizeof(float));
