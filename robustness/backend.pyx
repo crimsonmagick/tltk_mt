@@ -3,6 +3,10 @@ cimport cython
 from cpython cimport array
 from libc.stdlib cimport malloc, free
 import array 
+
+cdef extern from "backend.h":
+    c_float higher_dim_pred(c_int n, c_int m, c_float* q,c_float* l, c_float* u, c_float **init_A, c_float **init_P)
+    
 cdef extern from "backend.h":
     void c_not(float* robustness,long length)
 
@@ -53,6 +57,11 @@ cdef extern from "backend.h":
     
 #    return left_robustness
 
+# c_int n, c_int m, c_float* q,c_float* l, c_float* u, c_float **init_A, c_float **init_P
+def py_higher_dim(int n, int m, float* q, float* l, float* u, float** init_A, float** init_P) -> float[::1]:
+    cdef float result
+    result = higher_dim_pred(n, m, q, l, u, init_A, init_P)
+    return result
 
 def py_not(list robustness) -> float[::1]:
     cdef float * c_robustness

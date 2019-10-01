@@ -7,23 +7,90 @@
 #include <stdbool.h>
 #include "osqp.h"
 
-c_float higher_dim_pred(c_int n, c_int m, c_float* p_values, c_int* p_indexs, c_int* p_pointers,c_int p_nnz,c_float* q,c_float* A_values,c_int* A_indexs, c_int* A_pointers,c_int A_nnz,c_float* l, c_float* u){
+csc* array_to_csc(c_int m, c_int n, c_float **A){
+    c_int i,j, A_nnz, p_counter, num_vals, first_ele;
+    c_int *A_p, *A_i;
+    c_float *A_x;
+    num_vals = 0;
+    p_counter = 0;
+    csc *final;
+    A_nnz = 0;      
+    if((final = c_malloc(sizeof(csc))) < 0)
+        perror("MEM ERROR");
+    for(j=0;j!=n;j++)
+        for(i=0;i!=m;i++)
+            if(A[i][j] != 0) A_nnz++;
+    A_x = malloc(A_nnz * sizeof(c_float));
+    A_i = malloc(A_nnz * sizeof(c_int));
+    A_p = malloc((n+1)*sizeof(c_int));
+
+    for(j=0;j!=n;j++){
+
+        first_ele = 0;
+        for(i=0;i!=m;i++){
+            if(A[i][j] != 0){
+                A_x[num_vals] = A[i][j];
+                A_i[num_vals] = i;
+                if(first_ele == 0){
+                    A_p[p_counter] = num_vals;
+                    p_counter++;
+                    first_ele ++;
+                }
+                num_vals++;
+            }
+            
+        }
+    }
+    A_p[n] = A_nnz;
+    /*
+    for(i=0;i<num_vals;i++)
+        printf("%f ",A_x[i]);
+    printf("\n");
+    for(i=0;i<num_vals;i++)
+        printf("%lld ",A_i[i]);
+    printf("\n");
+    for(i=0;i<p_counter+1;i++)
+        printf("%lld ",A_p[i]);
+    printf("\n");*/
+    final->nzmax = A_nnz;
+    final->m = m;
+    final->n = n;
+    final->p = malloc((n+1)*sizeof(c_int));
+    final->p = A_p;
+    final->i = malloc(A_nnz * sizeof(c_int));
+    final->i = A_i;
+    final->x = malloc(A_nnz * sizeof(c_float));
+    final->x = A_x;
+    final->nz = -1;
+    return final;
+        
+}
+
+//c_float higher_dim_pred(c_int n, c_int m, c_float* p_values, c_int* p_indexs, c_int* p_pointers,c_int p_nnz,c_float* q,c_float* A_values,c_int* A_indexs, c_int* A_pointers,c_int A_nnz,c_float* l, c_float* u){
+c_float higher_dim_pred(c_int n, c_int m, c_float* q,c_float* l, c_float* u, c_float **init_A, c_float **init_P){
+    
     OSQPData* data;
     OSQPSettings  *settings;
     OSQPWorkspace *work;
-          
+    csc *P, *A;      
     if((data = (OSQPData *)c_malloc(sizeof(OSQPData))) < 0)
         perror("MEM ERROR");
     
     if((settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings))) < 0)
         perror("MEM ERROR");
         
+    if((A = (csc *)c_malloc(sizeof(csc))) < 0)
+        perror("MEM ERROR");
+    if((P = (csc *)c_malloc(sizeof(csc))) < 0)
+        perror("MEM ERROR");
+    A = array_to_csc(m, n, init_A);
+    P = array_to_csc(n, n, init_P);
     if (data) {
         data->n = n;
         data->m = m;
-        data->P = csc_matrix(data->n, data->n, p_nnz, p_values, p_indexs, p_pointers);
+        data->P = csc_matrix(data->n, data->n, P->nzmax, P->x, P->i, P->p);
         data->q = q;
-        data->A = csc_matrix(data->m, data->n, A_nnz, A_values, A_indexs, A_pointers);
+        data->A = csc_matrix(data->m, data->n, A->nzmax, A->x, A->i, A->p);
         data->l = l;
         data->u = u;
     }
@@ -192,6 +259,7 @@ float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float*
     
     return finally_robustness;
 }
+
 float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length){
     long i;
     float max;
@@ -449,13 +517,44 @@ float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* l
 
 
 int main(){
-    long length = 100000000;
+    long length = 10;
     float *left_traces = (float*)malloc(length*sizeof(float));
     float *right_traces = (float*)malloc(length*sizeof(float));
     float *time_stamps = (float*)malloc(length*sizeof(float));
     float *results = (float*)malloc(length*sizeof(float));
     long i;
     double time_spent = 0;
+    c_float q[2] = {1.0, 1.0, };
+    c_float l[3] = {1.0, 0.0, 0.0, };
+    c_float u[3] = {1.0, 0.7, 0.7, };
+    c_float **disp, **P;
+    c_float test;
+    //csc *test;
+    disp = malloc(3 * sizeof(c_float*));
+    P = malloc(2 * sizeof(c_float*));
+    for (i=0; i<3; i++)
+        disp[i] = malloc(2 * sizeof(c_float));
+    for (i=0; i<2; i++)
+        P[i] = malloc(2*sizeof(c_float));
+    disp[0][0] = 1.0;
+    disp[1][0] = 1.0;
+    disp[2][0] = 0.0;
+    disp[0][1] = 1.0;
+    disp[1][1] = 0.0;
+    disp[2][1] = 1.0;
+    
+    P[0][0] = 4.0;
+    P[0][1] = 1.0;
+    P[1][0] = 0.0;
+    P[1][1] = 2.0;
+    test = higher_dim_pred(2, 3, q, l, u, disp, P);
+    printf("%f\n",test);
+/*
+    if((test = (csc *)c_malloc(sizeof(csc))) < 0)
+        perror("Error allocating memory");
+    test = array_to_csc(3,2,disp);
+    */
+
     for(i = 0; i < length;i++){
         left_traces[i] = 1;
         right_traces[i] = 2;
@@ -463,7 +562,7 @@ int main(){
     }
     clock_t begin = clock();
     //predicate_setup(traces, 2.0f, 0.0f,length);
-    results = c_global_threaded(0.0f,100.0f, left_traces,time_stamps, length);
+    results = c_global(0.0f,100.0f, left_traces,time_stamps, length);
     clock_t end = clock();
     time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
     printf("%g\n",time_spent);
