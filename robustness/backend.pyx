@@ -5,7 +5,7 @@ from libc.stdlib cimport malloc, free
 import array 
 
 cdef extern from "backend.h":
-    c_float higher_dim_pred(c_int n, c_int m, c_float* q,c_float* l, c_float* u, c_float **init_A, c_float **init_P)
+    float higher_dim_pred(int n, int m, float* q,float* l, float* u, float **init_A, float **init_P)
     
 cdef extern from "backend.h":
     void c_not(float* robustness,long length)
@@ -57,10 +57,52 @@ cdef extern from "backend.h":
     
 #    return left_robustness
 
-# c_int n, c_int m, c_float* q,c_float* l, c_float* u, c_float **init_A, c_float **init_P
-def py_higher_dim(int n, int m, float* q, float* l, float* u, float** init_A, float** init_P) -> float[::1]:
+def py_higher_dim(int n, int m, list q, list l, list u, list init_A, list init_P) -> float[::1]:
+    cdef float* c_q
+    cdef float* c_l
+    cdef float* c_u
+    cdef float** A
+    cdef float** P
     cdef float result
-    result = higher_dim_pred(n, m, q, l, u, init_A, init_P)
+    cdef int c_n, c_m
+    
+    A = <float **>malloc(m * cython.sizeof(c_q))
+    P = <float **>malloc(n * cython.sizeof(c_q))
+    c_q = <float *>malloc(len(q) * cython.sizeof(float))
+    c_l = <float *>malloc(len(l) * cython.sizeof(float))
+    c_u = <float *>malloc(len(u) * cython.sizeof(float))
+    
+    
+    for i in xrange(m):
+        A[i] = <float *>malloc(n * cython.sizeof(float))
+        for j in xrange(n):
+            A[i][j] = init_A[i][j]
+    for i in xrange(n):
+        P[i] = <float *>malloc(n * cython.sizeof(float))
+        for j in xrange(n):
+            P[i][j] = init_P[i][j]
+    for i in xrange(len(q)):
+        c_q[i] = q[i]
+    for i in xrange(len(l)):
+        c_l[i] = l[i]
+    for i in xrange(len(u)):
+        c_u[i] = u[i]
+    c_n = n
+    c_m = m
+        
+    result = higher_dim_pred(c_n, c_m, c_q, c_l, c_u, A, P)
+    
+    with nogil:
+        free(c_q)
+        free(c_l)
+        free(c_u)
+        for i in xrange(m):
+            free(A[i])
+        free(A)
+        for i in xrange(n):
+            free(P[i])
+        free(P)
+     
     return result
 
 def py_not(list robustness) -> float[::1]:
