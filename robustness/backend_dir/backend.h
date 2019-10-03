@@ -1,7 +1,7 @@
 #ifndef BACKEND_H
 #define BACKEND_H
 
-#include "osqp.j"
+#include "osqp.h"
 
 
 void c_not(float* robustness,long length);
@@ -11,7 +11,7 @@ float* c_finally(float lower_time_bound, float upper_time_bound, float* robustne
 float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_until(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
 void c_one_dim_pred(float* traces, float A, float bound,long length);
-c_float higher_dim_pred(c_int n, c_int m, c_float* q,c_float* l, c_float* u, c_float **init_A, c_float **init_P);
+void higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float* traces, long length);
 
 // Auxiliary functions
 

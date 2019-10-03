@@ -4,6 +4,7 @@ import gpubackend
 import ctypes
 import cvxpy as cp
 import numpy as np
+import scipy as sp
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 from time import time
@@ -50,22 +51,32 @@ class Predicate:
                 else:
                     predicate_robustness = gpubackend.py_one_dim_pred_gpu(list(trace), self.A_Matrix, self.bound)   
             else:
-                for value in trace:
-                    np_value = np.array(value)
-                    # if np_value.size == 1 and np_A_Matrix.size == 1:
-                        # predicate_robustness.append(value * self.A_Matrix - self.bound)
-                    if (self.A_Matrix*np_value <= self.bound).all():            #calculate depth if np_value is in A*x <= b
-                        x = cp.Variable(np_value.size)
-                        objective = cp.Minimize(cp.norm(x - np_value))
-                        constraints = [self.A_Matrix*x >= self.bound]
-                        prob = cp.Problem(objective, constraints)
-                        predicate_robustness.append(-prob.solve(solver=cp.ECOS)) #ECOS has fastest time of ones tested. Going to add this as an argument eventually
-                    else:                                               #calculate distance if np_value is not in A*x <= b
-                        x = cp.Variable(np_value.size)
-                        objective = cp.Minimize(cp.norm(x - np_value))
-                        constraints = [self.A_Matrix*x <= self.bound]
-                        prob = cp.Problem(objective, constraints)
-                        predicate_robustness.append(prob.solve(solver=cp.ECOS))
+                n = len(self.A_Matrix[0])
+                m = len(self.A_Matrix)
+                init_A = self.A_Matrix
+                u = self.bound
+                init_P = 2 * np.eye(n, dtype=np.float64)
+                init_P = init_P.tolist()
+                l = [float("-inf")] * m
+                q = [0] * m
+                predicate_robustness = backend.py_higher_dim(n, m, q, l, u, init_A, init_P, traces[self.variable_name], len(traces[self.variable_name]))
+
+                # for value in trace:
+                    # np_value = np.array(value)
+                    # # if np_value.size == 1 and np_A_Matrix.size == 1:
+                        # # predicate_robustness.append(value * self.A_Matrix - self.bound)
+                    # if (self.A_Matrix*np_value <= self.bound).all():            #calculate depth if np_value is in A*x <= b
+                        # x = cp.Variable(np_value.size)
+                        # objective = cp.Minimize(cp.norm(x - np_value))
+                        # constraints = [self.A_Matrix*x >= self.bound]
+                        # prob = cp.Problem(objective, constraints)
+                        # predicate_robustness.append(-prob.solve(solver=cp.ECOS)) #ECOS has fastest time of ones tested. Going to add this as an argument eventually
+                    # else:                                               #calculate distance if np_value is not in A*x <= b
+                        # x = cp.Variable(np_value.size)
+                        # objective = cp.Minimize(cp.norm(x - np_value))
+                        # constraints = [self.A_Matrix*x <= self.bound]
+                        # prob = cp.Problem(objective, constraints)
+                        # predicate_robustness.append(prob.solve(solver=cp.ECOS))
         else:
                                                                     #I wanted to pass the Pool() as an argument but that weirdly causes an error. I then tryied making the thread pool in the object init but the same error happens. Not sure how to make the thread pool creation only happen once if the object is used more than once
             with Pool(cpu_count()) as p:

@@ -5,7 +5,7 @@ from libc.stdlib cimport malloc, free
 import array 
 
 cdef extern from "backend.h":
-    float higher_dim_pred(int n, int m, float* q,float* l, float* u, float **init_A, float **init_P)
+    void higher_dim_pred(int n, int m, double* q,double* l, double* u, double **init_A, double **init_P, float* traces, long length);
     
 cdef extern from "backend.h":
     void c_not(float* robustness,long length)
@@ -57,53 +57,55 @@ cdef extern from "backend.h":
     
 #    return left_robustness
 
-def py_higher_dim(int n, int m, list q, list l, list u, list init_A, list init_P) -> float[::1]:
-    cdef float* c_q
-    cdef float* c_l
-    cdef float* c_u
-    cdef float** A
-    cdef float** P
-    cdef float result
-    cdef int c_n, c_m
+def py_higher_dim(int n, int m, list q, list l, list u, list init_A, list init_P, list traces, long length) -> float[::1]:
+    cdef double* c_q
+    cdef double* c_l
+    cdef double* c_u
+    cdef double** A
+    cdef double** P
+    cdef float* c_traces
+    cdef double result
     
-    A = <float **>malloc(m * cython.sizeof(c_q))
-    P = <float **>malloc(n * cython.sizeof(c_q))
-    c_q = <float *>malloc(len(q) * cython.sizeof(float))
-    c_l = <float *>malloc(len(l) * cython.sizeof(float))
-    c_u = <float *>malloc(len(u) * cython.sizeof(float))
+    A = <double **>malloc(m * cython.sizeof(c_q))
+    P = <double **>malloc(n * cython.sizeof(c_q))
+    c_q = <double *>malloc(len(q) * cython.sizeof(double))
+    c_l = <double *>malloc(len(l) * cython.sizeof(double))
+    c_u = <double *>malloc(len(u) * cython.sizeof(double))
+    c_traces = <float *>malloc(length * cython.sizeof(float))
     
+    for i in xrange(length):
+        c_traces[i] = traces[i]
     
     for i in xrange(m):
-        A[i] = <float *>malloc(n * cython.sizeof(float))
+        A[i] = <double *>malloc(n * cython.sizeof(double))
         for j in xrange(n):
             A[i][j] = init_A[i][j]
     for i in xrange(n):
-        P[i] = <float *>malloc(n * cython.sizeof(float))
+        P[i] = <double *>malloc(n * cython.sizeof(double))
         for j in xrange(n):
             P[i][j] = init_P[i][j]
+    
     for i in xrange(len(q)):
         c_q[i] = q[i]
     for i in xrange(len(l)):
         c_l[i] = l[i]
     for i in xrange(len(u)):
         c_u[i] = u[i]
-    c_n = n
-    c_m = m
-        
-    result = higher_dim_pred(c_n, c_m, c_q, c_l, c_u, A, P)
-    
+    higher_dim_pred(n, m, c_q, c_l, c_u, A, P, c_traces, length)
+    for i in xrange(length):
+        traces[i] = c_traces[i]
     with nogil:
         free(c_q)
         free(c_l)
         free(c_u)
+        free(c_traces)
         for i in xrange(m):
             free(A[i])
         free(A)
         for i in xrange(n):
             free(P[i])
         free(P)
-     
-    return result
+    return traces
 
 def py_not(list robustness) -> float[::1]:
     cdef float * c_robustness

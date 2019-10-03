@@ -8,7 +8,6 @@ from numpy import genfromtxt
 import numpy as np
 from multiprocessing import Pool, freeze_support
 
-
 if __name__ == '__main__':
     if os.name == 'nt':
         freeze_support()
@@ -21,8 +20,8 @@ if __name__ == '__main__':
 
     mode = "gpu"
 
-    speed_pred = MTL.Predicate('speed', Aspeed, bspeed, mode)
-    rpm_pred = MTL.Predicate('rpm', Arpm, brpm, mode)
+    #speed_pred = MTL.Predicate('speed', Aspeed, bspeed, mode)
+    #rpm_pred = MTL.Predicate('rpm', Arpm, brpm, mode)
     #root = MTL.Not(MTL.And(MTL.Finally(0, 100, speed_pred,mode), MTL.Finally(0, 100, rpm_pred,mode),mode),mode)
     #root = MTL.Finally(0,100,MTL.Predicate('rpm', Arpm, brpm),'gpu')
     #root = MTL.And(speed_pred ,speed_pred,'gpu')
@@ -31,8 +30,8 @@ if __name__ == '__main__':
 
     # data = genfromtxt('data.csv', delimiter=',')
     # time_data = genfromtxt('dataTime.csv')
-    # two_dim_pred = Predicate('data',[[-1.0,1.0],[1.0,1.0]],[-120.0,4500.0])
-    # root = two_dim_pred
+    two_dim_pred = MTL.Predicate('speed',[[-1.0,1.0],[1.0,1.0]],[-120.0,4500.0])
+    root = two_dim_pred
 
     # speedData = np.transpose(data[:, 0])
 
@@ -43,13 +42,15 @@ if __name__ == '__main__':
     # traces = {'speed': speedData, 'rpm': rpmData}
     # #traces = {'data' : data}
     # time_stamps = timeData
-    i = 500000000
-    traces = {'speed': np.arange(i), 'rpm': np.arange(i)}
+    i = 50
+    traces = {'speed': np.arange(i).tolist(), 'rpm': np.arange(i)}
     time_stamps = np.arange(1, i + 1)
+    # Maybe use mgrid for 2d trace generation
+    # X,Y = np.mgrid[0:i:1, 0:i:1]
     times = []
    
     t0 = time.time()
-    root.eval_interval(traces, time_stamps)[0]
+    print(root.eval_interval(traces, time_stamps))
     t1 = time.time()
 
     print('Run time: ', t1 - t0)

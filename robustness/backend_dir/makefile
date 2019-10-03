@@ -6,7 +6,7 @@ libbackend.a: backend.o
 	ar rcs $@ $^
 
 backend.o: backend.c backend.h
-	$(CC) -c -losqp $<
+	$(CC) -c -losqp -fopenmp $<
 
 clean:
 	rm *.o *.a *.so

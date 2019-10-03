@@ -7,10 +7,10 @@
 #include <stdbool.h>
 #include "osqp.h"
 
-csc* array_to_csc(c_int m, c_int n, c_float **A){
+csc* array_to_csc(c_int m, c_int n, double **A){
     c_int i,j, A_nnz, p_counter, num_vals, first_ele;
     c_int *A_p, *A_i;
-    c_float *A_x;
+    double *A_x;
     num_vals = 0;
     p_counter = 0;
     csc *final;
@@ -67,12 +67,13 @@ csc* array_to_csc(c_int m, c_int n, c_float **A){
 }
 
 //c_float higher_dim_pred(c_int n, c_int m, c_float* p_values, c_int* p_indexs, c_int* p_pointers,c_int p_nnz,c_float* q,c_float* A_values,c_int* A_indexs, c_int* A_pointers,c_int A_nnz,c_float* l, c_float* u){
-c_float higher_dim_pred(c_int n, c_int m, c_float* q,c_float* l, c_float* u, c_float **init_A, c_float **init_P){
-    
+void higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float* traces, long length){
     OSQPData* data;
     OSQPSettings  *settings;
     OSQPWorkspace *work;
-    csc *P, *A;      
+    csc *P, *A;     
+    int i, j; 
+    double temp;
     if((data = (OSQPData *)c_malloc(sizeof(OSQPData))) < 0)
         perror("MEM ERROR");
     
@@ -83,30 +84,48 @@ c_float higher_dim_pred(c_int n, c_int m, c_float* q,c_float* l, c_float* u, c_f
         perror("MEM ERROR");
     if((P = (csc *)c_malloc(sizeof(csc))) < 0)
         perror("MEM ERROR");
+    /*    
+    for(i = 0;i!=n;i++){
+        for(j=0;j!=n;j++)
+            printf("%f ",init_P[i][j]);
+        printf("\n");
+    }*/
     A = array_to_csc(m, n, init_A);
     P = array_to_csc(n, n, init_P);
-    if (data) {
-        data->n = n;
-        data->m = m;
-        data->P = csc_matrix(data->n, data->n, P->nzmax, P->x, P->i, P->p);
-        data->q = q;
-        data->A = csc_matrix(data->m, data->n, A->nzmax, A->x, A->i, A->p);
-        data->l = l;
-        data->u = u;
-    }
     
     if (settings) {
         osqp_set_default_settings(settings);
         settings->verbose = false;
     }
-    
-    
-    osqp_setup(&work, data, settings);
-   
-    osqp_solve(work);
-   
-   c_float objective_value = work->info->obj_val;
-   
+    long current_time_step;
+    for(current_time_step = 0; current_time_step < length; current_time_step++){
+        if (data) {
+            data->n = n;
+            data->m = m;
+            data->P = csc_matrix(data->n, data->n, P->nzmax, P->x, P->i, P->p);
+            data->q = q;
+            data->A = csc_matrix(data->m, data->n, A->nzmax, A->x, A->i, A->p);
+            data->l = l;
+            // Bi-Ai*xx 
+            for(i=0;i!=m;i++){
+                temp = 0;
+                for(j=0;j!=n;j++){
+                    temp += init_A[i][j] * traces[j];
+                }
+                u[i] = u[i] - temp;
+            }
+            data->u = u;
+        }
+        
+     
+        
+        
+        osqp_setup(&work, data, settings);
+       
+        osqp_solve(work);
+       
+       traces[current_time_step] = work->info->obj_val;
+    }
    if (data) {
         if (data->A) c_free(data->A);
         if (data->P) c_free(data->P);
@@ -116,7 +135,6 @@ c_float higher_dim_pred(c_int n, c_int m, c_float* q,c_float* l, c_float* u, c_f
     if (settings) 
         c_free(settings);
     
-    return objective_value;
 }
 
 
@@ -547,8 +565,8 @@ int main(){
     P[0][1] = 1.0;
     P[1][0] = 0.0;
     P[1][1] = 2.0;
-    test = higher_dim_pred(2, 3, q, l, u, disp, P);
-    printf("%f\n",test);
+    higher_dim_pred(2, 3, q, l, u, disp, P,left_traces,length);
+    //printf("%f\n",test);
 /*
     if((test = (csc *)c_malloc(sizeof(csc))) < 0)
         perror("Error allocating memory");
