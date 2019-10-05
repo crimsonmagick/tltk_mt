@@ -67,13 +67,17 @@ csc* array_to_csc(c_int m, c_int n, double **A){
 }
 
 //c_float higher_dim_pred(c_int n, c_int m, c_float* p_values, c_int* p_indexs, c_int* p_pointers,c_int p_nnz,c_float* q,c_float* A_values,c_int* A_indexs, c_int* A_pointers,c_int A_nnz,c_float* l, c_float* u){
-void higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float* traces, long length){
+float* higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float** traces, long length){
     OSQPData* data;
     OSQPSettings  *settings;
     OSQPWorkspace *work;
     csc *P, *A;     
-    int i, j; 
-    double temp;
+    int i, j, k; 
+    double temp, *b;
+    float *x, *results;
+    results = malloc(length*sizeof(float));
+    b = malloc(m*sizeof(double));
+    x = malloc(n*sizeof(float));
     if((data = (OSQPData *)c_malloc(sizeof(OSQPData))) < 0)
         perror("MEM ERROR");
     
@@ -84,21 +88,16 @@ void higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **
         perror("MEM ERROR");
     if((P = (csc *)c_malloc(sizeof(csc))) < 0)
         perror("MEM ERROR");
-    /*    
-    for(i = 0;i!=n;i++){
-        for(j=0;j!=n;j++)
-            printf("%f ",init_P[i][j]);
-        printf("\n");
-    }*/
     A = array_to_csc(m, n, init_A);
     P = array_to_csc(n, n, init_P);
     
-    if (settings) {
-        osqp_set_default_settings(settings);
-        settings->verbose = false;
-    }
+
     long current_time_step;
     for(current_time_step = 0; current_time_step < length; current_time_step++){
+        if (settings) {
+            osqp_set_default_settings(settings);
+            settings->verbose = false;
+        }
         if (data) {
             data->n = n;
             data->m = m;
@@ -107,25 +106,22 @@ void higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **
             data->A = csc_matrix(data->m, data->n, A->nzmax, A->x, A->i, A->p);
             data->l = l;
             // Bi-Ai*xx 
-            for(i=0;i!=m;i++){
+            for(j=0;j!=n;j++)
+                x[j] = traces[current_time_step][j];
+            for(j=0;j!=m;j++){
                 temp = 0;
-                for(j=0;j!=n;j++){
-                    temp += init_A[i][j] * traces[j];
-                }
-                u[i] = u[i] - temp;
+                for(k=0;k!=n;k++)
+                    temp += init_A[j][k] * x[k];
+                b[j] = u[j] - temp;
             }
-            data->u = u;
+            data->u = b;
+            osqp_setup(&work, data, settings);
+            osqp_solve(work);
+            results[current_time_step] = sqrt(work->info->obj_val);
         }
         
-     
-        
-        
-        osqp_setup(&work, data, settings);
        
-        osqp_solve(work);
-       
-       traces[current_time_step] = work->info->obj_val;
-    }
+   }
    if (data) {
         if (data->A) c_free(data->A);
         if (data->P) c_free(data->P);
@@ -134,10 +130,76 @@ void higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **
     
     if (settings) 
         c_free(settings);
-    
+    return results;
 }
 
+float* higher_dim_pred_threaded(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float** traces, long length){
+    OSQPData* data;
+    OSQPSettings  *settings;
+    OSQPWorkspace *work;
+    csc *P, *A;     
+    int i, j, k; 
+    double temp, *b;
+    float *x, *results;
+    results = malloc(length*sizeof(float));
+    b = malloc(m*sizeof(double));
+    x = malloc(n*sizeof(float));
+    if((data = (OSQPData *)c_malloc(sizeof(OSQPData))) < 0)
+        perror("MEM ERROR");
+    
+    if((settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings))) < 0)
+        perror("MEM ERROR");
+        
+    if((A = (csc *)c_malloc(sizeof(csc))) < 0)
+        perror("MEM ERROR");
+    if((P = (csc *)c_malloc(sizeof(csc))) < 0)
+        perror("MEM ERROR");
+    A = array_to_csc(m, n, init_A);
+    P = array_to_csc(n, n, init_P);
+    
 
+    long current_time_step;
+    #pragma omp parallel 
+    #pragma taskloop num_tasks(32)
+    for(current_time_step = 0; current_time_step < length; current_time_step++){
+        if (settings) {
+            osqp_set_default_settings(settings);
+            settings->verbose = false;
+        }
+        if (data) {
+            data->n = n;
+            data->m = m;
+            data->P = csc_matrix(data->n, data->n, P->nzmax, P->x, P->i, P->p);
+            data->q = q;
+            data->A = csc_matrix(data->m, data->n, A->nzmax, A->x, A->i, A->p);
+            data->l = l;
+            // Bi-Ai*xx 
+            for(j=0;j!=n;j++)
+                x[j] = traces[current_time_step][j];
+            for(j=0;j!=m;j++){
+                temp = 0;
+                for(k=0;k!=n;k++)
+                    temp += init_A[j][k] * x[k];
+                b[j] = u[j] - temp;
+            }
+            data->u = b;
+            osqp_setup(&work, data, settings);
+            osqp_solve(work);
+            results[current_time_step] = work->info->obj_val;
+        }
+        
+       
+   }
+   if (data) {
+        if (data->A) c_free(data->A);
+        if (data->P) c_free(data->P);
+        c_free(data);
+    }
+    
+    if (settings) 
+        c_free(settings);
+    return results;
+}
 
 void  c_not(float* robustness,long length){
     long i;
@@ -565,7 +627,7 @@ int main(){
     P[0][1] = 1.0;
     P[1][0] = 0.0;
     P[1][1] = 2.0;
-    higher_dim_pred(2, 3, q, l, u, disp, P,left_traces,length);
+    //higher_dim_pred(2, 3, q, l, u, disp, P,left_traces,length);
     //printf("%f\n",test);
 /*
     if((test = (csc *)c_malloc(sizeof(csc))) < 0)

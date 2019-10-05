@@ -43,7 +43,7 @@ if __name__ == '__main__':
     # #traces = {'data' : data}
     # time_stamps = timeData
     i = 50
-    traces = {'speed': [[1,1]], 'rpm': np.arange(i)}
+    traces = {'speed': [[1,1], [1,1], [1,1], [1,1], [1,1], [1,1], [1,1], [1,1]], 'rpm': np.arange(i)}
     time_stamps = np.arange(1, i + 1)
     # Maybe use mgrid for 2d trace generation
     # X,Y = np.mgrid[0:i:1, 0:i:1]

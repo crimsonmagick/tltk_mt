@@ -5,7 +5,7 @@ from libc.stdlib cimport malloc, free
 import array 
 
 cdef extern from "backend.h":
-    void higher_dim_pred(int n, int m, double* q,double* l, double* u, double **init_A, double **init_P, float* traces, long length);
+    float* higher_dim_pred(int n, int m, double* q,double* l, double* u, double **init_A, double **init_P, float** traces, long length);
     
 cdef extern from "backend.h":
     void c_not(float* robustness,long length)
@@ -57,24 +57,26 @@ cdef extern from "backend.h":
     
 #    return left_robustness
 
-def py_higher_dim(int n, int m, list q, list l, list u, list init_A, list init_P, list traces, long length) -> float[::1]:
+def py_higher_dim(int n, int m, list q, list l, list u, list init_A, list init_P, list traces, long length, list results) -> float[::1]:
     cdef double* c_q
     cdef double* c_l
     cdef double* c_u
     cdef double** A
     cdef double** P
-    cdef float* c_traces
-    cdef double result
-    
+    cdef float** c_traces
+    cdef float* result;
     A = <double **>malloc(m * cython.sizeof(c_q))
     P = <double **>malloc(n * cython.sizeof(c_q))
     c_q = <double *>malloc(len(q) * cython.sizeof(double))
     c_l = <double *>malloc(len(l) * cython.sizeof(double))
     c_u = <double *>malloc(len(u) * cython.sizeof(double))
-    c_traces = <float *>malloc(length * cython.sizeof(float))
+    result = <float *>malloc(length*cython.sizeof(float));
+    c_traces = <float **>malloc(length * cython.sizeof(c_traces))
     
     for i in xrange(length):
-        c_traces[i] = traces[i]
+        c_traces[i] = <float *>malloc(n * cython.sizeof(float))
+        for j in xrange(n):
+            c_traces[i][j] = traces[i][j]
     
     for i in xrange(m):
         A[i] = <double *>malloc(n * cython.sizeof(double))
@@ -91,13 +93,18 @@ def py_higher_dim(int n, int m, list q, list l, list u, list init_A, list init_P
         c_l[i] = l[i]
     for i in xrange(len(u)):
         c_u[i] = u[i]
-    higher_dim_pred(n, m, c_q, c_l, c_u, A, P, c_traces, length)
+    result = higher_dim_pred(n, m, c_q, c_l, c_u, A, P, c_traces, length)
+    #for i in xrange(length):
+    #    for j in xrange(n):
+    #        traces[i][j] = c_traces[i][j]
     for i in xrange(length):
-        traces[i] = c_traces[i]
+        results[i] = result[i]
     with nogil:
         free(c_q)
         free(c_l)
         free(c_u)
+        for i in xrange(length):
+            free(c_traces[i])
         free(c_traces)
         for i in xrange(m):
             free(A[i])
@@ -105,7 +112,7 @@ def py_higher_dim(int n, int m, list q, list l, list u, list init_A, list init_P
         for i in xrange(n):
             free(P[i])
         free(P)
-    return traces
+    return results
 
 def py_not(list robustness) -> float[::1]:
     cdef float * c_robustness

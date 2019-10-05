@@ -59,8 +59,9 @@ class Predicate:
                 init_P = init_P.tolist()
                 l = [float("-inf")] * m
                 q = [0] * m
-                predicate_robustness = backend.py_higher_dim(n, m, q, l, u, init_A, init_P, traces[self.variable_name], len(traces[self.variable_name]))
-
+                traces = traces[self.variable_name]
+                results = [0] * len(traces)
+                predicate_robustness = backend.py_higher_dim(n, m, q, l, u, init_A, init_P, traces, len(traces), results)
                 # for value in trace:
                     # np_value = np.array(value)
                     # # if np_value.size == 1 and np_A_Matrix.size == 1:
@@ -86,6 +87,7 @@ class Predicate:
                 print('Predicate time: ', t1 - t0)
                 p.close()
                 p.join()
+        self.robustness = predicate_robustness[0]
         return predicate_robustness
         
 

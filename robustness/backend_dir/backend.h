@@ -10,8 +10,12 @@ void c_and(float* left_robustness, float* right_robustness, long length);
 float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_until(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
+float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
+float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
+float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
 void c_one_dim_pred(float* traces, float A, float bound,long length);
-void higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float* traces, long length);
+float* higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float** traces, long length);
+float* higher_dim_pred_threaded(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float** traces, long length);
 
 // Auxiliary functions
 
