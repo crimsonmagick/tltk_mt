@@ -61,7 +61,7 @@ class Predicate:
                 q = [0] * m
                 traces = traces[self.variable_name]
                 results = [0] * len(traces)
-                predicate_robustness = backend.py_higher_dim(n, m, q, l, u, init_A, init_P, traces, len(traces), results)
+                predicate_robustness = backend.py_higher_dim_threaded(n, m, q, l, u, init_A, init_P, traces, len(traces), results)
                 # for value in trace:
                     # np_value = np.array(value)
                     # # if np_value.size == 1 and np_A_Matrix.size == 1:
@@ -148,7 +148,7 @@ class Finally:
         t0 = time()
         if self.process_type == 'cpu':
             print("finally CPU computation")
-            finally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+            finally_robustness = backend.py_finally_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         else:
             print("finally GPU computation")
             finally_robustness = gpubackend.py_finally_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))

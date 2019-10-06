@@ -185,7 +185,7 @@ float* higher_dim_pred_threaded(c_int n, c_int m, double* q,double* l, double* u
             data->u = b;
             osqp_setup(&work, data, settings);
             osqp_solve(work);
-            results[current_time_step] = work->info->obj_val;
+            results[current_time_step] = sqrt(work->info->obj_val);
         }
         
        
@@ -310,6 +310,7 @@ float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float*
     }
     else{
         long current_time_step;
+        printf("PARALLEL STUFF DOING PARALLEL THINGS\n");
         #pragma omp parallel 
         #pragma taskloop num_tasks(32)
         for(current_time_step = length - 1; current_time_step >= 0; current_time_step--){
@@ -597,7 +598,7 @@ float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* l
 
 
 int main(){
-    long length = 10;
+    long length = 50000000;
     float *left_traces = (float*)malloc(length*sizeof(float));
     float *right_traces = (float*)malloc(length*sizeof(float));
     float *time_stamps = (float*)malloc(length*sizeof(float));
@@ -642,7 +643,7 @@ int main(){
     }
     clock_t begin = clock();
     //predicate_setup(traces, 2.0f, 0.0f,length);
-    results = c_global(0.0f,100.0f, left_traces,time_stamps, length);
+    results = c_global_threaded(0.0f,100.0f, left_traces,time_stamps, length);
     clock_t end = clock();
     time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
     printf("%g\n",time_spent);

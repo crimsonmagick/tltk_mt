@@ -5,7 +5,8 @@ from Cython.Build import cythonize
 extension = Extension(
     name="backend",
     sources=["backend.pyx","backend_dir/backend.c"],
-    libraries=["osqp","omp","backend"],
+    libraries=["osqp","gomp","backend"],
+    extra_compile_args= ["-fopenmp"],
     library_dirs=["backend_dir"],
     include_dirs=["backend_dir"]
 

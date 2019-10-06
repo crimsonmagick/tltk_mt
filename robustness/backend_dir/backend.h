@@ -2,7 +2,7 @@
 #define BACKEND_H
 
 #include "osqp.h"
-
+#include "omp.h"
 
 void c_not(float* robustness,long length);
 void c_or(float* left_robustness, float* right_robustness, long length);
