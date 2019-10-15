@@ -8,6 +8,8 @@ from numpy import genfromtxt
 import numpy as np
 from multiprocessing import Pool, freeze_support
 
+import matplotlib.pyplot as plt
+
 if __name__ == '__main__':
     if os.name == 'nt':
         freeze_support()
@@ -23,29 +25,40 @@ if __name__ == '__main__':
     #speed_pred = MTL.Predicate('speed', Aspeed, bspeed, mode)
     #rpm_pred = MTL.Predicate('rpm', Arpm, brpm, mode)
     #root = MTL.Not(MTL.And(MTL.Finally(0, 100, speed_pred,mode), MTL.Finally(0, 100, rpm_pred,mode),mode),mode)
-    root = MTL.Finally(0,100,MTL.Predicate('rpm', Arpm, brpm),mode)
+    #root = MTL.Finally(0,100,MTL.Predicate('rpm', Arpm, brpm),mode)
     #root = MTL.And(speed_pred ,speed_pred,'gpu')
 
     #root = Finally(1,2.2,Predicate('geese',-1,-1))
 
-    # data = genfromtxt('data.csv', delimiter=',')
-    # time_data = genfromtxt('dataTime.csv')
-    #two_dim_pred = MTL.Predicate('speed',[[1,0],[-1,0],[0,1],[0,-1]],[3, -2, 4, -2])
+    #data = genfromtxt('seqS.csv', delimiter=',')
+    #time_data = genfromtxt('seqT.csv')
+    #root = MTL.Predicate('speed',[[1,0],[-1,0],[0,1],[0,-1]],[3, -2, 4, -2])
     #root = two_dim_pred
+    
+    #root = MTL.Finally(0,float('inf'),MTL.Or(MTL.Predicate('speed',[-1, 0],[-120]),MTL.Predicate('rpm',[0 ,-1],[-4500])))
+    
+    #root = MTL.Predicate('speed',[[1,0],[-1,0],[0,1],[0,-1]],[3, -2, 4, -2])
 
-    # speedData = np.transpose(data[:, 0])
-
-    # rpmData = np.transpose(data[:, 1])
-
-    # timeData = np.transpose(time_data)
-
+    #combData = np.array(data)
+    #timeData = np.array(time_data)
+    
     # traces = {'speed': speedData, 'rpm': rpmData}
     # #traces = {'data' : data}
     # time_stamps = timeData
-    i = 100000000
-    #traces = {'speed': [[1,1]]*1000000, 'rpm': np.arange(i)}
-    traces = {'speed': np.ones(i), 'rpm': np.arange(i)}
+    i = 10000000
+    
+    Acomb = [[1,0],[0,1]]
+    bcomb = [150, 4500]
+    
+    #root = MTL.Not(MTL.And(MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb)),MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb))))
+    #plt.scatter(timeData, combData[1])
+    #plt.show()
+    #root = MTL.Not(MTL.And(MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb)),MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb))))
+    traces = {'speed': [1]*i, 'rpm': np.arange(i)}
+    root = MTL.Not(MTL.Finally(0,100,MTL.Predicate('speed', Aspeed, bspeed),mode))
+    #traces = {'comb': combData.tolist()}
     time_stamps = np.arange(1, i + 1)
+    
     # Maybe use mgrid for 2d trace generation
     # X,Y = np.mgrid[0:i:1, 0:i:1]
     times = []

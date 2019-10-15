@@ -7,6 +7,21 @@
 #include <stdbool.h>
 #include "osqp.h"
 
+
+const int True = 0;
+const int False = 1;
+
+int in_set(double* left,double* right, long length){
+    long i;
+    for(i = 0; i <= length; i++){
+        if(left[i] > right[i]){
+            return False;
+        }
+    }
+    return True;
+}
+
+
 csc* array_to_csc(c_int m, c_int n, double **A){
     c_int i,j, A_nnz, p_counter, num_vals, first_ele;
     c_int *A_p, *A_i;
@@ -66,58 +81,91 @@ csc* array_to_csc(c_int m, c_int n, double **A){
         
 }
 
-//c_float higher_dim_pred(c_int n, c_int m, c_float* p_values, c_int* p_indexs, c_int* p_pointers,c_int p_nnz,c_float* q,c_float* A_values,c_int* A_indexs, c_int* A_pointers,c_int A_nnz,c_float* l, c_float* u){
-float* higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float** traces, long length){
+double* higher_dim_pred(long trace_size, long long int n, long long int m, double* q,double* l, double* u, int A_nnz, int P_nnz, double** traces, long length,
+                        double* P_data, long long int* P_indices, long long int* P_indptr, double* A_data, long long int* A_indices, long long int* A_indptr, double* init_A){
     OSQPData* data;
     OSQPSettings  *settings;
     OSQPWorkspace *work;
-    csc *P, *A;     
-    int i, j, k; 
+    int i, j, k, in_set; 
     double temp, *b;
-    float *x, *results;
-    results = malloc(length*sizeof(float));
+    double *x;
+    double* results;
+    results = malloc(length*sizeof(double));
     b = malloc(m*sizeof(double));
-    x = malloc(n*sizeof(float));
+    x = malloc(trace_size*sizeof(double));
     if((data = (OSQPData *)c_malloc(sizeof(OSQPData))) < 0)
         perror("MEM ERROR");
     
     if((settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings))) < 0)
         perror("MEM ERROR");
+    /*
+    k = 0;
+    for(j=0;j!=m*n;j++){
         
-    if((A = (csc *)c_malloc(sizeof(csc))) < 0)
-        perror("MEM ERROR");
-    if((P = (csc *)c_malloc(sizeof(csc))) < 0)
-        perror("MEM ERROR");
-    A = array_to_csc(m, n, init_A);
-    P = array_to_csc(n, n, init_P);
-    
-
+        printf("%lf ",init_A[j]);
+        k++ ;
+        if(k == n){
+            k = 0;
+            printf("\n");
+        }
+    }*/
     long current_time_step;
-    for(current_time_step = 0; current_time_step < length; current_time_step++){
-        if (settings) {
+    if (settings) {
             osqp_set_default_settings(settings);
             settings->verbose = false;
-        }
+    }
+    /*
+    printf("%f %f\n",P_data[0],P_data[1]);
+    printf("%ld %ld\n",P_indices[0],P_indices[1]);
+    printf("%ld %ld %ld\n",P_indptr[0],P_indptr[1],P_indptr[2]);
+    printf("%f %f\n",A_data[0],A_data[1]);
+    printf("%ld %ld\n",A_indices[0],A_indices[1]);
+    printf("%ld %ld %ld\n",A_indptr[0],A_indptr[1],A_indptr[2]);*/
+    
+    if(data){
+        data->n = n;
+        data->m = m;
+        data->P = csc_matrix(data->n, data->n, P_nnz, P_data, P_indices, P_indptr);
+        data->q = q;
+        data->A = csc_matrix(data->m, data->n, A_nnz, A_data, A_indices, A_indptr);
+    }
+    for(current_time_step = 0; current_time_step < length; current_time_step++){
+        in_set = 0;
         if (data) {
-            data->n = n;
-            data->m = m;
-            data->P = csc_matrix(data->n, data->n, P->nzmax, P->x, P->i, P->p);
-            data->q = q;
-            data->A = csc_matrix(data->m, data->n, A->nzmax, A->x, A->i, A->p);
             data->l = l;
-            // Bi-Ai*xx 
-            for(j=0;j!=n;j++)
-                x[j] = traces[current_time_step][j];
+            data->u = b;
+            //printf("Timestamp: %ld and trace: ", current_time_step);
+            for(j=0;j!=trace_size;j++){
+                x[j] = traces[j][current_time_step];
+                //printf("%f ",x[j]);
+            }
+            //printf(":");
+            
             for(j=0;j!=m;j++){
                 temp = 0;
-                for(k=0;k!=n;k++)
-                    temp += init_A[j][k] * x[k];
+                for(k=0;k!=trace_size;k++){
+                    temp += init_A[j*n + k] * x[k];
+                }
+                // trace is in good set
+                if(temp > u[j])  
+                    in_set = 1;
                 b[j] = u[j] - temp;
             }
-            data->u = b;
+            if(in_set == 0){
+                for(i=0;i!=m;i++){
+                    l[i] = b[i];
+                    b[i] = INFINITY;
+                }
+            }else{
+                for(i=0;i!=m;i++){
+                    l[i] = -INFINITY;
+                }
+            }
             osqp_setup(&work, data, settings);
             osqp_solve(work);
             results[current_time_step] = sqrt(work->info->obj_val);
+            if(in_set==0)
+                results[current_time_step] = (double)(-1.0)*results[current_time_step];
         }
         
        
@@ -132,64 +180,97 @@ float* higher_dim_pred(c_int n, c_int m, double* q,double* l, double* u, double 
         c_free(settings);
     return results;
 }
-
-float* higher_dim_pred_threaded(c_int n, c_int m, double* q,double* l, double* u, double **init_A, double **init_P, float** traces, long length){
+double* higher_dim_pred_threaded(long trace_size, long long int n, long long int m, double* q,double* l, double* u, int A_nnz, int P_nnz, double** traces, long length,
+                        double* P_data, long long int* P_indices, long long int* P_indptr, double* A_data, long long int* A_indices, long long int* A_indptr, double* init_A){
     OSQPData* data;
     OSQPSettings  *settings;
     OSQPWorkspace *work;
-    csc *P, *A;     
-    int i, j, k; 
+    int i, j, k, in_set; 
     double temp, *b;
-    float *x, *results;
-    results = malloc(length*sizeof(float));
+    double *x;
+    double* results;
+    results = malloc(length*sizeof(double));
     b = malloc(m*sizeof(double));
-    x = malloc(n*sizeof(float));
+    x = malloc(trace_size*sizeof(double));
     if((data = (OSQPData *)c_malloc(sizeof(OSQPData))) < 0)
         perror("MEM ERROR");
     
     if((settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings))) < 0)
         perror("MEM ERROR");
+    /*
+    k = 0;
+    for(j=0;j!=m*n;j++){
         
-    if((A = (csc *)c_malloc(sizeof(csc))) < 0)
-        perror("MEM ERROR");
-    if((P = (csc *)c_malloc(sizeof(csc))) < 0)
-        perror("MEM ERROR");
-    A = array_to_csc(m, n, init_A);
-    P = array_to_csc(n, n, init_P);
-    
-
+        printf("%lf ",init_A[j]);
+        k++ ;
+        if(k == n){
+            k = 0;
+            printf("\n");
+        }
+    }*/
     long current_time_step;
-    #pragma omp parallel 
-    #pragma taskloop num_tasks(32)
-    for(current_time_step = 0; current_time_step < length; current_time_step++){
-        if (settings) {
+    if (settings) {
             osqp_set_default_settings(settings);
             settings->verbose = false;
-        }
+    }
+    /*
+    printf("%f %f\n",P_data[0],P_data[1]);
+    printf("%ld %ld\n",P_indices[0],P_indices[1]);
+    printf("%ld %ld %ld\n",P_indptr[0],P_indptr[1],P_indptr[2]);
+    printf("%f %f\n",A_data[0],A_data[1]);
+    printf("%ld %ld\n",A_indices[0],A_indices[1]);
+    printf("%ld %ld %ld\n",A_indptr[0],A_indptr[1],A_indptr[2]);*/
+    clock_t begin = clock();
+    for(current_time_step = 0; current_time_step < length; current_time_step++){
+        in_set = 0;
         if (data) {
             data->n = n;
             data->m = m;
-            data->P = csc_matrix(data->n, data->n, P->nzmax, P->x, P->i, P->p);
+            data->P = csc_matrix(data->n, data->n, P_nnz, P_data, P_indices, P_indptr);
             data->q = q;
-            data->A = csc_matrix(data->m, data->n, A->nzmax, A->x, A->i, A->p);
+            data->A = csc_matrix(data->m, data->n, A_nnz, A_data, A_indices, A_indptr);
             data->l = l;
-            // Bi-Ai*xx 
-            for(j=0;j!=n;j++)
-                x[j] = traces[current_time_step][j];
+            data->u = b;
+            //printf("Timestamp: %ld and trace: ", current_time_step);
+            for(j=0;j!=trace_size;j++){
+                x[j] = traces[j][current_time_step];
+                //printf("%f ",x[j]);
+            }
+            //printf(":");
+            
             for(j=0;j!=m;j++){
                 temp = 0;
-                for(k=0;k!=n;k++)
-                    temp += init_A[j][k] * x[k];
+                for(k=0;k!=trace_size;k++){
+                    temp += init_A[j*n + k] * x[k];
+                }
+                // trace is in good set
+                if(temp > u[j])  
+                    in_set = 1;
                 b[j] = u[j] - temp;
             }
-            data->u = b;
+            if(in_set == 0){
+                for(i=0;i!=m;i++){
+                    l[i] = b[i];
+                    b[i] = INFINITY;
+                }
+            }else{
+                for(i=0;i!=m;i++){
+                    l[i] = -INFINITY;
+                }
+            }
             osqp_setup(&work, data, settings);
             osqp_solve(work);
-            results[current_time_step] = sqrt(work->info->obj_val);
+            results[current_time_step] = (double)(1.0)*sqrt(work->info->obj_val);
+            if(in_set==0)
+                results[current_time_step] = (double)(-1.0)*results[current_time_step];
         }
         
        
    }
+   double time_spent = 0;
+   clock_t end = clock();
+   time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
+   printf("C time higher dim time: %lf\n",time_spent);
    if (data) {
         if (data->A) c_free(data->A);
         if (data->P) c_free(data->P);
@@ -298,21 +379,22 @@ float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float*
         perror("Error: finally could not malloc memory");
         exit(-1);
     }
-
     if(lower_time_bound == 0 && isinf(upper_time_bound)){
         max = *(robustness + (length - 1));
+        //#pragma omp parallel
+        //#pragma omp taskloop num_tasks(32)
+        #pragma omp parallel for
         for(i = length - 1; i >= 0; i--){
             if(*(robustness + i) > max){
             max = *(robustness + i);
             }
             *(finally_robustness + i) = max;
+        
         }
     }
     else{
         long current_time_step;
-        printf("PARALLEL STUFF DOING PARALLEL THINGS\n");
-        #pragma omp parallel 
-        #pragma taskloop num_tasks(32)
+        #pragma omp parallel for
         for(current_time_step = length - 1; current_time_step >= 0; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
@@ -336,6 +418,7 @@ float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float*
             }
         
         }
+        
     }
     
     return finally_robustness;
@@ -461,8 +544,9 @@ float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* 
     }
     else{
         long current_time_step;
-    #pragma omp parallel 
-    #pragma taskloop num_tasks(32)
+        #pragma omp parallel
+        #pragma omp single
+        #pragma omp taskloop num_tasks(32)
         for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
@@ -510,8 +594,6 @@ float* c_until(float lower_time_bound, float upper_time_bound, float* left_robus
     else{
         long current_time_step;
         float last_robustness = -INFINITY;
-    #pragma omp parallel 
-    #pragma taskloop num_tasks(32)
         for(current_time_step = length-1; current_time_step >= 0; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
@@ -561,6 +643,9 @@ float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* l
     else{
         long current_time_step;
         float last_robustness = -INFINITY;
+        #pragma omp parallel
+        #pragma omp single
+        #pragma omp taskloop num_tasks(32)
         for(current_time_step = length-1; current_time_step >= 0; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
@@ -598,12 +683,32 @@ float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* l
 
 
 int main(){
-    long length = 50000000;
+    /*
+    double *left_traces = (double*)malloc(3*sizeof(double));
+    double *right_traces = (double*)malloc(3*sizeof(double));
+    left_traces[0] = 0;
+    left_traces[1] = -1;
+    left_traces[2] = 0;
+    right_traces[0] = 0;
+    right_traces[1] = 0;
+    right_traces[2] = 0;
+    printf("%d\n",in_set(left_traces,right_traces,3));
+    */
+    
+    long length = 100000000;
+    double time_spent = 0;
     float *left_traces = (float*)malloc(length*sizeof(float));
     float *right_traces = (float*)malloc(length*sizeof(float));
     float *time_stamps = (float*)malloc(length*sizeof(float));
     float *results = (float*)malloc(length*sizeof(float));
+    
     long i;
+    for(i = 0; i < length;i++){
+        left_traces[i] = 1;
+        right_traces[i] = 2;
+        time_stamps[i] = i;
+    }
+    /*
     double time_spent = 0;
     c_float q[2] = {1.0, 1.0, };
     c_float l[3] = {1.0, 0.0, 0.0, };
@@ -629,21 +734,22 @@ int main(){
     P[1][0] = 0.0;
     P[1][1] = 2.0;
     //higher_dim_pred(2, 3, q, l, u, disp, P,left_traces,length);
-    //printf("%f\n",test);
+    //printf("%f\n",test);*/
 /*
     if((test = (csc *)c_malloc(sizeof(csc))) < 0)
         perror("Error allocating memory");
     test = array_to_csc(3,2,disp);
     */
-
+/*
     for(i = 0; i < length;i++){
         left_traces[i] = 1;
         right_traces[i] = 2;
         time_stamps[i] = i;
     }
+    * */
     clock_t begin = clock();
     //predicate_setup(traces, 2.0f, 0.0f,length);
-    results = c_global_threaded(0.0f,100.0f, left_traces,time_stamps, length);
+    results = c_finally_threaded(0.0f,100.0f, left_traces,time_stamps, length);
     clock_t end = clock();
     time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
     printf("%g\n",time_spent);

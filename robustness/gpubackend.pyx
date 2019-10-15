@@ -128,7 +128,6 @@ def py_finally_gpu(float lower_time_bound,float upper_time_bound,list robustness
 		c_robustness[i] = robustness[i]
 		c_time_stamps[i] = time_stamps[i]
 	c_finally_gpu(c_robustness, c_time_stamps, c_results, lower_time_bound,upper_time_bound,len(robustness))
-	print("HERE")
 	for i in xrange(len(robustness)): #Same here
 		robustness[i] = c_results[i]
         

@@ -1,6 +1,7 @@
+import matlab.engine
 import numpy as np
 from scipy.optimize import minimize
-
+from numpy import genfromtxt
 import auxilliary.computeInputSignal as computeInputSignal
 import auxilliary.systemSimulator as systemSimulator
 
@@ -22,6 +23,9 @@ def sim_and_return_rob(z, *params):
     if opt[0] == 'simulink':
         time_stamps, internal_states, output = systemSimulator.simulate_system(eng, model, simulation_time,
                                                                                step, signal)
+    else:
+        time_stamps = np.array(genfromtxt('seqT2.csv'))
+        output = np.array(genfromtxt('seqS2.csv', delimiter=',')).tolist()
 
     # How many predicates?
     no_predicates = len(predicates) - 1
@@ -29,14 +33,12 @@ def sim_and_return_rob(z, *params):
     # Initialize traces dictionary and fill from simulation output
     traces = {}
     for i in range(no_predicates):
-        outputs = [row[i] for row in output]
-        predicate_data = np.transpose(outputs)
-        traces[predicate_tags[i]] = predicate_data
-
+        traces[predicate_tags[i]] = np.array(output).tolist() 
+        
     # Get time stamps from simulation output
     time_stamps = np.ravel(time_stamps)
     time_data = np.transpose(time_stamps)
-
+    
     # Calculate robustness
     rt.eval_interval(traces, time_data)
 
@@ -48,7 +50,10 @@ def sim_and_return_rob(z, *params):
 def falsify(model, interpolation, cp_samples, predicates, root, opt):
 
     # Initialize MATLAB engine
-    engine = systemSimulator.init_engine()
+    if opt[0] == 'simulink':
+        engine = systemSimulator.init_engine()
+    else:
+        engine = []
     params = (model, opt, interpolation, predicates, root, engine)
 
     my_opt = {'maxiter': 100, 'disp': True}

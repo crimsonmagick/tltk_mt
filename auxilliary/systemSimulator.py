@@ -1,5 +1,5 @@
-import numpy as np
 import matlab.engine
+import numpy as np
 
 
 # Simulate system function
@@ -29,10 +29,11 @@ def simulate_system(eng, model, simulation_time, step, inp_signal):
     # Commence simulink model simulation
 
     time_stamps, internal_states, outputs = eng.sim(model, sim_time_array, [], signal_array, nargout=3)
-
     return time_stamps, internal_states, outputs
 
 
 def init_engine():
     eng = matlab.engine.start_matlab()
+    print("Initializing matlab engine")
     return eng
+

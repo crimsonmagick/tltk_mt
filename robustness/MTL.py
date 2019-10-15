@@ -51,17 +51,27 @@ class Predicate:
                 else:
                     predicate_robustness = gpubackend.py_one_dim_pred_gpu(list(trace), self.A_Matrix, self.bound)   
             else:
-                n = len(self.A_Matrix[0])
-                m = len(self.A_Matrix)
+                if isinstance(self.A_Matrix[0], list):
+                    m = len(self.A_Matrix)
+                    n = len(self.A_Matrix[0])
+                else:
+                    m = 1
+                    n = len(self.A_Matrix)
+                
                 init_A = self.A_Matrix
                 u = self.bound
-                init_P = 2 * np.eye(n, dtype=np.float64)
-                init_P = init_P.tolist()
+                
                 l = [float("-inf")] * m
                 q = [0] * m
                 traces = traces[self.variable_name]
                 results = [0] * len(traces)
-                predicate_robustness = backend.py_higher_dim_threaded(n, m, q, l, u, init_A, init_P, traces, len(traces), results)
+                length = len(traces)
+                init_P = 2 * np.eye(len(traces[0]), dtype=np.float64)
+                init_P = init_P.tolist()
+                trace_size = len(traces[0])
+                length = len(traces)
+                traces = np.transpose(np.array(traces)).tolist()
+                predicate_robustness = backend.py_higher_dim_threaded(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
                 # for value in trace:
                     # np_value = np.array(value)
                     # # if np_value.size == 1 and np_A_Matrix.size == 1:
@@ -147,21 +157,21 @@ class Finally:
         #time_stamps.reverse()
         t0 = time()
         if self.process_type == 'cpu':
-            print("finally CPU computation")
+            #print("finally CPU computation")
             finally_robustness = backend.py_finally_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         else:
-            print("finally GPU computation")
+            #print("finally GPU computation")
             finally_robustness = gpubackend.py_finally_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
 
         t1 = time()
-        print('Finally time:', t1 - t0)
+        #print('Finally time:', t1 - t0)
         self.robustness = max(finally_robustness)
         
         if self.robustness > 0:
             self.value = True
         finally_robustness.reverse()
 
-        return	finally_robustness
+        return  finally_robustness
         
         
     def add_subformula(self,subformula):
@@ -252,11 +262,11 @@ class Or:
         if self.process_type == "cpu":
             or_robustness = backend.py_or(left_subformula_robustness,right_subformula_robustness)
         else:
-            print("GPU for OR")
+            #print("GPU for OR")
             or_robustness = gpubackend.py_or_gpu(left_subformula_robustness,right_subformula_robustness)
         
         t1 = time()
-        print('Or time: ', t1 - t0)
+        #print('Or time: ', t1 - t0)
         
         
         self.robustness = max(self.left_subformula.robustness,self.right_subformula.robustness)
