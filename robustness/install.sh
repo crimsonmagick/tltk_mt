@@ -18,8 +18,8 @@ cd ../..
 sudo cp /usr/local/lib/libosqp.so /usr/lib
 sudo cp /usr/local/lib/libqdldl.so /usr/lib
 
-sudo cp -r /usr/local/include/osqp /usr/include
-sudo cp -r /usr/local/include/qdldl /usr/include
+sudo cp /usr/local/include/* /usr/include
+sudo cp /usr/local/include/* /usr/include
 
 if [ "$1" == "-gpu" ]
 then
