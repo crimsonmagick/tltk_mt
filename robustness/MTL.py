@@ -1,6 +1,10 @@
 import sys
 import backend
-import gpubackend
+GPU_LIB_FOUND = True
+try:
+    import gpubackend
+except:
+    GPU_LIB_FOUND = False
 import ctypes
 import cvxpy as cp
 import numpy as np
