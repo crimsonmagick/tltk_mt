@@ -3,7 +3,7 @@
 sudo apt update 
 sudo apt upgrade
 sudo apt install libomp-dev git python3 python3-venv python3-pip cmake
-sudo pip3 install numpy scipy cython
+sudo pip3 install numpy scipy cython cvxpy
 
 
 git clone --recursive https://github.com/oxfordcontrol/osqp
