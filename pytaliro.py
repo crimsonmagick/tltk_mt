@@ -23,6 +23,9 @@ def sim_and_return_rob(z, *params):
     if opt[0] == 'simulink':
         time_stamps, internal_states, output = systemSimulator.simulate_system(eng, model, simulation_time,
                                                                                step, signal)
+    elif opt[0] == 'function':
+        time_stamps = np.linspace(-np.pi, np.pi, 10)
+        output = time_stamps + 0.5*np.sin(2*time_stamps)
     else:
         time_stamps = np.array(genfromtxt('seqT2.csv'))
         output = np.array(genfromtxt('seqS2.csv', delimiter=',')).tolist()

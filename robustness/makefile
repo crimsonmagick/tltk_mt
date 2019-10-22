@@ -10,8 +10,8 @@ $(LIB_DIR)/libbackend.a:
 
 clean:
 	rm *.so
-gpu: $(LIB_DIR)/libgpubackend.a
+gpu: $(LIB_DIR)/libgpubackend.so
 	python3 setup_gpu.py build_ext --inplace && rm -f gpubackend.cpp &&rm -Rf build
 
-$(LIB_DIR)/libgpubackend.a:
+$(LIB_DIR)/libgpubackend.so:
 	make $(LIB_DIR) gpu

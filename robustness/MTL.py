@@ -75,7 +75,7 @@ class Predicate:
                 trace_size = len(traces[0])
                 length = len(traces)
                 traces = np.transpose(np.array(traces)).tolist()
-                predicate_robustness = backend.py_higher_dim_threaded(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
+                predicate_robustness = backend.py_higher_dim(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
                 # for value in trace:
                     # np_value = np.array(value)
                     # # if np_value.size == 1 and np_A_Matrix.size == 1:
@@ -107,7 +107,7 @@ class Predicate:
 
 
 class Global:
-    def __init__(self,lower_time_bound,upper_time_bound,subformula = None, process_type = 'cpu'):
+    def __init__(self,lower_time_bound,upper_time_bound,subformula = None, process_type = 'cpu_threaded'):
         self.value = True
         self.subformula = subformula
         self.truth_value_history = []
@@ -128,11 +128,13 @@ class Global:
         
         if self.process_type == 'cpu':
             globally_robustness = backend.py_global(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+        elif self.process_type == 'cpu_threaded':
+            globally_robustness = backend.py_global_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         else:
-            print("global GPU computation")
+            #print("global GPU computation")
             globally_robustness = gpubackend.py_global_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         t1 = time()
-        print("Global time: ", t1 - t0)
+        #print("Global time: ", t1 - t0)
         self.robustness = min(globally_robustness)
         if self.robustness > 0:
             self.value = True
@@ -145,7 +147,7 @@ class Global:
         return self.subformula
 
 class Finally:
-    def __init__(self,lower_time_bound,upper_time_bound,subformula = None, process_type = 'cpu'):
+    def __init__(self,lower_time_bound,upper_time_bound,subformula = None, process_type = 'cpu_threaded'):
         self.subformula = subformula
         self.truth_value_history = []
         self.robustness = float('-inf')
@@ -162,6 +164,8 @@ class Finally:
         t0 = time()
         if self.process_type == 'cpu':
             #print("finally CPU computation")
+            finally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+        elif self.process_type == 'cpu_threaded':
             finally_robustness = backend.py_finally_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         else:
             #print("finally GPU computation")
@@ -303,7 +307,7 @@ class Implication:
         return or_robustness
 
 class Until:
-    def __init__(self,lower_time_bound,upper_time_bound,left_subformula = None,right_subformula = None):
+    def __init__(self,lower_time_bound,upper_time_bound,left_subformula = None,right_subformula = None,process_type = 'cpu_threaded'):
         self.left_subformula = left_subformula
         self.right_subformula = right_subformula
         self.upper_time_bound = upper_time_bound
@@ -324,6 +328,8 @@ class Until:
         last_robustness = float('-inf')
         if self.process_type == "cpu":
             until_robustness = until_robustness = backend.py_until(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
+        elif self.process_type == "cpu_threaded":
+            until_robustness = until_robustness = backend.py_until_threaded(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
         else:
             print("GPU for Until")
             until_robustness = gpubackend.py_until_gpu(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))

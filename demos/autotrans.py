@@ -13,7 +13,7 @@ step = 0.05
 inp_range = [0, 100]
 simulation_time = 30
 
-opt = ['file', step, inp_range, simulation_time]
+opt = ['function', step, inp_range, simulation_time]
 
 #phi = '!(<>_[0,30]speed /\ <>_[0,30]rpm)'
 
