@@ -865,14 +865,25 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         
         memset(G, 0 , n*n*sizeof(double));
         int j;
+        const double scaler = 2;
         for(j=0;j<n;j++){
-             *(G + (i * n + i)) = 2;
+             *(G + (j * n + j)) = scaler;
         }
-        
+
         A_t_trace = matmul(C,m,n,traces[i],n,1);
         matsub(b_sub,m,1,A_t_trace,m,1);
-        qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
         
+        
+        
+        qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
+        printf("G: \n");
+        int z,w;
+        for(z = 0; z<n; z++){
+            for(w = 0; w<n;w++){
+                printf("%lf,",G[z*n + w]);
+            }
+            printf("\n");
+        }
     }
         free(G);
         free(iters);

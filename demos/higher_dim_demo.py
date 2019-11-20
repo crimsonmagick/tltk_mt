@@ -16,13 +16,13 @@ if __name__ == '__main__':
 
     mode = "cpu"
 
-    i = 100000000
+    i = 10000
     Acomb = [1,0]
     bcomb = [150]
     
-    comb_predicate = MTL.Predicate('comb',Acomb,bcomb)
-    
-    root = MTL.Not(MTL.Finally(0,float('inf'),comb_predicate,mode))
+    #comb_predicate = MTL.Predicate('comb',Acomb,bcomb)
+    root = MTL.Predicate('comb',Acomb,bcomb)
+    #root = MTL.Not(MTL.Finally(0,float('inf'),comb_predicate,mode))
     
     traces = {'comb': [[1,0]]*i}
     #traces = {'comb': combData.tolist()}
