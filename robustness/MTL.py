@@ -6,12 +6,14 @@ try:
 except:
     GPU_LIB_FOUND = False
 import ctypes
-import cvxpy as cp
+# import cvxpy as cp
 import numpy as np
 import scipy as sp
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 from time import time
+import quadprog_polyhedron
+
 # trace[name] <= bound
 # Time bounds inclusive
 # 0 robustness is a failure (will add an option to choose later)
@@ -27,22 +29,22 @@ class Predicate:
         self.thread_pool = thread_pool
         self.process_type = process_type
         
-    def optimize_polyhedron(self,trace):
-        np_value = np.array(trace)
-        np_A_Matrix = np.array(self.A_Matrix)
+    # def optimize_polyhedron(self,trace):
+        # np_value = np.array(trace)
+        # np_A_Matrix = np.array(self.A_Matrix)
         
-        x = cp.Variable(np_value.size)
-        objective = cp.Minimize(cp.norm(x - np_value))
-        if np_value.size == 1 and np_A_Matrix.size == 1:
-            return trace * self.A_Matrix - self.bound
-        elif (self.A_Matrix*np_value <= self.bound).all():                        #calculate depth if np_value is in A*x <= b
-            constraints = [self.A_Matrix*x >= self.bound]
-            prob = cp.Problem(objective, constraints)
-            return -prob.solve(solver=cp.ECOS)    #ECOS has fastest time of ones tested. Going to add this as an argument eventually
-        else:                                                           #calculate distance if np_value is not in A*x <= b
-            constraints = [self.A_Matrix*x <= self.bound]
-            prob = cp.Problem(objective, constraints)
-            return prob.solve(solver=cp.ECOS)
+        # x = cp.Variable(np_value.size)
+        # objective = cp.Minimize(cp.norm(x - np_value))
+        # if np_value.size == 1 and np_A_Matrix.size == 1:
+            # return trace * self.A_Matrix - self.bound
+        # elif (self.A_Matrix*np_value <= self.bound).all():                        #calculate depth if np_value is in A*x <= b
+            # constraints = [self.A_Matrix*x >= self.bound]
+            # prob = cp.Problem(objective, constraints)
+            # return -prob.solve(solver=cp.ECOS)    #ECOS has fastest time of ones tested. Going to add this as an argument eventually
+        # else:                                                           #calculate distance if np_value is not in A*x <= b
+            # constraints = [self.A_Matrix*x <= self.bound]
+            # prob = cp.Problem(objective, constraints)
+            # return prob.solve(solver=cp.ECOS)
     
     def eval_interval(self,traces,time_stamps):
         trace = traces[self.variable_name]
@@ -74,8 +76,9 @@ class Predicate:
                 init_P = init_P.tolist()
                 trace_size = len(traces[0])
                 length = len(traces)
-                traces = np.transpose(np.array(traces)).tolist()
-                predicate_robustness = backend.py_higher_dim(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
+                #traces = np.transpose(np.array(traces)).tolist()
+                #predicate_robustness = backend.py_higher_dim(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
+                predicate_robustness = quadprog_polyhedron.solve_polyhedron(self.A_Matrix,self.bound,traces)
                 # for value in trace:
                     # np_value = np.array(value)
                     # # if np_value.size == 1 and np_A_Matrix.size == 1:
@@ -92,15 +95,15 @@ class Predicate:
                         # constraints = [self.A_Matrix*x <= self.bound]
                         # prob = cp.Problem(objective, constraints)
                         # predicate_robustness.append(prob.solve(solver=cp.ECOS))
-        else:
-                                                                    #I wanted to pass the Pool() as an argument but that weirdly causes an error. I then tryied making the thread pool in the object init but the same error happens. Not sure how to make the thread pool creation only happen once if the object is used more than once
-            with Pool(cpu_count()) as p:
-                t0 = time()
-                predicate_robustness = p.map(self.optimize_polyhedron, trace)
-                t1 = time()
-                print('Predicate time: ', t1 - t0)
-                p.close()
-                p.join()
+        # else:
+                                                                    # #I wanted to pass the Pool() as an argument but that weirdly causes an error. I then tryied making the thread pool in the object init but the same error happens. Not sure how to make the thread pool creation only happen once if the object is used more than once
+            # with Pool(cpu_count()) as p:
+                # t0 = time()
+                # predicate_robustness = p.map(self.optimize_polyhedron, trace)
+                # t1 = time()
+                # print('Predicate time: ', t1 - t0)
+                # p.close()
+                # p.join()
         self.robustness = predicate_robustness[0]
         return predicate_robustness
         
