@@ -756,6 +756,17 @@ L999:
     //return right;
 //}
 
+float* transpose(float* mat, long mat_row, long mat_col){
+    float* transposed_mat = (float*)malloc(mat_row*mat_col*sizeof(float));
+    long i,j; 
+    for(i=0;i<mat_row;i++){
+        for(j=0;j<mat_col;j++){
+            *(transposed_mat + (j * mat_col + i)) = *(mat + (i * mat_col + j));
+        }
+    } 
+    return transposed_mat;
+}
+
 double* matmul(double* left_mat, int left_row, int left_col, double* right_mat, int right_row, int right_col){
     if(left_col != right_row){
         perror("Matrix dim mismatch for multiplication");
@@ -865,7 +876,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         
         memset(G, 0 , n*n*sizeof(double));
         int j;
-        const double scaler = 2;
+        const double scaler = 1;
         for(j=0;j<n;j++){
              *(G + (j * n + j)) = scaler;
         }
@@ -873,17 +884,24 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         A_t_trace = matmul(C,m,n,traces[i],n,1);
         matsub(b_sub,m,1,A_t_trace,m,1);
         
+        int z,w;
+        //for(z = 0; z<m; z++){
+            //for(w = 0; w<n;w++){
+                //printf("%lf,",C[z*n + w]);
+            //}
+            //printf("\n");
+        //}
         
+        
+        //int qpgen2_(doublereal *dmat, doublereal *dvec, integer *
+        //fddmat, integer *n, doublereal *sol, doublereal *lagr, doublereal *
+        //crval, doublereal *amat, doublereal *bvec, integer *fdamat, integer *
+        //q, integer *meq, integer *iact, integer *nact, integer *iter, 
+        //doublereal *work, integer *ierr)
         
         qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
-        printf("G: \n");
-        int z,w;
-        for(z = 0; z<n; z++){
-            for(w = 0; w<n;w++){
-                printf("%lf,",G[z*n + w]);
-            }
-            printf("\n");
-        }
+        //printf("Sol: \n");
+        results[i] = sqrt(2*results[i]);
     }
         free(G);
         free(iters);

@@ -45,16 +45,16 @@ if __name__ == '__main__':
     # traces = {'speed': speedData, 'rpm': rpmData}
     # #traces = {'data' : data}
     # time_stamps = timeData
-    i = 100
+    i = 1000000
     #Acomb = [[1,0],[0,1]]
     #bcomb = [150, 4500]
-    Acomb = [-1,0]
-    bcomb = [-150]
+    Acomb = [1,0]
+    bcomb = [150]
     #root = MTL.Not(MTL.And(MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb)),MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb))))
     #plt.scatter(timeData, combData[1])
     #plt.show()
     #root = MTL.Not(MTL.And(MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb)),MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb))))
-    traces = {'comb': [[1,0]]*i}
+    traces = {'comb': [[0,0]]*i}
     root = MTL.Not(MTL.Finally(0,100,MTL.Predicate('comb', Acomb, bcomb),mode))
     #traces = {'comb': combData.tolist()}
     time_stamps = np.arange(1, i + 1)

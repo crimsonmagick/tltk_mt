@@ -45,7 +45,7 @@ def solve_polyhedron(list C, list b, list traces):
     wrap_polyhedron(C_,b_, np.int32(n),np.int32(m),traces_,len(traces),c_results)
     results = []
     for i in xrange(len(traces)):
-        results.append(c_results[i])
+        results.append(float(c_results[i]))
     
     return results
 #    with nogil:
