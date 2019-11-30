@@ -54,7 +54,7 @@ if __name__ == '__main__':
     #plt.scatter(timeData, combData[1])
     #plt.show()
     #root = MTL.Not(MTL.And(MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb)),MTL.Finally(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb))))
-    traces = {'comb': [[0,0]]*i}
+    traces = {'comb': [[10,0]]*i}
     root = MTL.Not(MTL.Finally(0,100,MTL.Predicate('comb', Acomb, bcomb),mode))
     #traces = {'comb': combData.tolist()}
     time_stamps = np.arange(1, i + 1)

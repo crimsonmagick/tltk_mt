@@ -48,9 +48,9 @@ def solve_polyhedron(list C, list b, list traces):
         results.append(float(c_results[i]))
     
     return results
-#    with nogil:
-#        free(c_results)
-#        free(b_)
+    with nogil:
+        free(c_results)
+        free(b_)
     
     
 def solve_qp(double[:, :] G, double[:] a, double[:, :] C=None, double[:] b=None, int meq=0, factorized=False):

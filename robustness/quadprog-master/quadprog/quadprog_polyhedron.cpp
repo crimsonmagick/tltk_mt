@@ -3040,8 +3040,8 @@ static PyObject *__pyx_pf_19quadprog_polyhedron_solve_polyhedron(CYTHON_UNUSED P
  *         results.append(float(c_results[i]))
  * 
  *     return results             # <<<<<<<<<<<<<<
- * #    with nogil:
- * #        free(c_results)
+ *     with nogil:
+ *         free(c_results)
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(__pyx_v_results);

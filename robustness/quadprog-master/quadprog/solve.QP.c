@@ -834,6 +834,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
     double* b_sub;
     double* A_t_trace;
     double* G;
+    double* C_temp;
     
     long i;
     
@@ -842,6 +843,11 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
     nact = 0; 
     //TODO: error check this mess
     iters = (int*)malloc(2*sizeof(int));
+    
+    if(!(C_temp = (double*)malloc(n*m*sizeof(double)))){
+        perror("C_temp init error");
+        exit(EXIT_FAILURE);
+    }
     
     if(!(a = (double*)malloc(n*sizeof(double)))){
         perror("a init error");
@@ -864,6 +870,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         meq = 0;
         nact = 0;
         
+        
         memset(iters, 0, 2*sizeof(int));
         memset(a,0,n*sizeof(double));
         memset(sol,0,n*sizeof(double));
@@ -872,6 +879,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         memset(work,0,(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1) * sizeof(double));
         memset(b_sub,0,m*sizeof(double));
         
+        memcpy(C_temp,C,n*m*sizeof(double));
         memcpy(b_sub,b,m*sizeof(double));
         
         memset(G, 0 , n*n*sizeof(double));
@@ -881,7 +889,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
              *(G + (j * n + j)) = scaler;
         }
 
-        A_t_trace = matmul(C,m,n,traces[i],n,1);
+        A_t_trace = matmul(C_temp,m,n,traces[i],n,1);
         matsub(b_sub,m,1,A_t_trace,m,1);
         
         int z,w;
@@ -902,6 +910,8 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
         //printf("Sol: \n");
         results[i] = sqrt(2*results[i]);
+        //free(A_t_trace);
+        //free(C_temp);
     }
         free(G);
         free(iters);
