@@ -14,6 +14,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
+
+const int true  = 1;
+const int false = 0;
 
 /*  Copyright (C) 1995-2010 Berwin A. Turlach <Berwin.Turlach@gmail.com> */
 
@@ -819,6 +823,21 @@ void matscaler(double scaler, double* mat, int row, int col){
         }
     }
 }
+
+
+int matlessthaneq(double* left_mat, double* right_mat, int rows, int cols){
+    int i,j;
+    for(i=0;i < rows;i++){
+        for(j=0;j < cols;j++){
+            if(*(left_mat + (i*cols + j)) > *(right_mat + (i*cols+j))){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
 
 void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results){
     
