@@ -16,8 +16,8 @@
 #include <stdio.h>
 #include <math.h>
 
-const int true  = 1;
-const int false = 0;
+const int true  = 0;
+const int false = 1;
 
 /*  Copyright (C) 1995-2010 Berwin A. Turlach <Berwin.Turlach@gmail.com> */
 
@@ -771,12 +771,12 @@ float* transpose(float* mat, long mat_row, long mat_col){
     return transposed_mat;
 }
 
-double* matmul(double* left_mat, int left_row, int left_col, double* right_mat, int right_row, int right_col){
+void matmul(double* left_mat, int left_row, int left_col, double* right_mat, int right_row, int right_col, double* result){
     if(left_col != right_row){
         perror("Matrix dim mismatch for multiplication");
         exit(EXIT_FAILURE);
     }
-    double* result = (double*)malloc(left_row * right_col * sizeof(double));
+    //double* result = (double*)malloc(left_row * right_col * sizeof(double));
     long i,j,k;
     float cell_sum;
    
@@ -789,8 +789,6 @@ double* matmul(double* left_mat, int left_row, int left_col, double* right_mat, 
             *(result + (i * right_col + j)) = cell_sum;
         }
     }
-   
-    return result;
 }
 
 void matsub(double* left_mat, int left_row, int left_col, double* right_mat, int right_row, int right_col){
@@ -863,6 +861,9 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
     //TODO: error check this mess
     iters = (int*)malloc(2*sizeof(int));
     
+    A_t_trace = (double*)malloc(m * 1 * sizeof(double));
+    //matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
+    
     if(!(C_temp = (double*)malloc(n*m*sizeof(double)))){
         perror("C_temp init error");
         exit(EXIT_FAILURE);
@@ -881,7 +882,10 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         exit(EXIT_FAILURE);
     }
     
+    
     G = (double*)calloc(n*n,sizeof(double));
+    
+    int positive_rob = false;
     
     for( i = 0; i < length; i++){
 
@@ -901,6 +905,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         memcpy(C_temp,C,n*m*sizeof(double));
         memcpy(b_sub,b,m*sizeof(double));
         
+        
         memset(G, 0 , n*n*sizeof(double));
         int j;
         const double scaler = 1;
@@ -908,18 +913,21 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
              *(G + (j * n + j)) = scaler;
         }
 
-        A_t_trace = matmul(C_temp,m,n,traces[i],n,1);
+        matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
+        
+        //printf("value: %d\n", matlessthaneq(A_t_trace,b_sub,m,1)); 
+        
+        if(matlessthaneq(A_t_trace,b_sub,m,1)){
+            matscaler(-1.0,C_temp,m,n);
+            matscaler(-1.0,b_sub,m,1);
+            matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
+            positive_rob = true;
+        }
+        
+        
         matsub(b_sub,m,1,A_t_trace,m,1);
-        
-        int z,w;
-        //for(z = 0; z<m; z++){
-            //for(w = 0; w<n;w++){
-                //printf("%lf,",C[z*n + w]);
-            //}
-            //printf("\n");
-        //}
-        
-        
+
+
         //int qpgen2_(doublereal *dmat, doublereal *dvec, integer *
         //fddmat, integer *n, doublereal *sol, doublereal *lagr, doublereal *
         //crval, doublereal *amat, doublereal *bvec, integer *fdamat, integer *
@@ -928,7 +936,13 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         
         qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
         //printf("Sol: \n");
-        results[i] = sqrt(2*results[i]);
+        if(!positive_rob){
+            results[i] = -1*sqrt(2*results[i]);
+        }
+        else{
+            results[i] = sqrt(2*results[i]);
+        }
+        positive_rob = false;
         //free(A_t_trace);
         //free(C_temp);
     }
