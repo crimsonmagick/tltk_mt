@@ -936,6 +936,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         
         qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
         //printf("Sol: \n");
+        free(traces[i]);
         if(!positive_rob){
             results[i] = -1*sqrt(2*results[i]);
         }
