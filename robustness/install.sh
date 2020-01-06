@@ -5,22 +5,6 @@ sudo apt upgrade
 sudo apt install libomp-dev git python3 python3-venv python3-pip cmake
 sudo pip3 install numpy scipy cython cvxpy
 
-
-git clone --recursive https://github.com/oxfordcontrol/osqp
-cd osqp
-mkdir build
-cd build
-cmake -G "Unix Makefiles" ..
-cmake --build .
-sudo make install
-cd ../..
-
-sudo cp /usr/local/lib/libosqp.so /usr/lib
-sudo cp /usr/local/lib/libqdldl.so /usr/lib
-
-sudo cp /usr/local/include/osqp/* /usr/include
-sudo cp /usr/local/include/qdldl/* /usr/include
-
 if [ "$1" == "-gpu" ]
 then
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-ubuntu1804.pin

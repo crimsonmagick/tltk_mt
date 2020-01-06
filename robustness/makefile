@@ -4,7 +4,7 @@ default: backend
 
 backend: setup.py backend.pyx $(LIB_DIR)/libbackend.a $(QUADPROG_DIR)/'quadprog_polyhedron%.so' 
 	python3 setup.py build_ext --inplace && rm -f backend.c && rm -Rf build	
-	
+
 $(LIB_DIR)/libbackend.a:
 	make -C $(LIB_DIR) libbackend.a
 
