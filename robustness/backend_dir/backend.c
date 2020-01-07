@@ -1,3 +1,6 @@
+//C code for processing MTL robustness fromulas
+//Uses the dp_taliro algorithms to process robustnesses
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -11,7 +14,9 @@
 const int True = 0;
 const int False = 1;
 
-
+//  Processes mtl not, and stores results in *robustness
+//      robustness: a float pointer of robustnesses
+//      length: how many robustness timesteps are stored in robustness
 void  c_not(float* robustness,long length){
     long i;
     for(i = 0; i < length; i++){
@@ -19,6 +24,10 @@ void  c_not(float* robustness,long length){
     }
 }
 
+//  Processes mtl or, and stores results in left_robustness
+//      left_robustness: a float pointer of robustnesses
+//      right_robustness: a float pointer of robustnesses
+//      length: how many robustness timesteps are stored in left_robustness and right_robustness
 void c_or(float* left_robustness, float* right_robustness, long length){
     long i;
     for(i=0; i < length; i++){
@@ -28,6 +37,10 @@ void c_or(float* left_robustness, float* right_robustness, long length){
     }
 }
 
+//  Processes mtl and, and stores results in left_robustness
+//      left_robustness: a float pointer of robustnesses
+//      right_robustness: a float pointer of robustnesses
+//      length: how many robustness timesteps are stored in left_robustness and right_robustness
 void c_and(float* left_robustness, float* right_robustness, long length){
     long i;
     for(i=0; i < length; i++){
@@ -37,7 +50,11 @@ void c_and(float* left_robustness, float* right_robustness, long length){
     }
 }
 
-
+//  Searches time stamps for desired time step using binary search
+//      time_stamps: a pointer to the time stamps to be searched
+//      time: the target time we are looking for a value near
+//      start_lower_index: the lower bound of where we need to search
+//      length: how many time steps there are
 long search_sorted(float* time_stamps,float time,long start_lower_index,long length){
     long lower_index = start_lower_index;
     long upper_index = length - 1;
@@ -57,13 +74,15 @@ long search_sorted(float* time_stamps,float time,long start_lower_index,long len
     }
     return middle;
 }
+
+//  Returns the max of two inputs
 float max(float left, float right){
     if(left > right){
         return left;
     }
     return right;
 }
-
+//  Returns min of two inputs
 float min(float left, float right){
     if(left < right){
         return left;
@@ -71,7 +90,10 @@ float min(float left, float right){
     return right;
 }
 
-
+//returns the index of the minimium value in array
+//  array: a float pointer
+//  start_index: lower bound on where to search in array
+//  end_index: upper bound on where to search in array 
 long find_min(float* array, long start_index, long end_index){
     long i, index;
     float min;
@@ -86,6 +108,10 @@ long find_min(float* array, long start_index, long end_index){
     return index;
 }
 
+//returns the index of the max value in array
+//  array: a float pointer
+//  start_index: lower bound on where to search in array
+//  end_index: upper bound on where to search in array 
 long find_max(float* array, long start_index, long end_index){
     long i, index;
     float max;
@@ -100,7 +126,13 @@ long find_max(float* array, long start_index, long end_index){
     return index;
 }
 
-
+//  Processes mtl finally useing parrell processing
+//      lower_time_bound: a float representing the finally lower time bound
+//      upper_time_bound: a float representing the finally upper time bound
+//      robustness: a float pointer of robustnesses
+//      time_stamps: stores the time stamp for each time step
+//      length: how many robustness timesteps are stored in robustness
+//      returns finally_robustness: an array of length, length storing the results of the finally operation
 float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length){
     long i;
     float max;
@@ -111,8 +143,6 @@ float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float*
     }
     if(lower_time_bound == 0 && isinf(upper_time_bound)){
         max = *(robustness + (length - 1));
-        //#pragma omp parallel
-        //#pragma omp taskloop num_tasks(32)
         for(i = length - 1; i >= 0; i--){
             if(*(robustness + i) > max){
             max = *(robustness + i);
@@ -127,7 +157,6 @@ float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float*
         for(current_time_step = length - 1; current_time_step >= 0; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
-            //long search_sorted(float* time_stamps,float time,long start_lower_index,long length)
             long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
             long lower_bound_index; 
             
@@ -153,6 +182,13 @@ float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float*
     return finally_robustness;
 }
 
+//  Processes mtl finally
+//      lower_time_bound: a float representing the finally lower time bound
+//      upper_time_bound: a float representing the finally upper time bound
+//      robustness: a float pointer of robustnesses
+//      time_stamps: stores the time stamp for each time step
+//      length: how many robustness timesteps are stored in robustness
+//      returns finally_robustness: an array of length, length storing the results of the finally operation
 float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length){
     long i;
     float max;
@@ -178,7 +214,6 @@ float* c_finally(float lower_time_bound, float upper_time_bound, float* robustne
         for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
-            //long search_sorted(float* time_stamps,float time,long start_lower_index,long length)
             long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
             long lower_bound_index; 
             
@@ -202,7 +237,13 @@ float* c_finally(float lower_time_bound, float upper_time_bound, float* robustne
     return finally_robustness;
 }
 
-
+//  Processes mtl global
+//      lower_time_bound: a float representing the global lower time bound
+//      upper_time_bound: a float representing the global upper time bound
+//      robustness: a float pointer of robustnesses
+//      time_stamps: stores the time stamp for each time step
+//      length: how many robustness timesteps are stored in robustness
+//      returns global_robustness: a pointer to the array of length, length storing the results of the global operation
 float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length){
     long i;
     float min;
@@ -228,7 +269,6 @@ float* c_global(float lower_time_bound, float upper_time_bound, float* robustnes
         for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
-            //long search_sorted(float* time_stamps,float time,long start_lower_index,long length)
             long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
             long lower_bound_index; 
             
@@ -252,6 +292,13 @@ float* c_global(float lower_time_bound, float upper_time_bound, float* robustnes
     return global_robustness;
 }
 
+//  Processes mtl global using parrel processing
+//      lower_time_bound: a float representing the global lower time bound
+//      upper_time_bound: a float representing the global upper time bound
+//      robustness: a float pointer of robustnesses
+//      time_stamps: stores the time stamp for each time step
+//      length: how many robustness timesteps are stored in robustness
+//      returns global_robustness: a pointer to the array of length, length storing the results of the global operation
 float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length){
     long i;
     float min;
@@ -277,7 +324,6 @@ float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* 
         for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
-            //long search_sorted(float* time_stamps,float time,long start_lower_index,long length)
             long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
             long lower_bound_index; 
             
@@ -300,7 +346,11 @@ float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* 
     }
     return global_robustness;
 }
-
+//  Process 1 dimisional polyhedron A*trace[i] <= bound
+//      traces: an array of length, length containing data from simulation
+//      A: a float
+//      bound: the polyhedron boundary
+//      length: how many time steps there are
 void c_one_dim_pred(float* traces, float A, float bound,long length){
     long i;
     for(i = 0; i < length; i++){
@@ -308,6 +358,14 @@ void c_one_dim_pred(float* traces, float A, float bound,long length){
     }
 }
 
+//  Processes mtl until (left_robustness Until Right_robustness)
+//      lower_time_bound: a float representing the until lower time bound
+//      upper_time_bound: a float representing the until upper time bound
+//      left_robustness: a float pointer of robustnesses
+//      right_robustness: a float pointer of robustnesses
+//      time_stamps: stores the time stamp for each time step
+//      length: how many robustness timesteps are stored in robustness
+//      returns until_robustness: a pointer to the array of length, length storing the results of the until operation
 float* c_until(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length){
     float* until_robustness = (float*) malloc(length * sizeof(float));
     if(lower_time_bound == 0 && isinf(upper_time_bound)){
@@ -356,7 +414,14 @@ float* c_until(float lower_time_bound, float upper_time_bound, float* left_robus
     return until_robustness;
 }  
 
-
+//  Processes mtl until using parallel processing(left_robustness Until Right_robustness)
+//      lower_time_bound: a float representing the until lower time bound
+//      upper_time_bound: a float representing the until upper time bound
+//      left_robustness: a float pointer of robustnesses
+//      right_robustness: a float pointer of robustnesses
+//      time_stamps: stores the time stamp for each time step
+//      length: how many robustness timesteps are stored in robustness
+//      returns until_robustness: a pointer to the array of length, length storing the results of the until operation
 float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length){
     float* until_robustness = (float*) malloc(length * sizeof(float));
     if(lower_time_bound == 0 && isinf(upper_time_bound)){

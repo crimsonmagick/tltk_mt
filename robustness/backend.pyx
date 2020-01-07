@@ -1,3 +1,6 @@
+#backend.pyx
+#This file contains the wrapper code so python can run C code for calculuating MTL robustness
+
 import numpy as np
 cimport cython 
 from cpython cimport array
@@ -36,11 +39,13 @@ cdef extern from "backend.h":
 cdef extern from "backend.h":
     void c_one_dim_pred(float* traces, float A, float bound,long length);
 
+#Wrapper for MTL not operation
+#   robustness: A list of python floats
+#   returns: A list of python floats
 def py_not(list robustness) -> float[::1]:
     cdef float * c_robustness
     c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))
-#    cdef array.array c_array_robustness = array.array('f',robustness)
-#    cdef float[:] c_robustness = c_array_robustness
+
     if c_robustness is NULL:
         raise MemoryError()
     
@@ -59,6 +64,10 @@ def py_not(list robustness) -> float[::1]:
     
     return robustness
 
+#Wrapper for MTL and operation
+#   left_robustness: A list of python floats
+#   right_robustness: A list of python floats
+#   returns: A list of python floats
 def py_and(list left_robustness,list right_robustness) -> float[::1]:
     cdef float * c_left_robustness
     cdef float * c_right_robustness
@@ -77,14 +86,17 @@ def py_and(list left_robustness,list right_robustness) -> float[::1]:
     
     for i in xrange(len(left_robustness)): #Same here
         left_robustness[i] = c_left_robustness[i]
-    #list_results = np.ndarray((len(left_robustness), ), 'f', c_left_robustness, order='C')
-#    left_robustness = c_left_robustness[:len(left_robustness)]
+
     with nogil:
         free(c_left_robustness)
         free(c_right_robustness)
-    
+
     return left_robustness
 
+#Wrapper for the MTL or operation
+#   left_robustness: A list of python floats
+#   right_robustness: A list of python floats
+#   returns: A list of python floats
 def py_or(list left_robustness,list right_robustness) -> float[::1]:
     cdef float * c_left_robustness
     cdef float * c_right_robustness
@@ -103,14 +115,17 @@ def py_or(list left_robustness,list right_robustness) -> float[::1]:
     
     for i in xrange(len(left_robustness)): #Same here
         left_robustness[i] = c_left_robustness[i]
-    #list_results = np.ndarray((len(left_robustness), ), 'f', c_left_robustness, order='C')
-#    left_robustness = c_left_robustness[:len(left_robustness)]
     with nogil:
         free(c_left_robustness)
         free(c_right_robustness)
     
     return left_robustness
 
+#Wrapper for the MTL finally operation
+    #lower_time_bound: A python float
+    #upper_time_bound: A pyhton float
+    #robustness: A list containing floats
+    #time_stamps: A list containing floats
 def py_finally(float lower_time_bound,float upper_time_bound,list robustness,list time_stamps) -> float[::1]:
     cdef float * c_robustness
     cdef float * c_time_stamps
@@ -127,15 +142,17 @@ def py_finally(float lower_time_bound,float upper_time_bound,list robustness,lis
     
     for i in xrange(len(robustness)): #Same here
         robustness[i] = c_results[i]
-        
-    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
-    
     with nogil:
         free(c_robustness)
         free(c_time_stamps)
         free(c_results)
     return robustness
-    
+
+#Wrapper for the MTL finally operation that takes advantage of parallel processing
+    #lower_time_bound: A python float
+    #upper_time_bound: A pyhton float
+    #robustness: A list containing floats
+    #time_stamps: A list containing floats
 def py_finally_threaded(float lower_time_bound,float upper_time_bound,list robustness,list time_stamps) -> float[::1]:
     cdef float * c_robustness
     cdef float * c_time_stamps
@@ -144,23 +161,25 @@ def py_finally_threaded(float lower_time_bound,float upper_time_bound,list robus
     c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))
     c_time_stamps = <float *>malloc(len(time_stamps)*cython.sizeof(float))
     
-    for i in xrange(len(robustness)): #Sure this can be done better
+    for i in xrange(len(robustness)): 
         c_robustness[i] = robustness[i]
         c_time_stamps[i] = time_stamps[i]
     
     c_results = c_finally_threaded(lower_time_bound,upper_time_bound,c_robustness,c_time_stamps,len(robustness))
     
-    for i in xrange(len(robustness)): #Same here
+    for i in xrange(len(robustness)): 
         robustness[i] = c_results[i]
-        
-    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
-    
     with nogil:
         free(c_robustness)
         free(c_time_stamps)
         free(c_results)
     return robustness
 
+#Wrapper for the MTL global operation
+    #lower_time_bound: A python float
+    #upper_time_bound: A pyhton float
+    #robustness: A list containing floats
+    #time_stamps: A list containing floats
 def py_global(float lower_time_bound,float upper_time_bound,list robustness,list time_stamps) -> float[::1]:
     cdef float * c_robustness
     cdef float * c_time_stamps
@@ -169,23 +188,25 @@ def py_global(float lower_time_bound,float upper_time_bound,list robustness,list
     c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))
     c_time_stamps = <float *>malloc(len(time_stamps)*cython.sizeof(float))
     
-    for i in xrange(len(robustness)): #Sure this can be done better
+    for i in xrange(len(robustness)): 
         c_robustness[i] = robustness[i]
         c_time_stamps[i] = time_stamps[i]
     
     c_results = c_global(lower_time_bound,upper_time_bound,c_robustness,c_time_stamps,len(robustness))
     
-    for i in xrange(len(robustness)): #Same here
+    for i in xrange(len(robustness)): 
         robustness[i] = c_results[i]
-        
-    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
-    
     with nogil:
         free(c_robustness)
         free(c_time_stamps)
         free(c_results)
     return robustness
-    
+
+#Wrapper for the MTL global operation that takes advantage of parallel processing
+    #lower_time_bound: A python float
+    #upper_time_bound: A pyhton float
+    #robustness: A list containing floats
+    #time_stamps: A list containing floats
 def py_global_threaded(float lower_time_bound,float upper_time_bound,list robustness,list time_stamps) -> float[::1]:
     cdef float * c_robustness
     cdef float * c_time_stamps
@@ -194,24 +215,26 @@ def py_global_threaded(float lower_time_bound,float upper_time_bound,list robust
     c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))
     c_time_stamps = <float *>malloc(len(time_stamps)*cython.sizeof(float))
     
-    for i in xrange(len(robustness)): #Sure this can be done better
+    for i in xrange(len(robustness)): 
         c_robustness[i] = robustness[i]
         c_time_stamps[i] = time_stamps[i]
     
     c_results = c_global_threaded(lower_time_bound,upper_time_bound,c_robustness,c_time_stamps,len(robustness))
     
-    for i in xrange(len(robustness)): #Same here
+    for i in xrange(len(robustness)): 
         robustness[i] = c_results[i]
-        
-    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
-    
     with nogil:
         free(c_robustness)
         free(c_time_stamps)
         free(c_results)
     return robustness
 
-
+#Wrapper for the MTL until operation (left_robustness[i] Until right_robustness[i])
+    #lower_time_bound: A python float
+    #upper_time_bound: A pyhton float
+    #left_robustness: A list containing floats
+    #right_robustness: A list containing floats
+    #time_stamps: A list containing floats
 def py_until(float lower_time_bound,float upper_time_bound,list left_robustness,list right_robustness,list time_stamps) -> float[::1]:
     cdef float * c_left_robustness
     cdef float * c_right_robustness
@@ -222,7 +245,7 @@ def py_until(float lower_time_bound,float upper_time_bound,list left_robustness,
     c_right_robustness = <float *>malloc(len(right_robustness)*cython.sizeof(float))
     c_time_stamps = <float *>malloc(len(time_stamps)*cython.sizeof(float))
     
-    for i in xrange(len(left_robustness)): #Sure this can be done better
+    for i in xrange(len(left_robustness)):
         c_left_robustness[i] = left_robustness[i]
         c_right_robustness[i] = right_robustness[i]
         c_time_stamps[i] = time_stamps[i]
@@ -231,9 +254,6 @@ def py_until(float lower_time_bound,float upper_time_bound,list left_robustness,
     
     for i in xrange(len(left_robustness)): #Same here
         left_robustness[i] = c_results[i]
-        
-    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
-    
     with nogil:
         free(c_left_robustness)
         free(c_right_robustness)
@@ -242,6 +262,12 @@ def py_until(float lower_time_bound,float upper_time_bound,list left_robustness,
         
     return left_robustness
 
+#Wrapper for the MTL until operation that takes advantage of parallel processing (left_robustness[i] Until right_robustness[i])
+    #lower_time_bound: A python float
+    #upper_time_bound: A pyhton float
+    #left_robustness: A list containing floats
+    #right_robustness: A list containing floats
+    #time_stamps: A list containing floats
 def py_until_threaded(float lower_time_bound,float upper_time_bound,list left_robustness,list right_robustness,list time_stamps) -> float[::1]:
     cdef float * c_left_robustness
     cdef float * c_right_robustness
@@ -252,18 +278,15 @@ def py_until_threaded(float lower_time_bound,float upper_time_bound,list left_ro
     c_right_robustness = <float *>malloc(len(right_robustness)*cython.sizeof(float))
     c_time_stamps = <float *>malloc(len(time_stamps)*cython.sizeof(float))
     
-    for i in xrange(len(left_robustness)): #Sure this can be done better
+    for i in xrange(len(left_robustness)): 
         c_left_robustness[i] = left_robustness[i]
         c_right_robustness[i] = right_robustness[i]
         c_time_stamps[i] = time_stamps[i]
     
     c_results = c_until_threaded(lower_time_bound,upper_time_bound,c_left_robustness,c_right_robustness,c_time_stamps,len(left_robustness))
     
-    for i in xrange(len(left_robustness)): #Same here
+    for i in xrange(len(left_robustness)):
         left_robustness[i] = c_results[i]
-        
-    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
-    
     with nogil:
         free(c_left_robustness)
         free(c_right_robustness)
@@ -271,12 +294,13 @@ def py_until_threaded(float lower_time_bound,float upper_time_bound,list left_ro
         free(c_results)
         
     return left_robustness
-
+#Wrapper for a one dimisional polyheadron predicate A*robustness[i] <= bound
+#   robustness: A list of python floats
+#   A: A python float
+#   bound: A python float
 def py_one_dim_pred(list robustness, float A, float bound) -> float[::1]:
     cdef float * c_robustness
     c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))
-#    cdef array.array c_array_robustness = array.array('f',robustness)
-#    cdef float[:] c_robustness = c_array_robustness
     if c_robustness is NULL:
         raise MemoryError()
     
@@ -287,9 +311,6 @@ def py_one_dim_pred(list robustness, float A, float bound) -> float[::1]:
     
     for i in xrange(len(robustness)): #Same here
         robustness[i] = c_robustness[i]
-    
-    #list_results = np.ndarray((len(robustness), ), 'f', c_robustness, order='C')
-    
     with nogil:
         free(c_robustness)
     
