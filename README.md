@@ -8,11 +8,9 @@ When you're done, you can delete the content in this README and update the file 
 ## Required Libraries
 MTL.py requires
 
-1. numpy
-2. cvxpy
-3. multiprocessing 
-
+1. numpy 
+2. scipy
 Other libraries needed
 
 1. matlab.engine [install matlab engine API in Python](https://www.scivision.dev/matlab-engine-callable-from-python-how-to-install-and-setup/)
-2. scipy
+
