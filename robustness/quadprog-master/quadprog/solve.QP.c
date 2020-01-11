@@ -938,10 +938,10 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         //printf("Sol: \n");
         free(traces[i]);
         if(!positive_rob){
-            results[i] = -1*sqrt(2*results[i]);
+            results[i] = sqrt(2*results[i]);
         }
         else{
-            results[i] = sqrt(2*results[i]);
+            results[i] = -1*sqrt(2*results[i]);
         }
         positive_rob = false;
         //free(A_t_trace);
