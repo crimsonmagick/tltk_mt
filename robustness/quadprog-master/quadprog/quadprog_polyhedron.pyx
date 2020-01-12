@@ -13,6 +13,9 @@ cdef extern:
 
 cdef extern:
     void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results)
+
+cdef extern:
+    void wrap_polyhedron_thread(double* C, double* b,int n, int m, double** traces,long length ,double* results)
     
 def solve_polyhedron(list C, list b, list traces):
     cdef double** traces_
@@ -46,13 +49,12 @@ def solve_polyhedron(list C, list b, list traces):
     results = []
     for i in xrange(len(traces)):
         results.append(float(c_results[i]))
-    
-    return results
     with nogil:
         free(c_results)
         free(b_)
         free(C_)
         free(traces_)
+    return results
     
     
 def solve_qp(double[:, :] G, double[:] a, double[:, :] C=None, double[:] b=None, int meq=0, factorized=False):

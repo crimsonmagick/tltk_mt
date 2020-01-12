@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <pthread.h>
+#include <sys/sysinfo.h>
 
 const int true  = 0;
 const int false = 1;
@@ -835,7 +837,49 @@ int matlessthaneq(double* left_mat, double* right_mat, int rows, int cols){
     return true;
 }
 
+struct thread_package
+{
+    double* C;
+    double* b;
+    int n;
+    int m;
+    double** traces;
+    long length;
+    double* results;
+    long start_index;
+    long sub_length;
+};
 
+void wrap_polyhedron_threaded(double* C, double* b,int n, int m, double** traces,long length ,double* results){
+    int number_of_threads = get_nprocs();
+    struct thread_package** packages = (struct thread_package**)malloc(number_of_threads * sizeof(struct thread_package*));
+    
+    long current_start = 0;
+    int thread_id;
+    
+    long sub_length = (length / number_of_threads) + 1;
+    
+    for(thread_id=0; thread_id < number_of_threads; thread_id++){
+        packages[thread_id] = (struct thread_package*)malloc(sizeof(struct thread_package));
+        packages[thread_id]->C = C;
+        packages[thread_id]->b = b;
+        packages[thread_id]->n = n;
+        packages[thread_id]->m = m;
+        packages[thread_id]->traces = traces;
+        packages[thread_id]->length = length;
+        packages[thread_id]->results = results;
+        packages[thread_id]->start_index = current_start;
+        packages[thread_id]->sub_length = sub_length;
+
+        current_start += sub_length;
+        
+        
+    }
+}
+
+void wrap_polyhedron_kernal(struct thread_package package){
+
+}
 
 void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results){
     
@@ -915,7 +959,6 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
 
         matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
         
-        //printf("value: %d\n", matlessthaneq(A_t_trace,b_sub,m,1)); 
         
         if(matlessthaneq(A_t_trace,b_sub,m,1)){
             matscaler(-1.0,C_temp,m,n);
@@ -935,7 +978,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         //doublereal *work, integer *ierr)
         
         qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
-        //printf("Sol: \n");
+
         free(traces[i]);
         if(!positive_rob){
             results[i] = sqrt(2*results[i]);
@@ -944,8 +987,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
             results[i] = -1*sqrt(2*results[i]);
         }
         positive_rob = false;
-        //free(A_t_trace);
-        //free(C_temp);
+
     }
         free(G);
         free(iters);

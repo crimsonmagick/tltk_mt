@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # traces = {'speed': speedData, 'rpm': rpmData}
     # #traces = {'data' : data}
     # time_stamps = timeData
-    i = 15000
+    i = 500000000
     #Acomb = [[1,0],[0,1]]
     #bcomb = [150, 4500]
     Acomb = [1,0]
