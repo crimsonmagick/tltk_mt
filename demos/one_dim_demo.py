@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(1, '../robustness')
 
-import MTL as MTL
+import MTL
 import time
 import numpy as np
 

@@ -10,7 +10,7 @@ import numpy as np
 
 mode = "cpu"
 
-i = 10000
+i = 10000000
 Acomb = [1,1]
 bcomb = [150]
 
