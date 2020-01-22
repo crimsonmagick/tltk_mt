@@ -1,14 +1,10 @@
 import sys
 sys.path.insert(1, '../robustness')
-import os
 
 import MTL as MTL
 import time
-from numpy import genfromtxt
 import numpy as np
 
-
-import matplotlib.pyplot as plt
 
 mode = "cpu"
 

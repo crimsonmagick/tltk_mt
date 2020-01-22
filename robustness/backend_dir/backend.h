@@ -1,7 +1,6 @@
 #ifndef BACKEND_H
 #define BACKEND_H
 
-#include "osqp.h"
 #include "omp.h"
 
 void c_not(float* robustness,long length);
@@ -20,7 +19,6 @@ double* higher_dim_pred_threaded(long trace_size, long long int n, long long int
 // Auxiliary functions
 
 long search_sorted(float* time_stamps,float time,long start_lower_index,long length);
-csc* array_to_csc(c_int m, c_int n, c_float **A);
 long find_min(float* array, long start_index, long end_index);
 long find_max(float* array, long start_index, long end_index);
 
