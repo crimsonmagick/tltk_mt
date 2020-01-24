@@ -209,7 +209,7 @@ class Not:
         # not_robustness = backend.py_not(subformula_robustness)
         # t1 = time()
         # print('Not time: ', t1 - t0)
-        if self.process_type == "cpu":
+        if self.process_type == "cpu" or self.process_type == "cpu_threaded":
             not_robustness = backend.py_not(subformula_robustness)
         else:
             print("GPU for NOT")
@@ -246,7 +246,7 @@ class And:
         #c_left_subformula_robustness = (ctypes.c_float * len(left_subformula_robustness))(*left_subformula_robustness)
         # t1 = time()
         # print('And time: ',t1-t0)
-        if self.process_type == "cpu":
+        if self.process_type == "cpu" or self.process_type == "cpu_threaded":
             and_robustness = backend.py_and(left_subformula_robustness,right_subformula_robustness)
         else:
             print("GPU for AND")
@@ -271,7 +271,7 @@ class Or:
         # for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
             
             # or_robustness.append(max(left_robustness,right_robustness))
-        if self.process_type == "cpu":
+        if self.process_type == "cpu" or self.process_type == "cpu_threaded":
             or_robustness = backend.py_or(left_subformula_robustness,right_subformula_robustness)
         else:
             #print("GPU for OR")

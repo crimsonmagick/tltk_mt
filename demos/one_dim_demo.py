@@ -13,14 +13,14 @@ bspeed = 150
 Arpm = -1
 brpm = -4500
 
-mode = "cpu"
+mode = "cpu_threaded"
 
 i = 1000000
 
 speed_predicate = MTL.Predicate('speed',Aspeed,bspeed)
 
 traces = {'speed': [1]*i}
-root = MTL.Not(MTL.Finally(0,100,speed_predicate,mode))
+root = MTL.Not(speed_predicate,mode)
 
 time_stamps = np.arange(1, i + 1)
 
