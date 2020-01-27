@@ -10,7 +10,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-modes = ["cpu_threaded", "gpu"]
+modes = ["cpu_threaded"]
 for mode in modes:
     start = 1000000
     stop = 5000001

@@ -4,7 +4,7 @@ sys.path.insert(1, '../')
 sys.path.insert(1, '../robustness')
 
 import numpy as np
-import pytaliro as pytaliro
+import tltk as tltk
 import robustness.MTL as MTL
 
 model = 'sldemo_autotrans_mod01'
@@ -54,4 +54,4 @@ cp_samples = np.random.uniform(low=inp_range[0], high=inp_range[1], size=(2,))
 predicates = [pred_tags,test_pred]
 #root = MTL.Not((MTL.Finally(0, 30, speed_pred, mode)))
 root = MTL.Not(MTL.Finally(0,100,test_pred))
-results = pytaliro.falsify(model, interpolation, cp_samples, predicates, root, opt)
+results = tltk.falsify(model, interpolation, cp_samples, predicates, root, opt)
