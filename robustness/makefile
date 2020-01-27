@@ -13,7 +13,12 @@ $(QUADPROG_DIR)/'quadprog_polyhedron%.so':
 
 
 clean:
-	rm *.so
+	rm -f *.so
+	rm -f backend_dir/*.so backend_dir/*.a backend_dir/*.o
+	rm -f -r __pycache__
+	rm -f  quadprog-master/build/lib.linux-x86_64-3.8/*.so
+	rm -f  quadprog-master/build/temp.linux-x86_64-3.8/quadprog/*.o
+	rm -f -r ../__pycache__
 gpu: $(LIB_DIR)/libgpubackend.so
 	python3 setup_gpu.py build_ext --inplace && rm -f gpubackend.cpp &&rm -Rf build
 
