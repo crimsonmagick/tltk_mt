@@ -5,7 +5,6 @@ from numpy import genfromtxt
 import auxilliary.computeInputSignal as computeInputSignal
 import auxilliary.systemSimulator as systemSimulator
 
-
 def sim_and_return_rob(z, *params):
     cur_sample = z
     model, opt, interpolation, predicates, rt, eng = params
@@ -24,11 +23,13 @@ def sim_and_return_rob(z, *params):
         time_stamps, internal_states, output = systemSimulator.simulate_system(eng, model, simulation_time,
                                                                                step, signal)
     elif opt[0] == 'function':
+        # User can add any desired function here
+        # np.sin() is used as a placeholder
         time_stamps = np.linspace(-np.pi, np.pi, 10)
         output = time_stamps + 0.5*np.sin(2*time_stamps)
     else:
-        time_stamps = np.array(genfromtxt('seqT2.csv'))
-        output = np.array(genfromtxt('seqS2.csv', delimiter=',')).tolist()
+        time_stamps = np.array(genfromtxt('data/eqT2.csv'))
+        output = np.array(genfromtxt('data/seqS2.csv', delimiter=',')).tolist()
 
     # How many predicates?
     no_predicates = len(predicates) - 1

@@ -13,29 +13,11 @@ step = 0.05
 inp_range = [0, 100]
 simulation_time = 30
 
-opt = ['function', step, inp_range, simulation_time]
-
-#phi = '!(<>_[0,30]speed /\ <>_[0,30]rpm)'
-
-#root = MTL.Finally(0,float('inf'),MTL.Or(MTL.Predicate('speed',[-1,0],-120),MTL.Predicate('rpm',[0,-1],-4500)))
-
-# = [[-1,0],[0,-1]];
-#bcomb = [-120,-4500]
-
-#Acomb = [-1,0];
-#bcomb = [-120];
-
-#root = MTL.Global(0,float('inf'),MTL.Predicate('comb',Acomb,bcomb))
-
-Aspeed = [1,0]
-bspeed = [120]
-
-Arpm = [0,1]
-brpm = [4500]
+opt = ['simulink', step, inp_range, simulation_time]
 
 interpolation = 'pchip'
 
-mode = 'false'
+mode = 'gpu'
 #pred_tags = ['speed', 'rpm']
 pred_tags = ['test']
 test_pred = MTL.Predicate(pred_tags[0],[1,0],[150], mode)
