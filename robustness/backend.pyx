@@ -92,6 +92,17 @@ def py_and(list left_robustness,list right_robustness) -> float[::1]:
         free(c_right_robustness)
 
     return left_robustness
+    
+#def py_and_numpy(left_robustness,right_robustness) -> float[::1]:
+#    cdef float[:] c_left_robustness = left_robustness
+#    cdef float[:] c_right_robustness = right_robustness
+        
+#    c_and(c_left_robustness,c_right_robustness,len(left_robustness))
+    
+
+
+
+#    return left_robustness
 
 #Wrapper for the MTL or operation
 #   left_robustness: A list of python floats
@@ -316,3 +327,13 @@ def py_one_dim_pred(list robustness, float A, float bound) -> float[::1]:
     
     return robustness
 
+
+def py_one_dim_pred_numpy(robustness, float A, float bound) -> float[::1]:
+    cdef float[:] c_robustness = robustness
+
+        
+    c_one_dim_pred(&c_robustness[0],A,bound,len(robustness))
+    
+
+    
+    return robustness

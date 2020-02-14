@@ -54,7 +54,8 @@ class Predicate:
         if self.thread_pool == False:
             if (not isinstance(trace[0],list)) and (not isinstance(self.A_Matrix, list)):
                 if self.process_type == 'cpu':
-                    predicate_robustness = backend.py_one_dim_pred(list(trace), self.A_Matrix, self.bound)
+                    predicate_robustness = backend.py_one_dim_pred_numpy(trace, self.A_Matrix, self.bound)
+                    #predicate_robustness = backend.py_one_dim_pred(list(trace), self.A_Matrix, self.bound)
                 else:
                     predicate_robustness = gpubackend.py_one_dim_pred_gpu(list(trace), self.A_Matrix, self.bound)   
             else:
