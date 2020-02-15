@@ -5,7 +5,7 @@ import MTL as MTL
 import numpy as np
 import time
 
-start = 100000000
+start = 1000000
 stop = start * 2
 step = 1
 mode = 'cpu'
@@ -13,17 +13,22 @@ mode = 'cpu'
 for i in range(start,stop+1,step):
     Ar3 = 150
     br3 = 20
-
+    
+    Ar4 = 400
+    br4 = 130
     
 
-    pred3 = MTL.Predicate('data',Ar3,br3)
-    #pred4 = MTL.Predicate('data',Ar4,br4)
+    pred3 = MTL.Predicate('data1',Ar3,br3)
+    pred4 = MTL.Predicate('data2',Ar4,br4)
 
-    traces = {'data': np.array([1]*i,dtype=np.float32)}
-    time_stamps = np.arange(1, i + 1)
+    traces = {'data1': np.ones(i,dtype=np.float32),'data2': np.ones(i,dtype=np.float32)} 
+    time_stamps = np.arange(1, i + 1,dtype=np.float32)
     #root = MTL.Global(0,float("inf"),MTL.And(pred3,MTL.Finally(0,100,pred4,mode),mode),mode)
-    root = pred3    
+    root = MTL.Not(MTL.Global(0,100,MTL.Or(pred3,pred4),process_type = 'cpu_threaded'))
+    #print("data generated")    
     t0 = time.time()
     root.eval_interval(traces, time_stamps)
     t1 = time.time()
-    print("Phi_1_higher_dim","| Mode:" ,mode,'| Samples:', i, ' | Time: ', t1 - t0)
+    print("Phi_1_higher_dim\t","| Mode:" ,mode,'\t| Samples:', i, '\t| Time: ', '%.4f'%(t1 - t0), '    \t| robustness', root.robustness)
+    del traces
+    del time_stamps

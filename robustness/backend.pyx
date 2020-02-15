@@ -20,15 +20,24 @@ cdef extern from "backend.h":
 
 cdef extern from "backend.h":
     float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
-    
+
+cdef extern from "backend.h":
+    float* c_finally_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* finally_robustness ,long length);
+
 cdef extern from "backend.h":
     float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
+
+cdef extern from "backend.h":
+    float* c_finally_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, float* finally_robustness,long length);
 
 cdef extern from "backend.h":
     float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
     
 cdef extern from "backend.h":
     float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
+    
+cdef extern from "backend.h":
+    float* c_global_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness,long length);
 
 cdef extern from "backend.h":
     float* c_until(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
@@ -93,14 +102,28 @@ def py_and(list left_robustness,list right_robustness) -> float[::1]:
 
     return left_robustness
     
-#def py_and_numpy(left_robustness,right_robustness) -> float[::1]:
-#    cdef float[:] c_left_robustness = left_robustness
-#    cdef float[:] c_right_robustness = right_robustness
+def py_and_numpy(left_robustness,right_robustness) -> float[::1]:
+    cdef float[:] c_left_robustness = left_robustness
+    cdef float[:] c_right_robustness = right_robustness
         
-#    c_and(c_left_robustness,c_right_robustness,len(left_robustness))
+    c_and(&c_left_robustness[0],&c_right_robustness[0],len(left_robustness))
     
+    return c_left_robustness
 
-
+def py_or_numpy(left_robustness,right_robustness) -> float[::1]:
+    cdef float[:] c_left_robustness = left_robustness
+    cdef float[:] c_right_robustness = right_robustness
+        
+    c_or(&c_left_robustness[0],&c_right_robustness[0],len(left_robustness))
+    
+    return c_left_robustness
+    
+def py_not_numpy(robustness) -> float[::1]:
+    cdef float[:] c_robustness = robustness
+        
+    c_not(&c_robustness[0],len(robustness))
+    
+    return c_robustness
 
 #    return left_robustness
 
@@ -164,6 +187,34 @@ def py_finally(float lower_time_bound,float upper_time_bound,list robustness,lis
     #upper_time_bound: A pyhton float
     #robustness: A list containing floats
     #time_stamps: A list containing floats
+
+def py_finally_threaded_numpy(float lower_time_bound,float upper_time_bound,robustness,time_stamps) -> float[::1]:
+    cdef float[:] c_robustness = robustness
+    cdef float[:] c_time_stamps = time_stamps
+    cdef float[:] c_results = np.empty(len(robustness),dtype=np.float32)
+    
+    c_finally_threaded_no_malloc(lower_time_bound,upper_time_bound,&c_robustness[0],&c_time_stamps[0],&c_results[0],len(robustness))
+    
+    return c_results
+    
+def py_global_threaded_numpy(float lower_time_bound,float upper_time_bound,robustness,time_stamps) -> float[::1]:
+    cdef float[:] c_robustness = robustness
+    cdef float[:] c_time_stamps = time_stamps
+    cdef float[:] c_results = np.empty(len(robustness),dtype=np.float32)
+    
+    c_global_threaded_no_malloc(lower_time_bound,upper_time_bound,&c_robustness[0],&c_time_stamps[0],&c_results[0],len(robustness))
+    
+    return c_results
+    
+def py_finally_numpy(float lower_time_bound,float upper_time_bound,robustness,time_stamps) -> float[::1]:
+    cdef float[:] c_robustness = robustness
+    cdef float[:] c_time_stamps = time_stamps
+    cdef float[:] c_results = np.empty(len(robustness),dtype=np.float32)
+    
+    c_finally_no_malloc(lower_time_bound,upper_time_bound,&c_robustness[0],&c_time_stamps[0],&c_results[0],len(robustness))
+    
+    return c_results
+
 def py_finally_threaded(float lower_time_bound,float upper_time_bound,list robustness,list time_stamps) -> float[::1]:
     cdef float * c_robustness
     cdef float * c_time_stamps

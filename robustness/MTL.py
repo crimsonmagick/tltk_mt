@@ -5,7 +5,7 @@ try:
     import gpubackend
 except:
     GPU_LIB_FOUND = False
-    print("ERROR: No gpu libary found")
+    print("WARNING: No gpu libary found")
 import ctypes
 # import cvxpy as cp
 import numpy as np
@@ -128,13 +128,12 @@ class Global:
         
         #subformula_robustness.reverse()
         #time_stamps.reverse()
-        t0 = time()
-        
         
         if self.process_type == 'cpu':
             globally_robustness = backend.py_global(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         elif self.process_type == 'cpu_threaded':
-            globally_robustness = backend.py_global_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+            #globally_robustness = backend.py_global_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+            globally_robustness = backend.py_global_threaded_numpy(self.lower_time_bound,self.upper_time_bound,subformula_robustness,time_stamps)
         else:
             #print("global GPU computation")
             globally_robustness = gpubackend.py_global_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
@@ -143,7 +142,7 @@ class Global:
         self.robustness = min(globally_robustness)
         if self.robustness > 0:
             self.value = True
-        globally_robustness.reverse()
+        #globally_robustness.reverse()
         return globally_robustness
     
     def add_subformula(self,subformula):
@@ -169,9 +168,11 @@ class Finally:
         t0 = time()
         if self.process_type == 'cpu':
             #print("finally CPU computation")
-            finally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+            #finally_robustness = backend.py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+            finally_robustness = backend.py_finally_numpy(self.lower_time_bound,self.upper_time_bound,subformula_robustness,time_stamps)
         elif self.process_type == 'cpu_threaded':
-            finally_robustness = backend.py_finally_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+            finally_robustness = backend.py_finally_threaded_numpy(self.lower_time_bound,self.upper_time_bound,subformula_robustness,time_stamps)
+            #finally_robustness = backend.py_finally_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         else:
             #print("finally GPU computation")
             finally_robustness = gpubackend.py_finally_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
@@ -182,7 +183,7 @@ class Finally:
         
         if self.robustness > 0:
             self.value = True
-        finally_robustness.reverse()
+        #finally_robustness.reverse()
 
         return  finally_robustness
         
@@ -211,7 +212,7 @@ class Not:
         # t1 = time()
         # print('Not time: ', t1 - t0)
         if self.process_type == "cpu" or self.process_type == "cpu_threaded":
-            not_robustness = backend.py_not(subformula_robustness)
+            not_robustness = backend.py_not_numpy(subformula_robustness)
         else:
             print("GPU for NOT")
             not_robustness = gpubackend.py_not_gpu(subformula_robustness)
@@ -248,7 +249,7 @@ class And:
         # t1 = time()
         # print('And time: ',t1-t0)
         if self.process_type == "cpu" or self.process_type == "cpu_threaded":
-            and_robustness = backend.py_and(left_subformula_robustness,right_subformula_robustness)
+            and_robustness = backend.py_and_numpy(left_subformula_robustness,right_subformula_robustness)
         else:
             print("GPU for AND")
             and_robustness = gpubackend.py_and_gpu(left_subformula_robustness,right_subformula_robustness)
@@ -273,7 +274,7 @@ class Or:
             
             # or_robustness.append(max(left_robustness,right_robustness))
         if self.process_type == "cpu" or self.process_type == "cpu_threaded":
-            or_robustness = backend.py_or(left_subformula_robustness,right_subformula_robustness)
+            or_robustness = backend.py_or_numpy(left_subformula_robustness,right_subformula_robustness)
         else:
             #print("GPU for OR")
             or_robustness = gpubackend.py_or_gpu(left_subformula_robustness,right_subformula_robustness)
