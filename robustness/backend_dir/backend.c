@@ -24,6 +24,15 @@ void  c_not(float* robustness,long length){
     }
 }
 
+void  c_not_threaded(float* robustness,long length){
+    long i;
+    #pragma omp parallel for num_threads(sysconf(_SC_NPROCESSORS_ONLN))
+    for(i = 0; i < length; i++){
+        *(robustness + i) = -1 * *(robustness + i);
+    }
+}
+
+
 //  Processes mtl or, and stores results in left_robustness
 //      left_robustness: a float pointer of robustnesses
 //      right_robustness: a float pointer of robustnesses
@@ -37,6 +46,17 @@ void c_or(float* left_robustness, float* right_robustness, long length){
     }
 }
 
+void c_or_threaded(float* left_robustness, float* right_robustness, long length){
+    long i;
+    #pragma omp parallel for num_threads(sysconf(_SC_NPROCESSORS_ONLN))
+    for(i=0; i < length; i++){
+        if(*(left_robustness + i) < *(right_robustness + i)){
+            *(left_robustness + i) = *(right_robustness + i);
+        }
+    }
+}
+
+
 //  Processes mtl and, and stores results in left_robustness
 //      left_robustness: a float pointer of robustnesses
 //      right_robustness: a float pointer of robustnesses
@@ -49,6 +69,17 @@ void c_and(float* left_robustness, float* right_robustness, long length){
         }
     }
 }
+
+void c_and_threaded(float* left_robustness, float* right_robustness, long length){
+    long i;
+    #pragma omp parallel for num_threads(sysconf(_SC_NPROCESSORS_ONLN))
+    for(i=0; i < length; i++){
+        if(*(left_robustness + i) > *(right_robustness + i)){
+            *(left_robustness + i) = *(right_robustness + i);
+        }
+    }
+}
+
 
 //  Searches time stamps for desired time step using binary search
 //      time_stamps: a pointer to the time stamps to be searched

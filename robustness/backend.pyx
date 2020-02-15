@@ -19,6 +19,16 @@ cdef extern from "backend.h":
     void c_and(float* left_robustness,float* right_robustness,long length)
 
 cdef extern from "backend.h":
+    void c_not_threaded(float* robustness,long length)
+
+cdef extern from "backend.h":
+    void c_or_threaded(float* left_robustness,float* right_robustness,long length)
+
+cdef extern from "backend.h":
+    void c_and_threaded(float* left_robustness,float* right_robustness,long length)
+
+
+cdef extern from "backend.h":
     float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 
 cdef extern from "backend.h":
@@ -110,6 +120,14 @@ def py_and_numpy(left_robustness,right_robustness) -> float[::1]:
     
     return c_left_robustness
 
+def py_and_threaded_numpy(left_robustness,right_robustness) -> float[::1]:
+    cdef float[:] c_left_robustness = left_robustness
+    cdef float[:] c_right_robustness = right_robustness
+        
+    c_and_threaded(&c_left_robustness[0],&c_right_robustness[0],len(left_robustness))
+    
+    return c_left_robustness
+
 def py_or_numpy(left_robustness,right_robustness) -> float[::1]:
     cdef float[:] c_left_robustness = left_robustness
     cdef float[:] c_right_robustness = right_robustness
@@ -117,11 +135,27 @@ def py_or_numpy(left_robustness,right_robustness) -> float[::1]:
     c_or(&c_left_robustness[0],&c_right_robustness[0],len(left_robustness))
     
     return c_left_robustness
+
+
+def py_or_threaded_numpy(left_robustness,right_robustness) -> float[::1]:
+    cdef float[:] c_left_robustness = left_robustness
+    cdef float[:] c_right_robustness = right_robustness
+    c_or_threaded(&c_left_robustness[0],&c_right_robustness[0],len(left_robustness))
+    
+    return c_left_robustness
     
 def py_not_numpy(robustness) -> float[::1]:
     cdef float[:] c_robustness = robustness
         
     c_not(&c_robustness[0],len(robustness))
+    
+    return c_robustness
+
+
+def py_not_threaded_numpy(robustness) -> float[::1]:
+    cdef float[:] c_robustness = robustness
+        
+    c_not_threaded(&c_robustness[0],len(robustness))
     
     return c_robustness
 
