@@ -541,6 +541,15 @@ void c_one_dim_pred(float* traces, float A, float bound,long length){
     }
 }
 
+
+void c_one_dim_pred_threaded(float* traces, float A, float bound,long length){
+    long i;
+    #pragma omp parallel for num_threads(sysconf(_SC_NPROCESSORS_ONLN))
+    for(i = 0; i < length; i++){
+        *(traces + i)  =  *(traces + i) * A - bound;
+    }
+}
+
 //  Processes mtl until (left_robustness Until Right_robustness)
 //      lower_time_bound: a float representing the until lower time bound
 //      upper_time_bound: a float representing the until upper time bound

@@ -20,7 +20,7 @@ import quadprog_polyhedron
 # 0 robustness is a failure (will add an option to choose later)
 
 class Predicate:
-    def __init__(self,variable_name,A_Matrix,bound,process_type = 'cpu',thread_pool = False):
+    def __init__(self,variable_name,A_Matrix,bound,process_type = 'cpu_threaded',thread_pool = False):
         self.variable_name = variable_name
         self.value = None
         self.truth_value_history = []
@@ -56,6 +56,8 @@ class Predicate:
                 if self.process_type == 'cpu':
                     predicate_robustness = backend.py_one_dim_pred_numpy(trace, self.A_Matrix, self.bound)
                     #predicate_robustness = backend.py_one_dim_pred(list(trace), self.A_Matrix, self.bound)
+                elif self.process_type == 'cpu_threaded':
+                    predicate_robustness = backend.py_one_dim_pred_threaded_numpy(trace, self.A_Matrix, self.bound)
                 else:
                     predicate_robustness = gpubackend.py_one_dim_pred_gpu(list(trace), self.A_Matrix, self.bound)   
             else:

@@ -58,6 +58,10 @@ cdef extern from "backend.h":
 cdef extern from "backend.h":
     void c_one_dim_pred(float* traces, float A, float bound,long length);
 
+cdef extern from "backend.h":
+    void c_one_dim_pred_threaded(float* traces, float A, float bound,long length);
+
+
 #Wrapper for MTL not operation
 #   robustness: A list of python floats
 #   returns: A list of python floats
@@ -418,6 +422,16 @@ def py_one_dim_pred_numpy(robustness, float A, float bound) -> float[::1]:
 
         
     c_one_dim_pred(&c_robustness[0],A,bound,len(robustness))
+    
+
+    
+    return robustness
+
+def py_one_dim_pred_threaded_numpy(robustness, float A, float bound) -> float[::1]:
+    cdef float[:] c_robustness = robustness
+
+        
+    c_one_dim_pred_threaded(&c_robustness[0],A,bound,len(robustness))
     
 
     

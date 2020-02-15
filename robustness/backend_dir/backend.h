@@ -20,6 +20,8 @@ float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* 
 float* c_global_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness,long length);
 float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
 void c_one_dim_pred(float* traces, float A, float bound,long length);
+void c_one_dim_pred_threaded(float* traces, float A, float bound,long length);
+
 double* higher_dim_pred(long trace_size, long long int n, long long int m, double* q,double* l, double* u, int A_nnz, int P_nnz, double** traces, long length, double* P_data, long long int* P_indices, long long int* P_indptr, double* A_data, long long int* A_indices, long long int* A_indptr, double* init_A);
 double* higher_dim_pred_threaded(long trace_size, long long int n, long long int m, double* q,double* l, double* u, int A_nnz, int P_nnz, double** traces, long length, double* P_data, long long int* P_indices, long long int* P_indptr, double* A_data, long long int* A_indices, long long int* A_indptr, double* init_A);
 
