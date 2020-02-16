@@ -447,6 +447,9 @@ float* c_global_no_malloc(float lower_time_bound, float upper_time_bound, float*
     }
     else{
         long current_time_step;
+        long previous_lower_bound_index;
+        long min_index = -1;
+        float min = -INFINITY;
         for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
@@ -464,10 +467,24 @@ float* c_global_no_malloc(float lower_time_bound, float upper_time_bound, float*
                 *(global_robustness + current_time_step) = *(robustness + lower_bound_index);
             }
             else{
-                long min_index = find_min(robustness,lower_bound_index,upper_bound_index);
-                *(global_robustness + current_time_step) = *(robustness + min_index);
+                if(min_index == -1){
+                    min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                    *(global_robustness + current_time_step) = *(robustness + min_index);
+                }
+                else if(min_index > upper_bound_index){
+                    min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                    *(global_robustness + current_time_step) = *(robustness + min_index);
+                }
+                else{
+                    long possible_min_index = find_min(robustness,lower_bound_index,previous_lower_bound_index);
+                    if(*(robustness+possible_min_index) < min){
+                        min_index = possible_min_index;
+                    }
+                    *(global_robustness + current_time_step) = *(robustness + min_index);
+                }
             }
-        
+            previous_lower_bound_index = lower_bound_index;
+            min = *(global_robustness + current_time_step);
         }
     }
     return global_robustness;
