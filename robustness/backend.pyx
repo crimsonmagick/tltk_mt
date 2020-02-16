@@ -41,6 +41,9 @@ cdef extern from "backend.h":
 
 cdef extern from "backend.h":
     float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
+
+cdef extern from "backend.h":
+    float* c_global_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness ,long length);
     
 cdef extern from "backend.h":
     float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
@@ -239,6 +242,16 @@ def py_finally_threaded_numpy(float lower_time_bound,float upper_time_bound,robu
     c_finally_threaded_no_malloc(lower_time_bound,upper_time_bound,&c_robustness[0],&c_time_stamps[0],&c_results[0],len(robustness))
     
     return c_results
+
+def py_global_numpy(float lower_time_bound,float upper_time_bound,robustness,time_stamps) -> float[::1]:
+    cdef float[:] c_robustness = robustness
+    cdef float[:] c_time_stamps = time_stamps
+    cdef float[:] c_results = np.empty(len(robustness),dtype=np.float32)
+    
+    c_global_no_malloc(lower_time_bound,upper_time_bound,&c_robustness[0],&c_time_stamps[0],&c_results[0],len(robustness))
+    
+    return c_results
+
     
 def py_global_threaded_numpy(float lower_time_bound,float upper_time_bound,robustness,time_stamps) -> float[::1]:
     cdef float[:] c_robustness = robustness

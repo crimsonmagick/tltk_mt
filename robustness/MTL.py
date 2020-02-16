@@ -132,7 +132,7 @@ class Global:
         #time_stamps.reverse()
         
         if self.process_type == 'cpu':
-            globally_robustness = backend.py_global(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+            globally_robustness = backend.py_global_numpy(self.lower_time_bound,self.upper_time_bound,subformula_robustness,time_stamps)
         elif self.process_type == 'cpu_threaded':
             #globally_robustness = backend.py_global_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
             globally_robustness = backend.py_global_threaded_numpy(self.lower_time_bound,self.upper_time_bound,subformula_robustness,time_stamps)

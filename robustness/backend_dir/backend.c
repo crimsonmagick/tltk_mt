@@ -425,6 +425,55 @@ float* c_global(float lower_time_bound, float upper_time_bound, float* robustnes
     return global_robustness;
 }
 
+float* c_global_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness ,long length){
+    long i;
+    float min;
+    //float* global_robustness = (float*) malloc(length * sizeof(float));
+    
+    if(global_robustness == NULL){
+        perror("Error: global could not malloc memory");
+        exit(-1);
+    }
+    
+    if(lower_time_bound == 0 && isinf(upper_time_bound)){
+        min = *(robustness + (length - 1));
+        for(i = length - 1; i >= 0; i--){
+            if(*(robustness + i) < min){
+                min = *(robustness + i);
+            }
+            *(global_robustness + i) = min;
+
+        }
+    }
+    else{
+        long current_time_step;
+        for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
+            float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
+            float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
+            long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
+            long lower_bound_index; 
+            
+            if(lower_time_bound == 0){
+                lower_bound_index = current_time_step;
+            }
+            else{
+                lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
+            }
+            
+            if(lower_bound_index == upper_bound_index){
+                *(global_robustness + current_time_step) = *(robustness + lower_bound_index);
+            }
+            else{
+                long min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                *(global_robustness + current_time_step) = *(robustness + min_index);
+            }
+        
+        }
+    }
+    return global_robustness;
+}
+
+
 //  Processes mtl global using parrel processing
 //      lower_time_bound: a float representing the global lower time bound
 //      upper_time_bound: a float representing the global upper time bound
