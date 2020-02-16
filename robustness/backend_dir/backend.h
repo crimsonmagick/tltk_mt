@@ -14,11 +14,13 @@ float* c_finally(float lower_time_bound, float upper_time_bound, float* robustne
 float* c_finally_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* finally_robustness ,long length);
 float* c_global(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_until(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
+float* c_until_no_malloc(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness,float* until_robustness, float* time_stamps, long length);
 float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_finally_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* finally_robustness ,long length);
 float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_global_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness,long length);
 float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
+float* c_until_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps,float* until_robustness ,long length);
 void c_one_dim_pred(float* traces, float A, float bound,long length);
 void c_one_dim_pred_threaded(float* traces, float A, float bound,long length);
 

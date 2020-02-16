@@ -27,7 +27,6 @@ cdef extern from "backend.h":
 cdef extern from "backend.h":
     void c_and_threaded(float* left_robustness,float* right_robustness,long length)
 
-
 cdef extern from "backend.h":
     float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 
@@ -53,7 +52,13 @@ cdef extern from "backend.h":
     float* c_until(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
     
 cdef extern from "backend.h":
+    float* c_until_no_malloc(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness,float* until_robustness, float* time_stamps, long length);
+    
+cdef extern from "backend.h":
     float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps, long length);
+
+cdef extern from "backend.h":
+    float* c_until_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps,float* until_robustness ,long length);
 
 cdef extern from "backend.h":
     void c_one_dim_pred(float* traces, float A, float bound,long length);
@@ -361,6 +366,28 @@ def py_until(float lower_time_bound,float upper_time_bound,list left_robustness,
         free(c_results)
         
     return left_robustness
+    
+
+    
+def py_until_threaded_numpy(float lower_time_bound,float upper_time_bound,left_robustness,right_robustness,time_stamps) -> float[::1]:
+    cdef float[:] c_left_robustness = left_robustness
+    cdef float[:] c_right_robustness = right_robustness
+    cdef float[:] c_time_stamps = time_stamps
+    cdef float[:] c_results = np.empty(len(left_robustness),dtype=np.float32)
+    
+    c_until_threaded_no_malloc(lower_time_bound,upper_time_bound,&c_left_robustness[0],&c_right_robustness[0],&c_time_stamps[0],&c_results[0],len(left_robustness))
+    
+    return c_results
+    
+def py_until_numpy(float lower_time_bound,float upper_time_bound,left_robustness,right_robustness,time_stamps) -> float[::1]:
+    cdef float[:] c_left_robustness = left_robustness
+    cdef float[:] c_right_robustness = right_robustness
+    cdef float[:] c_time_stamps = time_stamps
+    cdef float[:] c_results = np.empty(len(left_robustness),dtype=np.float32)
+    
+    c_until_no_malloc(lower_time_bound,upper_time_bound,&c_left_robustness[0],&c_right_robustness[0],&c_time_stamps[0],&c_results[0],len(left_robustness))
+    
+    return c_results
 
 #Wrapper for the MTL until operation that takes advantage of parallel processing (left_robustness[i] Until right_robustness[i])
     #lower_time_bound: A python float

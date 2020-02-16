@@ -329,6 +329,7 @@ class Until:
         self.robustness = 0
         self.value = True
         self.right_subformula_true = False
+        self.process_type = process_type 
 
 
     def eval_interval(self,traces,time_stamps): 
@@ -340,9 +341,9 @@ class Until:
         inner_formula_min = []
         last_robustness = float('-inf')
         if self.process_type == "cpu":
-            until_robustness = until_robustness = backend.py_until(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
+            until_robustness = until_robustness = backend.py_until_numpy(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,time_stamps)
         elif self.process_type == "cpu_threaded":
-            until_robustness = until_robustness = backend.py_until_threaded(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
+            until_robustness = until_robustness = backend.py_until_threaded_numpy(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,time_stamps)
         else:
             print("GPU for Until")
             until_robustness = gpubackend.py_until_gpu(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))

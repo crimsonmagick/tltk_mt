@@ -661,7 +661,102 @@ float* c_until_threaded(float lower_time_bound, float upper_time_bound, float* l
         }
     }
     return until_robustness;
+}
+
+float* c_until_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps,float* until_robustness ,long length){
+    //float* until_robustness = (float*) malloc(length * sizeof(float));
+    if(lower_time_bound == 0 && isinf(upper_time_bound)){
+        float last_robustness = -INFINITY;
+        long current_time_step;
+        for(current_time_step = length - 1; current_time_step >= 0; current_time_step--){
+            last_robustness = max(min(last_robustness,left_robustness[current_time_step]),right_robustness[current_time_step]);
+            until_robustness[current_time_step] = last_robustness;
+        }
+    }
+    else{
+        long current_time_step;
+        float last_robustness = -INFINITY;
+        #pragma omp parallel for num_threads(sysconf(_SC_NPROCESSORS_ONLN))
+        for(current_time_step = length-1; current_time_step >= 0; current_time_step--){
+            float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
+            float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
+            long lower_bound_index;
+            if(lower_time_bound == 0){
+                lower_bound_index = current_time_step;
+            }
+            else{
+                lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
+            }
+            long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
+            
+            float min_robustness;
+            
+            if(lower_bound_index == current_time_step){
+                min_robustness = *(left_robustness+lower_bound_index);
+            }
+            else{
+                long min_robustness_index;
+                min_robustness_index = find_min(left_robustness,current_time_step,lower_bound_index);
+                min_robustness = *(left_robustness + min_robustness_index);
+            }
+            long bounded_index;
+            
+            for(bounded_index = lower_bound_index; bounded_index <= upper_bound_index; bounded_index++){
+                    last_robustness = max(last_robustness,min(right_robustness[bounded_index],min_robustness));
+                    min_robustness = min(min_robustness,left_robustness[bounded_index]);
+            }
+            *(until_robustness + current_time_step) = last_robustness;
+            last_robustness = -INFINITY;
+        }
+    }
+    return until_robustness;
 }  
 
-
+float* c_until_no_malloc(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness,float* until_robustness, float* time_stamps, long length){
+    //float* until_robustness = (float*) malloc(length * sizeof(float));
+    if(lower_time_bound == 0 && isinf(upper_time_bound)){
+        float last_robustness = -INFINITY;
+        long current_time_step;
+        for(current_time_step = length - 1; current_time_step >= 0; current_time_step--){
+            last_robustness = max(min(last_robustness,left_robustness[current_time_step]),right_robustness[current_time_step]);
+            until_robustness[current_time_step] = last_robustness;
+        }
+    }
+    else{
+        long current_time_step;
+        float last_robustness = -INFINITY;
+        for(current_time_step = length-1; current_time_step >= 0; current_time_step--){
+            float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
+            float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
+            long lower_bound_index;
+            if(lower_time_bound == 0){
+                lower_bound_index = current_time_step;
+            }
+            else{
+                lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
+            }
+            long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
+            
+            float min_robustness;
+            
+            if(lower_bound_index == current_time_step){
+                min_robustness = *(left_robustness+lower_bound_index);
+            }
+            else{
+                long min_robustness_index;
+                min_robustness_index = find_min(left_robustness,current_time_step,lower_bound_index);
+                min_robustness = *(left_robustness + min_robustness_index);
+            }
+            long bounded_index;
+            
+            for(bounded_index = lower_bound_index; bounded_index <= upper_bound_index; bounded_index++){
+                    last_robustness = max(last_robustness,min(right_robustness[bounded_index],min_robustness));
+                    min_robustness = min(min_robustness,left_robustness[bounded_index]);
+            }
+            *(until_robustness + current_time_step) = last_robustness;
+            last_robustness = -INFINITY;
+        }
+    }
+    return until_robustness;
+}
 
