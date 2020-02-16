@@ -128,7 +128,7 @@ float min(float left, float right){
 long find_min(float* array, long start_index, long end_index){
     long i, index;
     float min;
-    min = *array;
+    min = *(array+start_index);
     index = 0;
     for (i = start_index; i <= end_index; i++){
         if (*(array + i) < min){
@@ -146,7 +146,7 @@ long find_min(float* array, long start_index, long end_index){
 long find_max(float* array, long start_index, long end_index){
     long i, index;
     float max;
-    max = *array;
+    max = *(array+start_index);
     index = 0;
     for (i = start_index; i <= end_index; i++){
         if(*(array + i) > max){
