@@ -5,9 +5,9 @@ import MTL as MTL
 import numpy as np
 import time
 
-start = 50000
+start = 10000000
 stop = start * 2
-step = 10
+step = start * 3
 mode = 'cpu'
 
 for i in range(start,stop+1,step):
@@ -24,7 +24,7 @@ for i in range(start,stop+1,step):
     traces = {'data1': np.ones(i,dtype=np.float32),'data2': np.ones(i,dtype=np.float32)}
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
     #root = MTL.Not(MTL.And(MTL.Finally(0,1000,pred3),MTL.Global(0,1000,pred4)))
-    root = MTL.Global(0,1000,MTL.And(pred3,pred4),'cpu')
+    root = MTL.Global(0,1000,pred3,'cpu_threaded')
     #print("data generated")
     t0 = time.time()
     root.eval_interval(traces, time_stamps)

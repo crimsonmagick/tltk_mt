@@ -545,6 +545,51 @@ float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* 
     }
     return global_robustness;
 }
+
+void global_thread_task(long start_index,long end_index,float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness,long length){
+    long current_time_step;
+     //printf("Start index: %ld | End index: %ld\n",start_index,end_index - 1);
+    long previous_lower_bound_index;
+    long min_index = -1;
+    float min = -INFINITY;
+    for(current_time_step= end_index - 1; current_time_step >= start_index; current_time_step--){
+            float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
+            float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
+            long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
+            long lower_bound_index; 
+            
+            if(lower_time_bound == 0){
+                lower_bound_index = current_time_step;
+            }
+            else{
+                lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
+            }
+            
+            if(lower_bound_index == upper_bound_index){
+                *(global_robustness + current_time_step) = *(robustness + lower_bound_index);
+            }
+            else{
+                if(min_index == -1){
+                    min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                    *(global_robustness + current_time_step) = *(robustness + min_index);
+                }
+                else if(min_index > upper_bound_index){
+                    min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                    *(global_robustness + current_time_step) = *(robustness + min_index);
+                }
+                else{
+                    long possible_min_index = find_min(robustness,lower_bound_index,previous_lower_bound_index);
+                    if(*(robustness+possible_min_index) < min){
+                        min_index = possible_min_index;
+                    }
+                    *(global_robustness + current_time_step) = *(robustness + min_index);
+                }
+            }
+            previous_lower_bound_index = lower_bound_index;
+            min = *(global_robustness + current_time_step);
+    }
+}
+
 float* c_global_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness,long length){
     long i;
     float min;
@@ -565,34 +610,51 @@ float* c_global_threaded_no_malloc(float lower_time_bound, float upper_time_boun
         }
     }
     else{
-        long current_time_step;
-        #pragma omp parallel for num_threads(sysconf(_SC_NPROCESSORS_ONLN))
-        for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
-            float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
-            float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
-            long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
-            long lower_bound_index; 
+        long thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+        //long current_time_step;
+        long division_length = length / thread_count;
+        long overflow_work = length % thread_count;
+        long task;
+        //printf("task over_flow: %ld\n", overflow_work);
+        #pragma omp parallel for num_threads(thread_count)
+        for(task = 0; task < thread_count; task++){
+            long start_index = task * division_length;
+            long end_index = (task + 1) * division_length;
             
-            if(lower_time_bound == 0){
-                lower_bound_index = current_time_step;
-            }
-            else{
-                lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
+            if(task == (thread_count - 1)){
+                end_index += overflow_work;
             }
             
-            if(lower_bound_index == upper_bound_index){
-                *(global_robustness + current_time_step) = *(robustness + lower_bound_index);
-            }
-            else{
-                long min_index = find_min(robustness,lower_bound_index,upper_bound_index);
-                *(global_robustness + current_time_step) = *(robustness + min_index);
-            }
-        
+            global_thread_task(start_index,end_index,lower_time_bound,upper_time_bound,robustness,time_stamps,global_robustness,length);
         }
+        
+        //for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
+            
+            
+            //float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
+            //float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
+            //long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
+            //long lower_bound_index; 
+            
+            //if(lower_time_bound == 0){
+                //lower_bound_index = current_time_step;
+            //}
+            //else{
+                //lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
+            //}
+            
+            //if(lower_bound_index == upper_bound_index){
+                //*(global_robustness + current_time_step) = *(robustness + lower_bound_index);
+            //}
+            //else{
+                //long min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                //*(global_robustness + current_time_step) = *(robustness + min_index);
+            //}
+        
+        //}
     }
     return global_robustness;
 }
-
 
 
 //  Process 1 dimisional polyhedron A*trace[i] <= bound
