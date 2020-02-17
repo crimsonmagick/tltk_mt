@@ -477,14 +477,14 @@ float* c_global_no_malloc(float lower_time_bound, float upper_time_bound, float*
                 }
                 else{
                     long possible_min_index = find_min(robustness,lower_bound_index,previous_lower_bound_index);
-                    if(*(robustness+possible_min_index) < min){
+                    if(*(robustness+possible_min_index) <= min){
                         min_index = possible_min_index;
                     }
                     *(global_robustness + current_time_step) = *(robustness + min_index);
                 }
             }
             previous_lower_bound_index = lower_bound_index;
-            min = *(global_robustness + current_time_step);
+            min = *(global_robustness + min_index);
         }
     }
     return global_robustness;
@@ -579,14 +579,14 @@ void global_thread_task(long start_index,long end_index,float lower_time_bound, 
                 }
                 else{
                     long possible_min_index = find_min(robustness,lower_bound_index,previous_lower_bound_index);
-                    if(*(robustness+possible_min_index) < min){
+                    if(*(robustness+possible_min_index) <= min){
                         min_index = possible_min_index;
                     }
                     *(global_robustness + current_time_step) = *(robustness + min_index);
                 }
             }
             previous_lower_bound_index = lower_bound_index;
-            min = *(global_robustness + current_time_step);
+            min = *(global_robustness + min_index);
     }
 }
 

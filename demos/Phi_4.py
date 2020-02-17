@@ -26,11 +26,9 @@ for i in range(start,stop+1,step):
     traces = {'data1': np.ones(i,dtype=np.float32),'data2': np.ones(i,dtype=np.float32)}
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
     #root = MTL.Not(MTL.And(MTL.Finally(0,1000,pred3),MTL.Global(0,1000,pred4)))
-<<<<<<< HEAD
+
     root = MTL.Global(0,1000,pred3,'cpu_threaded')
-=======
-    root = MTL.Not(MTL.Global(0,100,MTL.Or(pred3,pred4,mode),'cpu'),mode)
->>>>>>> 01633fd5485d435d9d5c57af3fa44934f751ae62
+
     #print("data generated")
     t0 = time.time()
     root.eval_interval(traces, time_stamps)
