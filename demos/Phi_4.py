@@ -5,17 +5,19 @@ import MTL as MTL
 import numpy as np
 import time
 
-start = 10000000
-stop = start * 2
-step = start * 3
-mode = 'cpu'
+
+start = 100000000
+stop = 500000000 * 2
+step = 100000000
+mode = 'cpu_threaded'
+
 
 for i in range(start,stop+1,step):
-    Ar3 = 150
-    br3 = 20
+    Ar3 = 1
+    br3 = 160
     
-    Ar4 = 400
-    br4 = 130
+    Ar4 = 1
+    br4 = 4500
     
 
     pred3 = MTL.Predicate('data1',Ar3,br3)
@@ -24,7 +26,11 @@ for i in range(start,stop+1,step):
     traces = {'data1': np.ones(i,dtype=np.float32),'data2': np.ones(i,dtype=np.float32)}
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
     #root = MTL.Not(MTL.And(MTL.Finally(0,1000,pred3),MTL.Global(0,1000,pred4)))
+<<<<<<< HEAD
     root = MTL.Global(0,1000,pred3,'cpu_threaded')
+=======
+    root = MTL.Not(MTL.Global(0,100,MTL.Or(pred3,pred4,mode),'cpu'),mode)
+>>>>>>> 01633fd5485d435d9d5c57af3fa44934f751ae62
     #print("data generated")
     t0 = time.time()
     root.eval_interval(traces, time_stamps)
