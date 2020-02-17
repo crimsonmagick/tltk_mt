@@ -141,7 +141,7 @@ class Global:
             globally_robustness = gpubackend.py_global_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         t1 = time()
         #print("Global time: ", t1 - t0)
-        self.robustness = min(globally_robustness)
+        self.robustness = globally_robustness[0]
         if self.robustness > 0:
             self.value = True
         #globally_robustness.reverse()
@@ -179,9 +179,9 @@ class Finally:
             #print("finally GPU computation")
             finally_robustness = gpubackend.py_finally_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
 
-        t1 = time()
+        #t1 = time()
         #print('Finally time:', t1 - t0)
-        self.robustness = max(finally_robustness)
+        self.robustness = finally_robustness[0]
         
         if self.robustness > 0:
             self.value = True
