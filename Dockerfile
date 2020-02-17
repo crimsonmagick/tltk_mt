@@ -1,9 +1,6 @@
-FROM python:3
-
-WORKDIR /usr/src/app
-
-COPY requirements.txt ./
+FROM python:3.7.5
+WORKDIR /usr/src/tltk
+COPY . ./
 RUN pip install --no-cache-dir -r requirements.txt
-# RUN apt install git-all
-# RUN git clone https://bardhh@bitbucket.org/versyslab/tltk.git
+RUN cd robustness ; make
 
