@@ -31,3 +31,4 @@ root.eval_interval(traces, time_stamps)
 t1 = time.time()
 print("Phi_1_higher_dim","| Mode:" ,mode,'| Samples:', i, ' | Time: ', t1 - t0)
 
+#Change made to test docker update. 
