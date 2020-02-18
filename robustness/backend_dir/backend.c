@@ -551,7 +551,7 @@ void global_thread_task(long start_index,long end_index,float lower_time_bound, 
      //printf("Start index: %ld | End index: %ld\n",start_index,end_index - 1);
     long previous_lower_bound_index;
     long min_index = -1;
-    float min = -INFINITY;
+    float min = INFINITY;
     for(current_time_step= end_index - 1; current_time_step >= start_index; current_time_step--){
             float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
             float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
@@ -586,7 +586,7 @@ void global_thread_task(long start_index,long end_index,float lower_time_bound, 
                 }
             }
             previous_lower_bound_index = lower_bound_index;
-            min = *(global_robustness + min_index);
+            min = *(robustness + min_index);
     }
 }
 

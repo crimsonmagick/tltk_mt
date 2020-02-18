@@ -6,14 +6,14 @@ import numpy as np
 import time
 
 
-start = 1000000
-stop = 50000000
-step = 10000000
+start = 10000000
+stop = start * 2
+step = start * 3
 mode = 'cpu_threaded'
 
 
 for i in range(start,stop+1,step):
-    Ar3 = [1, 0]
+    Ar3 = [0, 1]
     br3 = [160]
     
     Ar4 = 1
@@ -30,7 +30,7 @@ for i in range(start,stop+1,step):
     #root = MTL.Not(MTL.And(MTL.Global(0,100,pred3),MTL.Global(0,100,pred4)))
     #root = MTL.Global(0,1000,pred3,'cpu_threaded')
 
-    root = MTL.Global(0,1000,pred3,"cpu_threaded")
+    root = MTL.Global(0,1000,pred4,"cpu_threaded")
 
     t0 = time.time()
     root.eval_interval(traces, time_stamps)
