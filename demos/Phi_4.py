@@ -7,7 +7,7 @@ import time
 
 
 start = 10000000
-stop = 50000000
+stop = 100000000
 step = 10000000
 mode = 'cpu_threaded'
 
