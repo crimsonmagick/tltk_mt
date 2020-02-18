@@ -82,7 +82,7 @@ class Predicate:
                 length = len(traces)
                 #traces = np.transpose(np.array(traces)).tolist()
                 #predicate_robustness = backend.py_higher_dim(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
-                predicate_robustness = quadprog_polyhedron.solve_polyhedron(self.A_Matrix,self.bound,traces)
+                predicate_robustness = np.array(quadprog_polyhedron.solve_polyhedron(self.A_Matrix,self.bound,traces),dtype=np.float32)
                 # for value in trace:
                     # np_value = np.array(value)
                     # # if np_value.size == 1 and np_A_Matrix.size == 1:
@@ -141,7 +141,7 @@ class Global:
             globally_robustness = gpubackend.py_global_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         t1 = time()
         #print("Global time: ", t1 - t0)
-        self.robustness = min(globally_robustness)
+        self.robustness = globally_robustness[0]
         if self.robustness > 0:
             self.value = True
         #globally_robustness.reverse()
@@ -179,9 +179,9 @@ class Finally:
             #print("finally GPU computation")
             finally_robustness = gpubackend.py_finally_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
 
-        t1 = time()
+        #t1 = time()
         #print('Finally time:', t1 - t0)
-        self.robustness = max(finally_robustness)
+        self.robustness = finally_robustness[0]
         
         if self.robustness > 0:
             self.value = True
