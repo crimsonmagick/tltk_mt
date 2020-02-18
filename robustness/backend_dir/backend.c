@@ -446,46 +446,48 @@ float* c_global_no_malloc(float lower_time_bound, float upper_time_bound, float*
         }
     }
     else{
-        long current_time_step;
-        long previous_lower_bound_index;
-        long min_index = -1;
-        float min = -INFINITY;
-        for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
-            float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
-            float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
-            long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
-            long lower_bound_index; 
+        global_thread_task(0,length,lower_time_bound,upper_time_bound,robustness,time_stamps,global_robustness,length);
+        //long current_time_step;
+        //long previous_lower_bound_index;
+        //long min_index = -1;
+        //float min = -INFINITY;
+        //for(current_time_step= length - 1; current_time_step >= 0; current_time_step--){
+            //float lower_bound = *(time_stamps + current_time_step) + lower_time_bound;
+            //float upper_bound = *(time_stamps + current_time_step) + upper_time_bound;
+            //long upper_bound_index = search_sorted(time_stamps,upper_bound,current_time_step,length);
+            //long lower_bound_index; 
             
-            if(lower_time_bound == 0){
-                lower_bound_index = current_time_step;
-            }
-            else{
-                lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
-            }
+            //if(lower_time_bound == 0){
+                //lower_bound_index = current_time_step;
+            //}
+            //else{
+                //lower_bound_index = search_sorted(time_stamps,lower_bound,current_time_step,length);
+            //}
             
-            if(lower_bound_index == upper_bound_index){
-                *(global_robustness + current_time_step) = *(robustness + lower_bound_index);
-            }
-            else{
-                if(min_index == -1){
-                    min_index = find_min(robustness,lower_bound_index,upper_bound_index);
-                    *(global_robustness + current_time_step) = *(robustness + min_index);
-                }
-                else if(min_index > upper_bound_index){
-                    min_index = find_min(robustness,lower_bound_index,upper_bound_index);
-                    *(global_robustness + current_time_step) = *(robustness + min_index);
-                }
-                else{
-                    long possible_min_index = find_min(robustness,lower_bound_index,previous_lower_bound_index);
-                    if(*(robustness+possible_min_index) <= min){
-                        min_index = possible_min_index;
-                    }
-                    *(global_robustness + current_time_step) = *(robustness + min_index);
-                }
-            }
-            previous_lower_bound_index = lower_bound_index;
-            min = *(global_robustness + min_index);
-        }
+            //if(lower_bound_index == upper_bound_index){
+                //*(global_robustness + current_time_step) = *(robustness + lower_bound_index);
+            //}
+            //else{
+                //if(min_index == -1){
+                    //min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                    //*(global_robustness + current_time_step) = *(robustness + min_index);
+                //}
+                //else if(min_index > upper_bound_index){
+                    //min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                    //*(global_robustness + current_time_step) = *(robustness + min_index);
+                //}
+                //else{
+                    //long possible_min_index = find_min(robustness,lower_bound_index,previous_lower_bound_index);
+                    //if(*(robustness+possible_min_index) <= min){
+                        //min_index = possible_min_index;
+                    //}
+                    //*(global_robustness + current_time_step) = *(robustness + min_index);
+                //}
+            //}
+            //previous_lower_bound_index = lower_bound_index;
+            //min = *(global_robustness + min_index);
+        //}
+    
     }
     return global_robustness;
 }
