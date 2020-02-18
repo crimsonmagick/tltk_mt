@@ -6,13 +6,11 @@ import numpy as np
 import time
 
 
-start = 1000000
-stop = 50000000
-step = 10000000
+list_range = (2**i for i in range(10,31))
+
 mode = 'cpu_threaded'
 
-
-for i in range(start,stop+1,step):
+for i in list_range:
     Ar3 = [1, 0]
     br3 = [160]
     
