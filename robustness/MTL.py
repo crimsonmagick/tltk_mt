@@ -82,7 +82,7 @@ class Predicate:
                 length = len(traces)
                 #traces = np.transpose(np.array(traces)).tolist()
                 #predicate_robustness = backend.py_higher_dim(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
-                predicate_robustness = quadprog_polyhedron.solve_polyhedron(self.A_Matrix,self.bound,traces)
+                predicate_robustness = np.array(quadprog_polyhedron.solve_polyhedron(self.A_Matrix,self.bound,traces),dtype=np.float32)
                 # for value in trace:
                     # np_value = np.array(value)
                     # # if np_value.size == 1 and np_A_Matrix.size == 1:
