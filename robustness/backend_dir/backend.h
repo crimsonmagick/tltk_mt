@@ -18,6 +18,7 @@ float* c_until(float lower_time_bound, float upper_time_bound, float* left_robus
 float* c_until_no_malloc(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness,float* until_robustness, float* time_stamps, long length);
 float* c_finally_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_finally_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* finally_robustness ,long length);
+void finally_thread_task(long start_index,long end_index,float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* finally_robustness,long length);
 float* c_global_threaded(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_global_threaded_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness,long length);
 void global_thread_task(long start_index,long end_index,float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness,long length);
