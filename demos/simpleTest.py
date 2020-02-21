@@ -16,15 +16,16 @@ br1 = 150
 Ar2 = np.array([[1],[1],[1]],dtype=np.float64)
 br2 = np.array([4500],dtype=np.float64)
 
-r1 = MTL.Predicate('comb',Ar1,br1)
+r1 = MTL.Predicate('comb',Ar1,br1,process_type = mode)
 r2 = MTL.Predicate('comb2',Ar2,br2)
 
 # phi = '[](r1 /\ r2)';
 root = r1
 #root = MTL.Or(r1,r1)
 
-i = 100000000
-traces = {'comb': np.ones(i,dtype=np.float32),'comb2':np.array([[1,1,1]]*i,dtype=np.float64)}
+i = 1000000000
+#traces = {'comb': np.ones(i,dtype=np.float32),'comb2':np.array([[1,1,1]]*i,dtype=np.float64)}
+traces = {'comb': np.ones(i,dtype=np.float32)}
 # traces['comb2'][0] = [20000,1]
 time_stamps = np.arange(1, i + 1,dtype=np.float32)
 #traces['comb2'][0] = np.array([20,20,200])

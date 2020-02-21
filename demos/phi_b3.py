@@ -7,7 +7,7 @@ import time
 
 import matplotlib.pyplot as plt
 
-list_range = (2**i for i in range(10,29))
+list_range = (2**i for i in range(10,30))
 
 mode = 'cpu_threaded'
 
@@ -15,8 +15,8 @@ x_length = []
 y_time = []
 
 for i in list_range:
-    Ar3 = 1
-    br3 = 160
+    Ar3 = -1
+    br3 = -160
     
     Ar4 = 1
     br4 = 4500
@@ -35,8 +35,11 @@ for i in list_range:
     
     x_length.append(i)
     y_time.append(t1-t0)
+    if(root.robustness != 4495):
+        print("phi_b3\t","| Mode:" ,mode,'\t| Samples:', "{:,}".format(i), '\t| Time: ', '%.4f'%(t1 - t0), '    \t| robustness', root.robustness)
+    else:
+        print('Samples:', "{:,}".format(i))
     
-    print("phi_b3\t","| Mode:" ,mode,'\t| Samples:', "{:,}".format(i), '\t| Time: ', '%.4f'%(t1 - t0), '    \t| robustness', root.robustness)
     del traces
     del time_stamps
 
