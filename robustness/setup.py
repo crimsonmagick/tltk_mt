@@ -16,5 +16,5 @@ extension = Extension(
 
 setup(
     name="backend",
-    ext_modules=cythonize([extension])
+    ext_modules=cythonize([extension], compiler_directives={'language_level' : "3"})
 )

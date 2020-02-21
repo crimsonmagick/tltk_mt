@@ -20,10 +20,10 @@ r1 = MTL.Predicate('comb',Ar1,br1)
 r2 = MTL.Predicate('comb2',Ar2,br2)
 
 # phi = '[](r1 /\ r2)';
-root = r2
+root = r1
 #root = MTL.Or(r1,r1)
 
-i = 10000
+i = 100000000
 traces = {'comb': np.ones(i,dtype=np.float32),'comb2':np.array([[1,1,1]]*i,dtype=np.float64)}
 # traces['comb2'][0] = [20000,1]
 time_stamps = np.arange(1, i + 1,dtype=np.float32)
