@@ -55,6 +55,32 @@ def solve_polyhedron(list C, list b, list traces):
         free(C_)
         free(traces_)
     return results
+
+def solve_polyhedron_numpy(C, double[:] b, traces):
+
+    n3, m1 = C.shape[0], C.shape[1]
+
+    cdef double** traces_
+    cdef long length = len(traces)
+    c_results = <double *>malloc(len(traces)*cython.sizeof(double))
+    traces_ = <double **>malloc(len(traces)*cython.sizeof(c_results))
+    
+    for time_step in xrange(len(traces)):
+        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
+        for i in xrange(len(traces[0])):
+            #print(traces[time_step][i], end=",")
+            traces_[time_step][i] = traces[time_step][i]
+            #sys.stdout.write("%lf," % traces[time_step][i])
+            
+    
+    cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
+    cdef double[::1] b_ = np.array(b, copy=True, order='F')
+    cdef double[:] results = np.empty(length,dtype=np.float64)
+
+    wrap_polyhedron(&C_[0,0],&b_[0],n3,m1,traces_,length,&results[0])
+    
+
+    return np.array(results,dtype=np.float32)
     
     
 def solve_qp(double[:, :] G, double[:] a, double[:, :] C=None, double[:] b=None, int meq=0, factorized=False):

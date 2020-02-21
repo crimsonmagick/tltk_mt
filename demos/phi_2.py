@@ -14,22 +14,22 @@ for i in list_range:
 # r3: [1 0 0; -1 0 0] x <= [250; -240]
 # r4: [1 0 0; -1 0 0] x <= [240; -230]
     
-    Ar3 = [[1,0,0],[-1,0,0]]
-    br3 = [[250],[-240]]
+    Ar3 = np.array([[1,0,0],[-1,0,0]],dtype=np.float64)
+    br3 = np.array([250,-240],dtype=np.float64)
     
-    Ar4 = [[1,0,0],[-1,0,0]]
-    br4 = [[250],[-240]]
+    Ar4 = np.array([[1,0,0],[-1,0,0]],dtype=np.float64)
+    br4 = np.array([250,-240],dtype=np.float64)
     
     r3 = MTL.Predicate('data1',Ar3,br3)
     r4 = MTL.Predicate('data2',Ar4,br4)
 
     traces = {} 
-    traces['data1'] = [[1,1,1]]*i
-    traces['data2'] = [[1,1,1]]*i
+    traces['data1'] = np.array([[1,1,1]]*i,dtype=np.float64)
+    traces['data2'] = np.array([[1,1,1]]*i,dtype=np.float64)
     #traces = {'data1': [[1,1,1]]*i,dtype=np.float32),'data2': [[1,1,1]]*i,dtype=np.float32)}
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
-    
-    root = MTL.Not(MTL.And(MTL.Global(5,150,r3,mode), MTL.Finally(300,400,r4,mode),mode),mode)
+    root = r3
+    #root = MTL.Not(MTL.And(MTL.Global(5,150,r3,mode), MTL.Finally(300,400,r4,mode),mode),mode)
         
     t0 = time.time()
     root.eval_interval(traces, time_stamps)

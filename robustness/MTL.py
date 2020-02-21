@@ -23,7 +23,7 @@ class Predicate:
     def __init__(self,variable_name,A_Matrix,bound,process_type = 'cpu_threaded',thread_pool = False):
         self.variable_name = variable_name
         self.value = None
-        self.truth_value_history = []
+        self.robustness_array = None
         self.bound = bound
         self.robustness = 0
         self.A_Matrix = A_Matrix
@@ -51,8 +51,12 @@ class Predicate:
         trace = traces[self.variable_name]
         predicate_robustness = []
         np_A_Matrix = np.array(self.A_Matrix)
+        
+        if type(self.robustness_array) != type(None):
+            return self.robustness_array
+        
         if self.thread_pool == False:
-            if (not isinstance(trace[0],list)) and (not isinstance(self.A_Matrix, list)):
+            if ((len(trace.shape) == 1) and (type(self.A_Matrix) == int or type(self.A_Matrix) == float)):
                 if self.process_type == 'cpu':
                     predicate_robustness = backend.py_one_dim_pred_numpy(trace, self.A_Matrix, self.bound)
                     #predicate_robustness = backend.py_one_dim_pred(list(trace), self.A_Matrix, self.bound)
@@ -61,28 +65,10 @@ class Predicate:
                 else:
                     predicate_robustness = gpubackend.py_one_dim_pred_gpu(list(trace), self.A_Matrix, self.bound)   
             else:
-                if isinstance(self.A_Matrix[0], list):
-                    m = len(self.A_Matrix)
-                    n = len(self.A_Matrix[0])
-                else:
-                    m = 1
-                    n = len(self.A_Matrix)
-                
-                init_A = self.A_Matrix
-                u = self.bound
-                
-                l = [float("-inf")] * m
-                q = [0] * m
-                traces = traces[self.variable_name]
-                results = [0] * len(traces)
-                length = len(traces)
-                init_P = 2 * np.eye(len(traces[0]), dtype=np.float64)
-                init_P = init_P.tolist()
-                trace_size = len(traces[0])
-                length = len(traces)
+ 
                 #traces = np.transpose(np.array(traces)).tolist()
                 #predicate_robustness = backend.py_higher_dim(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
-                predicate_robustness = np.array(quadprog_polyhedron.solve_polyhedron(self.A_Matrix,self.bound,traces),dtype=np.float32)
+                predicate_robustness = quadprog_polyhedron.solve_polyhedron_numpy(self.A_Matrix,self.bound,trace)
                 # for value in trace:
                     # np_value = np.array(value)
                     # # if np_value.size == 1 and np_A_Matrix.size == 1:
@@ -109,6 +95,7 @@ class Predicate:
                 # p.close()
                 # p.join()
         self.robustness = predicate_robustness[0]
+        self.robustness_array = predicate_robustness
         return predicate_robustness
         
 

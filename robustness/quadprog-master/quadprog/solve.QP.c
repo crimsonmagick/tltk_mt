@@ -937,7 +937,6 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         meq = 0;
         nact = 0;
         
-        
         memset(iters, 0, 2*sizeof(int));
         memset(a,0,n*sizeof(double));
         memset(sol,0,n*sizeof(double));
