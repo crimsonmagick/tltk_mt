@@ -59,7 +59,7 @@ class Predicate:
                 elif self.process_type == 'cpu_threaded':
                     predicate_robustness = backend.py_one_dim_pred_threaded_numpy(trace, self.A_Matrix, self.bound)
                 else:
-                    predicate_robustness = gpubackend.py_one_dim_pred_gpu(list(trace), self.A_Matrix, self.bound)   
+                    predicate_robustness = gpubackend.py_one_dim_pred_numpy_gpu(list(trace), self.A_Matrix, self.bound)   
             else:
                 if isinstance(self.A_Matrix[0], list):
                     m = len(self.A_Matrix)
@@ -138,7 +138,7 @@ class Global:
             globally_robustness = backend.py_global_threaded_numpy(self.lower_time_bound,self.upper_time_bound,subformula_robustness,time_stamps)
         else:
             #print("global GPU computation")
-            globally_robustness = gpubackend.py_global_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+            globally_robustness = gpubackend.py_global_numpy_gpu(self.lower_time_bound,self.upper_time_bound,subformula_robustness,time_stamps)
         t1 = time()
         #print("Global time: ", t1 - t0)
         self.robustness = globally_robustness[0]
@@ -176,8 +176,7 @@ class Finally:
             finally_robustness = backend.py_finally_threaded_numpy(self.lower_time_bound,self.upper_time_bound,subformula_robustness,time_stamps)
             #finally_robustness = backend.py_finally_threaded(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
         else:
-            #print("finally GPU computation")
-            finally_robustness = gpubackend.py_finally_gpu(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
+            finally_robustness = gpubackend.py_finally_numpy_gpu(self.lower_time_bound,self.upper_time_bound,subformula_robustness,time_stamps)
 
         #t1 = time()
         #print('Finally time:', t1 - t0)
@@ -218,7 +217,7 @@ class Not:
         elif self.process_type == "cpu_threaded":
             not_robustness = backend.py_not_threaded_numpy(subformula_robustness)
         else:
-            not_robustness = gpubackend.py_not_gpu(subformula_robustness)
+            not_robustness = gpubackend.py_not_numpy_gpu(subformula_robustness)
         self.robustness = -self.subformula.robustness 
         
         return not_robustness
@@ -256,8 +255,8 @@ class And:
         elif self.process_type == "cpu_threaded":
             and_robustness = backend.py_and_threaded_numpy(left_subformula_robustness,right_subformula_robustness)
         else:
-            print("GPU for AND")
-            and_robustness = gpubackend.py_and_gpu(left_subformula_robustness,right_subformula_robustness)
+            #print("GPU for AND")
+            and_robustness = gpubackend.py_and_numpy_gpu(left_subformula_robustness,right_subformula_robustness)
         self.robustness = min(self.left_subformula.robustness,self.right_subformula.robustness)
         return and_robustness
 
@@ -284,7 +283,7 @@ class Or:
             or_robustness = backend.py_or_threaded_numpy(left_subformula_robustness,right_subformula_robustness)
         else:
             #print("GPU for OR")
-            or_robustness = gpubackend.py_or_gpu(left_subformula_robustness,right_subformula_robustness)
+            or_robustness = gpubackend.py_or_numpy_gpu(left_subformula_robustness,right_subformula_robustness)
         
         t1 = time()
         #print('Or time: ', t1 - t0)
@@ -345,8 +344,7 @@ class Until:
         elif self.process_type == "cpu_threaded":
             until_robustness = until_robustness = backend.py_until_threaded_numpy(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,time_stamps)
         else:
-            print("GPU for Until")
-            until_robustness = gpubackend.py_until_gpu(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
+            until_robustness = gpubackend.py_until_numpy_gpu(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
         self.robustness = until_robustness[0]
         return until_robustness
 
