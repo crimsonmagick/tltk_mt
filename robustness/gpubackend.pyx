@@ -49,6 +49,11 @@ def py_one_dim_pred_gpu(list robustness, float A, float bound) -> float[::1]:
     
 	return robustness
 
+def py_one_dim_pred_numpy_gpu(robustness, float A, float bound) -> float[::1]:
+	cdef float[:] c_robustness = robustness      
+	predicate_setup(&c_robustness[0],A,bound,len(robustness))
+	return robustness
+
 def py_or_gpu(list left_robustness,list right_robustness) -> float[::1]:
 	cdef float * c_left_robustness
 	cdef float * c_right_robustness
@@ -66,6 +71,14 @@ def py_or_gpu(list left_robustness,list right_robustness) -> float[::1]:
 		free(c_left_robustness)
 		free(c_right_robustness)
 	return left_robustness
+
+def py_or_numpy_gpu(left_robustness,right_robustness) -> float[::1]:
+	cdef float[:] c_left_robustness = left_robustness
+	cdef float[:] c_right_robustness = right_robustness
+
+	c_or_gpu(&c_left_robustness[0],&c_right_robustness[0],len(left_robustness))
+
+	return c_left_robustness
 
 def py_and_gpu(list left_robustness,list right_robustness) -> float[::1]:
 	cdef float * c_left_robustness
@@ -93,6 +106,14 @@ def py_and_gpu(list left_robustness,list right_robustness) -> float[::1]:
     
 	return left_robustness
 
+def py_and_numpy_gpu(left_robustness,right_robustness) -> float[::1]:
+	cdef float[:] c_left_robustness = left_robustness
+	cdef float[:] c_right_robustness = right_robustness
+
+	c_and_gpu(&c_left_robustness[0],&c_right_robustness[0],len(left_robustness))
+
+	return c_left_robustness
+
 def py_not_gpu(list robustness) -> float[::1]:
 	cdef float * c_robustness
 	c_robustness = <float *>malloc(len(robustness)*cython.sizeof(float))
@@ -114,6 +135,13 @@ def py_not_gpu(list robustness) -> float[::1]:
 		free(c_robustness)
     
 	return robustness
+
+def py_not_numpy_gpu(robustness) -> float[::1]:
+	cdef float[:] c_robustness = robustness
+
+	c_not_gpu(&c_robustness[0],len(robustness))
+
+	return c_robustness
 
 def py_finally_gpu(float lower_time_bound,float upper_time_bound,list robustness,list time_stamps) -> float[::1]:
 # void c_finally_gpu(float* cpu_traces, float* cpu_time_stamps, float* results,float lower_time_bound, float upper_time_bound,long length)
@@ -138,6 +166,16 @@ def py_finally_gpu(float lower_time_bound,float upper_time_bound,list robustness
 		free(c_time_stamps)
 		free(c_results)
 	return robustness
+
+def py_finally_numpy_gpu(float lower_time_bound,float upper_time_bound,robustness,time_stamps) -> float[::1]:
+	cdef float[:] c_robustness = robustness
+	cdef float[:] c_time_stamps = time_stamps
+	cdef float[:] c_results = np.empty(len(robustness),dtype=np.float32)
+	#c_finally_gpu(c_robustness, c_time_stamps, c_results, lower_time_bound,upper_time_bound,len(robustness))
+	c_finally_gpu(&c_robustness[0],&c_time_stamps[0],&c_results[0],lower_time_bound,upper_time_bound,len(robustness))
+	#c_finally_gpu(lower_time_bound,upper_time_bound,&c_robustness[0],&c_time_stamps[0],&c_results[0],len(robustness))
+
+	return c_results
 
 def py_global_gpu(float lower_time_bound,float upper_time_bound,list robustness,list time_stamps) -> float[::1]:
 # c_global_gpu(float* cpu_traces, float* cpu_time_stamps, float* results,float lower_time_bound, float upper_time_bound,long length)
@@ -165,6 +203,15 @@ def py_global_gpu(float lower_time_bound,float upper_time_bound,list robustness,
 		free(c_time_stamps)
 		free(c_results)
 	return robustness
+
+def py_global_numpy_gpu(float lower_time_bound,float upper_time_bound,robustness,time_stamps) -> float[::1]:
+	cdef float[:] c_robustness = robustness
+	cdef float[:] c_time_stamps = time_stamps
+	cdef float[:] c_results = np.empty(len(robustness),dtype=np.float32)
+
+	c_global_gpu(&c_robustness[0],&c_time_stamps[0],&c_results[0],lower_time_bound,upper_time_bound,len(robustness))
+	
+	return c_results
 
 # c_until_gpu(float lower_time_bound, float upper_time_bound, float* left_robustness, float* right_robustness, float* time_stamps,float* results, long length)
 def py_until_gpu(float lower_time_bound,float upper_time_bound,list left_robustness,list right_robustness,list time_stamps) -> float[::1]:
@@ -196,3 +243,13 @@ def py_until_gpu(float lower_time_bound,float upper_time_bound,list left_robustn
 		free(c_results)
         
 	return left_robustness
+
+def py_until_numpy_gpu(float lower_time_bound,float upper_time_bound,left_robustness,right_robustness,time_stamps) -> float[::1]:
+	cdef float[:] c_left_robustness = left_robustness
+	cdef float[:] c_right_robustness = right_robustness
+	cdef float[:] c_time_stamps = time_stamps
+	cdef float[:] c_results = np.empty(len(left_robustness),dtype=np.float32)
+
+	c_until_gpu(lower_time_bound,upper_time_bound,&c_left_robustness[0],&c_right_robustness[0],&c_time_stamps[0],&c_results[0],len(left_robustness))
+
+	return c_results
