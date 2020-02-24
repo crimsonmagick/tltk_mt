@@ -762,8 +762,8 @@ L999:
     //return right;
 //}
 
-float* transpose(float* mat, long mat_row, long mat_col){
-    float* transposed_mat = (float*)malloc(mat_row*mat_col*sizeof(float));
+double* transpose(double* mat, int mat_row, int mat_col){
+    double* transposed_mat = (double*)malloc(mat_row*mat_col*sizeof(double));
     long i,j; 
     for(i=0;i<mat_row;i++){
         for(j=0;j<mat_col;j++){
@@ -881,7 +881,7 @@ void wrap_polyhedron_kernal(struct thread_package package){
 
 }
 
-void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results){
+void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long length ,double* results){
     
     double* a;
     int ierr;
@@ -899,6 +899,8 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
     
     long i;
     
+    double* C = transpose(C_f,n,m);
+    //double* b = transpose(b_f,1,m);
     ierr = 0;
     meq = 0;
     nact = 0; 
@@ -931,6 +933,11 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
     
     int positive_rob = false;
     
+    //int p;
+    //for(p=0;p<(n*m);p++){
+        //printf("%lf",*(C+p));
+    //}
+        //printf("\n");
     for( i = 0; i < length; i++){
 
         ierr = 0;
@@ -955,10 +962,10 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         for(j=0;j<n;j++){
              *(G + (j * n + j)) = scaler;
         }
+        
 
         matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
-        
-        
+
         if(matlessthaneq(A_t_trace,b_sub,m,1)){
             matscaler(-1.0,C_temp,m,n);
             matscaler(-1.0,b_sub,m,1);
@@ -979,7 +986,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
 
         free(traces[i]);
-        if(!positive_rob){
+        if(positive_rob){
             results[i] = sqrt(2*results[i]);
         }
         else{
@@ -988,6 +995,7 @@ void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long len
         positive_rob = false;
 
     }
+        free(C);
         free(G);
         free(iters);
         free(sol);

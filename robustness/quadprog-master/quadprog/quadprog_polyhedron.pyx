@@ -59,7 +59,7 @@ def solve_polyhedron(list C, list b, list traces):
 def solve_polyhedron_numpy(C, double[:] b, traces):
 
     n3, m1 = C.shape[0], C.shape[1]
-
+    
     cdef double** traces_
     cdef long length = len(traces)
     c_results = <double *>malloc(len(traces)*cython.sizeof(double))

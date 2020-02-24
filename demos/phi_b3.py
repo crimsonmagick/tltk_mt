@@ -39,6 +39,7 @@ for i in list_range:
 
     print("TLTk" ,"| phi_b3","| Mode:" ,mode,'\t| Samples:', "{:,}".format(i), '\t| Time: ', '%.4f'%(t1 - t0), '    \t| robustness', root.robustness)
 
+
     del traces
     del time_stamps
 

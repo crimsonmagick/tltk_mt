@@ -5,7 +5,7 @@ import MTL as MTL
 import numpy as np
 import time
 
-list_range = (2**i for i in range(10,31))
+list_range = (2**i for i in range(4,31))
 
 mode = 'cpu_threaded'
 
@@ -24,7 +24,7 @@ for i in list_range:
     r4 = MTL.Predicate('data2',Ar4,br4)
 
     traces = {} 
-    traces['data1'] = np.array([[1,1,1]]*i,dtype=np.float64)
+    traces['data1'] = np.array([[-1,-1,-1]]*i,dtype=np.float64)
     traces['data2'] = np.array([[1,1,1]]*i,dtype=np.float64)
     #traces = {'data1': [[1,1,1]]*i,dtype=np.float32),'data2': [[1,1,1]]*i,dtype=np.float32)}
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
