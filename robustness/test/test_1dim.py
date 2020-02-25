@@ -1,6 +1,6 @@
 import unittest
 import sys
-sys.path.insert(1, '../')
+sys.path.insert(1, '/usr/src/tltk/robustness/')
 import os
 import MTL as MTL 
 import numpy as np
