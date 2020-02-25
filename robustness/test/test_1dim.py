@@ -1,6 +1,6 @@
 import unittest
 import sys
-sys.path.insert(1, '../../robustness')
+sys.path.insert(1, '../')
 import os
 import MTL as MTL 
 import numpy as np
