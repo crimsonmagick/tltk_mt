@@ -31,7 +31,7 @@ class TestStringMethods(unittest.TestCase):
         root = MTL.And(pred1,pred2,mode)
         root.eval_interval(traces, time_stamps)
         
-        self.assertEqual(root.robustness,60)
+        self.assertEqual(root.robustness,50)
         
     def test_one_dim_or(self):
         mode = 'cpu_threaded'
