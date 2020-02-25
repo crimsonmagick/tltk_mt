@@ -26,12 +26,12 @@ class TestStringMethods(unittest.TestCase):
         time_stamps = np.array([1, 2, 3, 4, 5],dtype=np.float32)
 
         pred1 = MTL.Predicate('data1',Ar1,br1)
-        pred2 = MTL.Predicate('data2',Ar1,br1)
+        pred2 = MTL.Predicate('data2',Ar2,br2)
         
         root = MTL.And(pred1,pred2,mode)
         root.eval_interval(traces, time_stamps)
         
-        self.assertEqual(root.robustness,50)
+        self.assertEqual(root.robustness,60)
         
     def test_one_dim_or(self):
         mode = 'cpu_threaded'
@@ -51,7 +51,7 @@ class TestStringMethods(unittest.TestCase):
         time_stamps = np.array([1, 2, 3, 4, 5],dtype=np.float32);
 
         pred1 = MTL.Predicate('data1',Ar1,br1)
-        pred2 = MTL.Predicate('data2',Ar1,br1)
+        pred2 = MTL.Predicate('data2',Ar2,br2)
         
         root = MTL.Or(pred1,pred2,mode)
         root.eval_interval(traces, time_stamps)
@@ -76,7 +76,7 @@ class TestStringMethods(unittest.TestCase):
         time_stamps = np.array([1, 2, 3, 4, 5],dtype=np.float32)
 
         pred1 = MTL.Predicate('data1',Ar1,br1)
-        pred2 = MTL.Predicate('data2',Ar1,br1)
+        pred2 = MTL.Predicate('data2',Ar2,br2)
         
         root = MTL.Until(0,float('inf'),pred1,pred2,mode)
         root.eval_interval(traces, time_stamps)
@@ -101,7 +101,7 @@ class TestStringMethods(unittest.TestCase):
         time_stamps = np.array([1, 2, 3, 4, 5],dtype=np.float32)
 
         pred1 = MTL.Predicate('data1',Ar1,br1)
-        pred2 = MTL.Predicate('data2',Ar1,br1)
+        pred2 = MTL.Predicate('data2',Ar2,br2)
         
         root = MTL.Until(0,float('inf'),pred1,pred2,mode)
         root.eval_interval(traces, time_stamps)
