@@ -15,6 +15,9 @@ cdef extern:
     void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results)
 
 cdef extern:
+    void wrap_polyhedron_two(double** traces,long length,int n)
+
+cdef extern:
     void wrap_polyhedron_thread(double* C, double* b,int n, int m, double** traces,long length ,double* results)
     
 def solve_polyhedron(list C, list b, list traces):
@@ -56,9 +59,10 @@ def solve_polyhedron(list C, list b, list traces):
         free(traces_)
     return results
 
-def solve_polyhedron_numpy(C, double[:] b, traces):
 
-    n3, m1 = C.shape[0], C.shape[1]
+def solve_polyhedron_test(C, b, traces):
+
+    n3, m1 = C.shape[1], C.shape[0]
     
     cdef double** traces_
     cdef long length = len(traces)
@@ -72,7 +76,36 @@ def solve_polyhedron_numpy(C, double[:] b, traces):
             traces_[time_step][i] = traces[time_step][i]
             #sys.stdout.write("%lf," % traces[time_step][i])
             
+    C.transpose()
+    b.transpose()
+    cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
+    cdef double[::1] b_ = np.array(b, copy=True, order='F')
+    cdef double[:] results = np.empty(length,dtype=np.float64)
+
+    wrap_polyhedron_two(traces_,length,n3)
     
+
+    return np.array(results,dtype=np.float32)
+
+
+def solve_polyhedron_numpy(C, b, traces):
+
+    n3, m1 = C.shape[1], C.shape[0]
+    
+    cdef double** traces_
+    cdef long length = len(traces)
+    c_results = <double *>malloc(len(traces)*cython.sizeof(double))
+    traces_ = <double **>malloc(len(traces)*cython.sizeof(c_results))
+    
+    for time_step in xrange(len(traces)):
+        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
+        for i in xrange(len(traces[0])):
+            #print(traces[time_step][i], end=",")
+            traces_[time_step][i] = traces[time_step][i]
+            #sys.stdout.write("%lf," % traces[time_step][i])
+            
+    C.transpose()
+    b.transpose()
     cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
     cdef double[::1] b_ = np.array(b, copy=True, order='F')
     cdef double[:] results = np.empty(length,dtype=np.float64)

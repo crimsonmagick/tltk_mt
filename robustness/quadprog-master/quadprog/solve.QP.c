@@ -881,8 +881,19 @@ void wrap_polyhedron_kernal(struct thread_package package){
 
 }
 
+
+void wrap_polyhedron_two(double** traces, long length ,int n){
+    int j,i;
+    printf("n: %d\n",n);
+    for(j=0;j < length; j++){
+        for(i=0;i<n;i++){
+        printf("%lf ",traces[j][i]);
+        }
+        printf("\n");
+    }
+}
+
 void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long length ,double* results){
-    
     double* a;
     int ierr;
     int meq;
@@ -966,7 +977,7 @@ void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long l
 
         matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
 
-        if(matlessthaneq(A_t_trace,b_sub,m,1)){
+        if(!matlessthaneq(A_t_trace,b_sub,m,1)){
             matscaler(-1.0,C_temp,m,n);
             matscaler(-1.0,b_sub,m,1);
             matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
@@ -1004,7 +1015,8 @@ void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long l
         free(work);
         free(b_sub);
         free(A_t_trace);
-        free(a); 
+        free(a);
+        free(traces); 
 
 }
 
