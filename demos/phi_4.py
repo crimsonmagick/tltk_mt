@@ -11,18 +11,18 @@ mode = 'cpu_threaded'
 
 for i in list_range:
     
-    Ar7 = [[2.5 -0.6],[[0.1 -0.08]],[[-1.9 -0.4]],[1.7 0.8]]
-    br7 = [[5.5],[3.8],[4.9],[7.5]]
+    Ar7 = np.array([[2.5, -0.6],[0.1, -0.08],[-1.9, -0.4],[1.7, 0.8]],dtype=np.float64)
+    br7 = np.array([5.5,3.8,4.9,7.5],dtype=np.float64)
     
-    Ar8 = [[2.5 -0.6],[[0.1 -0.08]],[[-1.9 -0.4]],[1.7 0.8]]
-    br8 = [[4.5],[2.8],[2.9],[2.5]]
+    Ar8 = np.array([[2.5, -0.6],[0.1, -0.08],[-1.9, -0.4],[1.7, 0.8]],dtype=np.float64)
+    br8 = np.array([4.5,2.8,2.9,2.5],dtype=np.float64)
     
-    r7 = MTL.Predicate('data1',Ar3,br3)
-    r8 = MTL.Predicate('data2',Ar4,br4)
+    r7 = MTL.Predicate('data1',Ar7,br7)
+    r8 = MTL.Predicate('data2',Ar8,br8)
 
     traces = {} 
-    traces['data1'] = [[1,1,1]]*i
-    traces['data2'] = [[1,1,1]]*i
+    traces['data1'] = np.array([[1,1,1]]*i,dtype=np.float64)
+    traces['data2'] = np.array([[1,1,1]]*i,dtype=np.float64)
     #traces = {'data1': [[1,1,1]]*i,dtype=np.float32),'data2': [[1,1,1]]*i,dtype=np.float32)}
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
     
