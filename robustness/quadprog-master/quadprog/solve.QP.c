@@ -762,15 +762,17 @@ L999:
     //return right;
 //}
 
-double* transpose(double* mat, int mat_row, int mat_col){
-    double* transposed_mat = (double*)malloc(mat_row*mat_col*sizeof(double));
+void transpose(double* mat, int mat_row, int mat_col){
     long i,j; 
+    double temp;
     for(i=0;i<mat_row;i++){
         for(j=0;j<mat_col;j++){
-            *(transposed_mat + (j * mat_col + i)) = *(mat + (i * mat_col + j));
+            temp = *(mat + (i * mat_col + j));
+            *(mat + (i * mat_col + j)) = *(mat + (j * mat_col + i));
+            *(mat + (j * mat_col + i)) = temp;
         }
     } 
-    return transposed_mat;
+    //return transposed_mat;
 }
 
 void matmul(double* left_mat, int left_row, int left_col, double* right_mat, int right_row, int right_col, double* result){
@@ -780,13 +782,33 @@ void matmul(double* left_mat, int left_row, int left_col, double* right_mat, int
     }
     //double* result = (double*)malloc(left_row * right_col * sizeof(double));
     long i,j,k;
-    float cell_sum;
+    double cell_sum;
    
     for(i = 0; i < left_row; i++){
         for(j = 0; j < right_col; j++){
             cell_sum = 0;
             for(k = 0; k < left_col; k++){
                 cell_sum += *(left_mat + (i * left_col + k)) * *(right_mat + (k * right_col + j));
+            }
+            *(result + (i * right_col + j)) = cell_sum;
+        }
+    }
+}
+
+void matmulcol(double* left_mat, int left_row, int left_col, double* right_mat, int right_row, int right_col, double* result){
+    if(left_col != right_row){
+        perror("Matrix dim mismatch for multiplication");
+        exit(EXIT_FAILURE);
+    }
+    //double* result = (double*)malloc(left_row * right_col * sizeof(double));
+    long i,j,k;
+    double cell_sum;
+   
+    for(i = 0; i < left_row; i++){
+        for(j = 0; j < right_col; j++){
+            cell_sum = 0;
+            for(k = 0; k < left_col; k++){
+                cell_sum += *(left_mat + (k * left_row + i)) * *(right_mat + (j * left_col + k));
             }
             *(result + (i * right_col + j)) = cell_sum;
         }
@@ -801,9 +823,7 @@ void matsub(double* left_mat, int left_row, int left_col, double* right_mat, int
     
     long i, j;
     for(i = 0; i < left_row; i++){
-        for(j = 0; j < left_col; j++){
-            *(left_mat + (i * left_col + j)) = *(left_mat + (i * left_col + j)) - *(right_mat + (i * right_col + j));
-        }
+            left_mat[i] = left_mat[i] - right_mat[i];
     }
 }
 
@@ -819,7 +839,7 @@ void matscaler(double scaler, double* mat, int row, int col){
     int i, j;
     for(i = 0; i < row; i++){
         for(j = 0; j < col; j++){
-            *(mat + (i * col + j)) = scaler * *(mat + (i * col + j));
+            *(mat + (j * row + i)) = scaler * *(mat + (j * row + i));
         }
     }
 }
@@ -828,10 +848,8 @@ void matscaler(double scaler, double* mat, int row, int col){
 int matlessthaneq(double* left_mat, double* right_mat, int rows, int cols){
     int i,j;
     for(i=0;i < rows;i++){
-        for(j=0;j < cols;j++){
-            if(*(left_mat + (i*cols + j)) > *(right_mat + (i*cols+j))){
-                return false;
-            }
+        if(left_mat[i] > right_mat[i]){
+            return false;
         }
     }
     return true;
@@ -877,23 +895,218 @@ void wrap_polyhedron_threaded(double* C, double* b,int n, int m, double** traces
     }
 }
 
+double* translate_c_fortran(double* mat, double* translated,int n, int m){
+    int i,j;
+    //double* translated = (double*)malloc(m * n * sizeof(double));
+    for(i=0;i<n;i++){
+        for(j=0;j<m;j++){
+            *(translated + (i*m +j)) = *(mat + (j*n + i));
+        }
+    }
+    free(mat);
+    return translated;
+}
+
+int rowmajorindexfromcolumnmajorindex(int columnmajorindex, int width, int height) {
+    int row = columnmajorindex % height;
+    int column = columnmajorindex / height;
+    return row * width + column;
+}
+
+
+int columnmajorindexfromrowmajorindex(int rowmajorindex, int width, int height) {
+    return rowmajorindexfromcolumnmajorindex(rowmajorindex, height, width);
+}
+
+double* translate_fortran_c(double* mat,double* translated ,int n, int m){
+    int i,j;
+    //double* translated = (double*)malloc(m * n * sizeof(double));
+    for(i=0;i<n;i++){
+        for(j=0;j<m;j++){
+            *(translated + i*m+j) = *(mat + (columnmajorindexfromrowmajorindex(i*n+j,n,m)));
+        }
+    }
+    //free(mat);
+    return translated;
+}
+
+
 void wrap_polyhedron_kernal(struct thread_package package){
 
 }
 
 
-void wrap_polyhedron_two(double** traces, long length ,int n){
-    int j,i;
-    printf("n: %d\n",n);
-    for(j=0;j < length; j++){
-        for(i=0;i<n;i++){
-        printf("%lf ",traces[j][i]);
+void wrap_polyhedron_two(double** traces,double* C_f,double *b,int m , int n,long length){
+    double* a;
+    int ierr;
+    int meq;
+    int* iters;
+    int nact; 
+    double* sol;
+    double* lagr;
+    double* work;
+    int* iact; 
+    double* b_sub;
+    double* A_t_trace;
+    double* G;
+    double* C_temp;
+    double* results;
+    double* C;
+    double* C_f_temp;
+    printf("m:%d n:%d\n",m,n);
+    
+    int j,w;
+    long i = 1;
+    ierr = 0;
+    meq = 0;
+    nact = 0; 
+    
+    iters = (int*)malloc(2*sizeof(int));
+    A_t_trace = (double*)malloc(m * 1 * sizeof(double));
+    results = (double*)malloc(length * sizeof(double));
+    
+    
+    if(!(C = (double*)malloc(m*n*sizeof(double)))){
+        perror("C init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(C_temp = (double*)malloc(m*n*sizeof(double)))){
+        perror("C_temp init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(C_f_temp = (double*)malloc(m*n*sizeof(double)))){
+        perror("C_f_temp init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(b_sub = (double*)malloc(m*sizeof(double)))){
+        perror("b_sub init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(G = (double*)calloc(n*n,sizeof(double)))){
+        perror("G init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(a = (double*)malloc(n*sizeof(double)))){
+        perror("a init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    sol = (double*)calloc(n*1,sizeof(double));
+    lagr = (double*)calloc(m,sizeof(double));
+    iact = (int*)calloc(m,sizeof(int));
+    work = (double*)calloc(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1,sizeof(double));
+    
+    memcpy(C,C_f,m*n*sizeof(double));
+    
+    //translate_fortran_c(C_f,C,m,n);
+    
+    //---- loop ----
+    memset(iters, 0, 2*sizeof(int));
+    memset(a,0,n*sizeof(double));
+    memset(sol,0,n*sizeof(double));
+    memset(lagr,0,m*sizeof(double));
+    memset(iact,0,m*sizeof(double));
+    memset(work,0,(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1) * sizeof(double));
+    memset(G, 0 , n*n*sizeof(double));    
+    memset(A_t_trace,0,n*m*sizeof(double));
+    
+    memcpy(C_f_temp,C_f,m*n*sizeof(double));
+    memcpy(C_temp,C,m*n*sizeof(double));
+    memcpy(b_sub,b,m*sizeof(double));
+    
+    
+    
+    double scaler = 1;
+    
+    //Fill G to be the idinity matrix n by n
+    for(j=0;j<n;j++){
+         *(G + (j * n + j)) = scaler;
+    }
+    
+    
+
+    //Multiply the current A by the current trace to see if we are calculating depth or distance
+    matmulcol(C_f_temp,m,n,traces[i],n,1,A_t_trace);
+    
+    for(w=0;w<m;w++){
+        printf("A_t_trace: %lf | b_sub: %lf\n",A_t_trace[w],b_sub[w]);
+    }
+
+    printf("C_f\n");
+    for(j=0;j<m;j++){
+        for(w=0;w<n;w++){
+            printf("%lf ",*(C_f + (w*m + j)));
         }
         printf("\n");
     }
+    printf("------------------\n");
+    
+    printf("C_f_temp\n");
+    for(j=0;j<m;j++){
+        for(w=0;w<n;w++){
+            printf("%lf ",*(C_f_temp + (w*m + j)));
+        }
+        printf("\n");
+    }
+    printf("------------------\n");
+    
+    if(matlessthaneq(A_t_trace,b_sub,m,1)){
+            printf("sjaflsjfldskjfklsd\n");
+            matscaler(-1.0,C_f_temp,m,n);
+            matscaler(-1.0,b_sub,m,1);
+            memset(A_t_trace,0,n*m*sizeof(double));
+            matmul(C_f_temp,m,n,traces[i],n,1,A_t_trace);
+        
+    }
+     
+    printf("A_t_trace\n");
+    for(j=0;j<m;j++){
+        //printf("%lf\n",*(traces[i] + j));
+        printf("%lf\n",*(A_t_trace+j));
+    }
+    
+    printf("------------------\n"); 
+        
+    printf("b_sub\n");
+    for(j=0;j<m;j++){
+        //printf("%lf\n",*(traces[i] + j));
+        printf("%lf\n",*(b_sub+j));
+    }
+    
+    printf("------------------\n");
+    
+    matsub(b_sub,m,1,A_t_trace,m,1);
+    printf("C_f_temp\n");
+    for(j=0;j<m;j++){
+        for(w=0;w<n;w++){
+            printf("%lf ",*(C_f_temp + (w*m + j)));
+        }
+        printf("\n");
+    }
+    printf("------------------\n");
+    
+    printf("b_sub\n");
+    for(j=0;j<m;j++){
+        //printf("%lf\n",*(traces[i] + j));
+        printf("%lf\n",*(b_sub+j));
+    }
+    
+    printf("------------------\n");
+    
+    results[i] = 0;
+    qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_f_temp,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
+    
+    printf("result: %lf\n" ,sqrt(2*results[i]));
+    printf("ierr: %d\n" ,ierr);
+    
 }
 
-void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long length ,double* results){
+void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results){
     double* a;
     int ierr;
     int meq;
@@ -910,7 +1123,7 @@ void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long l
     
     long i;
     
-    double* C = transpose(C_f,n,m);
+    //double* C = transpose(C_f,n,m);
     //double* b = transpose(b_f,1,m);
     ierr = 0;
     meq = 0;
@@ -930,7 +1143,7 @@ void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long l
         perror("a init error");
         exit(EXIT_FAILURE);
     }
-    sol = (double*)calloc(n,sizeof(double));
+    sol = (double*)calloc(n*1,sizeof(double));
     lagr = (double*)calloc(m,sizeof(double));
     iact = (int*)calloc(m,sizeof(int));
     work = (double*)calloc(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1,sizeof(double));
@@ -950,7 +1163,7 @@ void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long l
     //}
         //printf("\n");
     for( i = 0; i < length; i++){
-
+        //reset all memory to zero
         ierr = 0;
         meq = 0;
         nact = 0;
@@ -969,21 +1182,23 @@ void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long l
         
         memset(G, 0 , n*n*sizeof(double));
         int j;
-        const double scaler = 1;
+        double scaler = 1;
+        
+        //Fill G to be the idinity matrix n by n
         for(j=0;j<n;j++){
              *(G + (j * n + j)) = scaler;
         }
         
-
+        //Multiplies C(m by n) with a trace(n by 1) and stores the results n A_t_trace(m by 1)
         matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
-
-        if(!matlessthaneq(A_t_trace,b_sub,m,1)){
+        
+        //checks if A_t_trace is less than
+        if(matlessthaneq(A_t_trace,b_sub,m,1)){
             matscaler(-1.0,C_temp,m,n);
             matscaler(-1.0,b_sub,m,1);
             matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
             positive_rob = true;
         }
-        
         
         matsub(b_sub,m,1,A_t_trace,m,1);
 
@@ -994,7 +1209,8 @@ void wrap_polyhedron(double* C_f, double* b,int n, int m, double** traces,long l
         //q, integer *meq, integer *iact, integer *nact, integer *iter, 
         //doublereal *work, integer *ierr)
         
-        qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
+        
+        qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&m,&n,&meq,iact,&nact,iters,work,&ierr);
 
         free(traces[i]);
         if(positive_rob){

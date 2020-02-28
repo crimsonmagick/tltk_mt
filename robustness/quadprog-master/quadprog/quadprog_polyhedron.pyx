@@ -15,7 +15,7 @@ cdef extern:
     void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results)
 
 cdef extern:
-    void wrap_polyhedron_two(double** traces,long length,int n)
+    void wrap_polyhedron_two(double** traces,double* C,double* b,int m,int n,long length)
 
 cdef extern:
     void wrap_polyhedron_thread(double* C, double* b,int n, int m, double** traces,long length ,double* results)
@@ -78,11 +78,12 @@ def solve_polyhedron_test(C, b, traces):
             
     C.transpose()
     b.transpose()
+    
     cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
     cdef double[::1] b_ = np.array(b, copy=True, order='F')
     cdef double[:] results = np.empty(length,dtype=np.float64)
 
-    wrap_polyhedron_two(traces_,length,n3)
+    wrap_polyhedron_two(traces_,&C_[0,0],&b_[0],m1,n3,length)
     
 
     return np.array(results,dtype=np.float32)
@@ -104,7 +105,7 @@ def solve_polyhedron_numpy(C, b, traces):
             traces_[time_step][i] = traces[time_step][i]
             #sys.stdout.write("%lf," % traces[time_step][i])
             
-    C.transpose()
+   # C.transpose()
     b.transpose()
     cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
     cdef double[::1] b_ = np.array(b, copy=True, order='F')
