@@ -86,7 +86,7 @@ def solve_polyhedron_test(C, b, traces):
     wrap_polyhedron_two(traces_,&C_[0,0],&b_[0],&results[0],m1,n3,length)
     
 
-    return np.array(results,dtype=np.float64)
+    return np.array(results,dtype=np.float32)
 
 
 #def solve_polyhedron_numpy(C, b, traces):

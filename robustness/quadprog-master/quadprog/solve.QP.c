@@ -818,7 +818,7 @@ void matsub(double* left_mat, int left_row, int left_col, double* right_mat, int
         exit(EXIT_FAILURE);
     }
     
-    long i, j;
+    long i;
     for(i = 0; i < left_row; i++){
             left_mat[i] = left_mat[i] - right_mat[i];
     }
@@ -843,7 +843,7 @@ void matscaler(double scaler, double* mat, int row, int col){
 
 
 int matlessthaneq(double* left_mat, double* right_mat, int rows, int cols){
-    int i,j;
+    int i;
     for(i=0;i < rows;i++){
         if(left_mat[i] > right_mat[i]){
             return false;
@@ -853,7 +853,7 @@ int matlessthaneq(double* left_mat, double* right_mat, int rows, int cols){
 }
 
 int matgreaterthaneq(double* left_mat, double* right_mat, int rows, int cols){
-    int i,j;
+    int i;
     for(i=0;i < rows;i++){
         if(left_mat[i] < right_mat[i]){
             return false;
@@ -985,7 +985,7 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,i
     double* C_f_temp;
     //printf("m:%d n:%d\n",m,n);
     
-    int j,w;
+    int j;
     long i = 0;
     ierr = 0;
     meq = 0;
