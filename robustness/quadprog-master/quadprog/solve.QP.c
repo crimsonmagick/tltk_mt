@@ -852,6 +852,17 @@ int matlessthaneq(double* left_mat, double* right_mat, int rows, int cols){
     return true;
 }
 
+int matgreaterthaneq(double* left_mat, double* right_mat, int rows, int cols){
+    int i,j;
+    for(i=0;i < rows;i++){
+        if(left_mat[i] < right_mat[i]){
+            return false;
+        }
+    }
+    return true;
+}
+
+
 struct thread_package
 {
     double* C;
@@ -928,12 +939,22 @@ double* translate_fortran_c(double* mat,double* translated ,int n, int m){
 }
 
 
-void wrap_polyhedron_kernal(struct thread_package package){
+double calc_half_space(double* C,double* b, int n, int m){
+    double min_dist;
+    double min_location;
+    int i,j;
+    double* C_halfspce;
+    double* Ct_halfspace;
+    
+    
+    for(i=0;i<m; i++){
+        
+    
+    }
 
 }
 
-
-double* wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long length){
+void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long length){
     double* a;
     int ierr;
     int meq;
@@ -1005,10 +1026,12 @@ double* wrap_polyhedron_two(double** traces,double* C_f,double *b,double* result
     //translate_fortran_c(C_f,C,m,n);
     
     for(i = 0; i < length; i++){
+        //refresh values incase qpgen destroyed them
+
         m = m_in;
         n = n_in;
-        //printf("m: %d | n: %d\n",m,n);
-        ierr = 0;
+
+        ierr = 1;
         meq = 0;
         nact = 0; 
         memset(iters, 0, 2*sizeof(int));
@@ -1025,92 +1048,32 @@ double* wrap_polyhedron_two(double** traces,double* C_f,double *b,double* result
         
         
         
-        //Fill G to be the idinity matrix n by n
+        //Fill G to be R^-1 n by n Matrix where 2*I = R^T * R
         for(j=0;j<n;j++){
-             *(G + (j * n + j)) = 1.0;
+             *(G + (j * n + j)) = 1;
         }
-        
-        //printf("G\n");
-        //for(j=0;j<n;j++){
-            //for(w=0;w<n;w++){
-                //printf("%lf ",*(G + (w*n + j)));
-            //}
-            //printf("\n");
-        //}
-        //printf("------------------\n");
-        
-        
     
         //Multiply the current A by the current trace to see if we are calculating depth or distance
-        //double* Ct_f_temp = C_f_temp = transpose(C_f_temp,m,n);
         matmulcol(C_f_temp,m,n,traces[i],n,1,A_t_trace);
         
-        //for(w=0;w<m;w++){
-            //printf("A_t_trace: %lf | b_sub: %lf\n",A_t_trace[w],b_sub[w]);
-        //}
-    
-        //printf("C_f\n");
-        //for(j=0;j<m;j++){
-            //for(w=0;w<n;w++){
-                //printf("%lf ",*(C_f + (w*m + j)));
-            //}
-            //printf("\n");
-        //}
-        //printf("------------------\n");
-        
-        
-         
-        //printf("A_t_trace\n");
-        //for(j=0;j<m;j++){
-            ////printf("%lf\n",*(traces[i] + j));
-            //printf("%lf\n",*(A_t_trace+j));
-        //}
-        
-        //printf("------------------\n"); 
-        
+        // Subtract A*x from b (b - A*x) 
         matsub(b_sub,m,1,A_t_trace,m,1);
         
-        
-        if(matlessthaneq(A_t_trace,b_sub,m,1)){
-                //matscaler(-1.0,C_f_temp,m,n);
-                matscaler(-1.0,b_sub,m,1);
-                matscaler(-1.0,C_f_temp,m,n);
-                //memset(A_t_trace,0,m*sizeof(double));
-                //matmulcol(C_f_temp,m,n,traces[i],n,1,A_t_trace);
-                //matscaler(-1.0,A_t_trace,m,1);
+        //Check if Ax >= b if it is multiply (b - Ax) and A by -1
+        //if(matgreaterthaneq(A_t_trace,b_sub,m,1)){
                 
-        }
-        
-        
-        
-        //printf("b_sub\n");
-        //for(j=0;j<m;j++){
-            ////printf("%lf\n",*(traces[i] + j));
-            //printf("%lf\n",*(b_sub+j));
+        matscaler(-1.0,b_sub,m,1);
+        matscaler(-1.0,C_f_temp,m,n);
         //}
         
-        //printf("------------------\n");
-        
-        
-        //printf("C_f_temp\n");
-        //for(j=0;j<m;j++){
-            //for(w=0;w<n;w++){
-                //printf("%lf ",*(C_f_temp + (w*m + j)));
-            //}
-            //printf("\n");
-        //}
-        //printf("------------------\n");
-        
-        
+        //Transpse A to be used with qpgen
         transpose(C_f_temp,m,n , C_t);
         
         qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_t,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
         results[i] = sqrt(2*results[i]);
     }
-    //printf("result: %lf\n" ,sqrt(2*results[i]));
-
+    //printf("result: %f\n" ,results[0]);
     
     //printf("ierr: %d\n" ,ierr);
     //printf("DONE\n");
-    return results;
 }

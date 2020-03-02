@@ -16,14 +16,14 @@ mode = 'cpu'
 
 i = 10
 
-g = 1000
+g = 10
 
 #Ap11 = np.array(np.random.rand(g,3),dtype=np.float64)
 
-Ap11 = np.array([[0,-3],[2, 0]], np.float64)
+Ap11 = np.array([[0,-3]], np.float64)
 
 #Ap11 = np.array([[1, 0]],dtype=np.float64)
-bp11 = np.array([1,2],dtype=np.float64)
+bp11 = np.array([-1,2],dtype=np.float64)
 
 #bp11 =  np.random.rand(g)
 
@@ -37,7 +37,7 @@ bp11 = np.array([1,2],dtype=np.float64)
 
 traces = {}
 
-data = [[224,0]]*i #np.random.rand(1,3)
+data = [[0,0]]*i #np.random.rand(1,3)
 
 traces['data2'] = np.array([[1,1,1]]*i,dtype=np.float64) #np.random.rand(1,3)
 

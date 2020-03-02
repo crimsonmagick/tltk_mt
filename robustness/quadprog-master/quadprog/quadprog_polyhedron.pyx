@@ -81,12 +81,12 @@ def solve_polyhedron_test(C, b, traces):
     
     cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
     cdef double[::1] b_ = np.array(b, copy=True, order='F')
-    cdef double[:] results = np.empty(length,dtype=np.float64)
+    cdef double[:] results = np.empty(length)
 
     wrap_polyhedron_two(traces_,&C_[0,0],&b_[0],&results[0],m1,n3,length)
     
 
-    return np.array(results,dtype=np.float32)
+    return np.array(results,dtype=np.float64)
 
 
 #def solve_polyhedron_numpy(C, b, traces):
