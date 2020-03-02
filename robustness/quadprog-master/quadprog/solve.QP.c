@@ -762,17 +762,14 @@ L999:
     //return right;
 //}
 
-void transpose(double* mat, int mat_row, int mat_col){
+void transpose(double* mat, int mat_row, int mat_col,double* result){
     long i,j; 
-    double temp;
-    for(i=0;i<mat_row;i++){
-        for(j=0;j<mat_col;j++){
-            temp = *(mat + (i * mat_col + j));
-            *(mat + (i * mat_col + j)) = *(mat + (j * mat_col + i));
-            *(mat + (j * mat_col + i)) = temp;
+    //double* result = (double*)calloc(mat_row*mat_col,sizeof(double));
+    for(i=0;i<mat_col;i++){
+        for(j=0;j<mat_row;j++){
+            *(result + (j * mat_col + i)) = *(mat + (i * mat_row + j));
         }
     } 
-    //return transposed_mat;
 }
 
 void matmul(double* left_mat, int left_row, int left_col, double* right_mat, int right_row, int right_col, double* result){
@@ -936,7 +933,7 @@ void wrap_polyhedron_kernal(struct thread_package package){
 }
 
 
-void wrap_polyhedron_two(double** traces,double* C_f,double *b,int m , int n,long length){
+double* wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long length){
     double* a;
     int ierr;
     int meq;
@@ -950,23 +947,25 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,int m , int n,lon
     double* A_t_trace;
     double* G;
     double* C_temp;
-    double* results;
-    double* C;
+    //double* results;
+    double* C_t;
     double* C_f_temp;
-    printf("m:%d n:%d\n",m,n);
+    //printf("m:%d n:%d\n",m,n);
     
     int j,w;
-    long i = 1;
+    long i = 0;
     ierr = 0;
     meq = 0;
     nact = 0; 
+    int m = m_in;
+    int n = n_in;
     
     iters = (int*)malloc(2*sizeof(int));
     A_t_trace = (double*)malloc(m * 1 * sizeof(double));
-    results = (double*)malloc(length * sizeof(double));
+    //results = (double*)malloc(length * sizeof(double));
     
     
-    if(!(C = (double*)malloc(m*n*sizeof(double)))){
+    if(!(C_t = (double*)malloc(m*n*sizeof(double)))){
         perror("C init error");
         exit(EXIT_FAILURE);
     }
@@ -1001,238 +1000,117 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,int m , int n,lon
     iact = (int*)calloc(m,sizeof(int));
     work = (double*)calloc(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1,sizeof(double));
     
-    memcpy(C,C_f,m*n*sizeof(double));
+    //memcpy(C,C_f,m*n*sizeof(double));
     
     //translate_fortran_c(C_f,C,m,n);
     
-    //---- loop ----
-    memset(iters, 0, 2*sizeof(int));
-    memset(a,0,n*sizeof(double));
-    memset(sol,0,n*sizeof(double));
-    memset(lagr,0,m*sizeof(double));
-    memset(iact,0,m*sizeof(double));
-    memset(work,0,(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1) * sizeof(double));
-    memset(G, 0 , n*n*sizeof(double));    
-    memset(A_t_trace,0,n*m*sizeof(double));
-    
-    memcpy(C_f_temp,C_f,m*n*sizeof(double));
-    memcpy(C_temp,C,m*n*sizeof(double));
-    memcpy(b_sub,b,m*sizeof(double));
-    
-    
-    
-    double scaler = 1;
-    
-    //Fill G to be the idinity matrix n by n
-    for(j=0;j<n;j++){
-         *(G + (j * n + j)) = scaler;
-    }
-    
-    
-
-    //Multiply the current A by the current trace to see if we are calculating depth or distance
-    matmulcol(C_f_temp,m,n,traces[i],n,1,A_t_trace);
-    
-    for(w=0;w<m;w++){
-        printf("A_t_trace: %lf | b_sub: %lf\n",A_t_trace[w],b_sub[w]);
-    }
-
-    printf("C_f\n");
-    for(j=0;j<m;j++){
-        for(w=0;w<n;w++){
-            printf("%lf ",*(C_f + (w*m + j)));
-        }
-        printf("\n");
-    }
-    printf("------------------\n");
-    
-    printf("C_f_temp\n");
-    for(j=0;j<m;j++){
-        for(w=0;w<n;w++){
-            printf("%lf ",*(C_f_temp + (w*m + j)));
-        }
-        printf("\n");
-    }
-    printf("------------------\n");
-    
-    if(matlessthaneq(A_t_trace,b_sub,m,1)){
-            printf("sjaflsjfldskjfklsd\n");
-            matscaler(-1.0,C_f_temp,m,n);
-            matscaler(-1.0,b_sub,m,1);
-            memset(A_t_trace,0,n*m*sizeof(double));
-            matmul(C_f_temp,m,n,traces[i],n,1,A_t_trace);
-        
-    }
-     
-    printf("A_t_trace\n");
-    for(j=0;j<m;j++){
-        //printf("%lf\n",*(traces[i] + j));
-        printf("%lf\n",*(A_t_trace+j));
-    }
-    
-    printf("------------------\n"); 
-        
-    printf("b_sub\n");
-    for(j=0;j<m;j++){
-        //printf("%lf\n",*(traces[i] + j));
-        printf("%lf\n",*(b_sub+j));
-    }
-    
-    printf("------------------\n");
-    
-    matsub(b_sub,m,1,A_t_trace,m,1);
-    printf("C_f_temp\n");
-    for(j=0;j<m;j++){
-        for(w=0;w<n;w++){
-            printf("%lf ",*(C_f_temp + (w*m + j)));
-        }
-        printf("\n");
-    }
-    printf("------------------\n");
-    
-    printf("b_sub\n");
-    for(j=0;j<m;j++){
-        //printf("%lf\n",*(traces[i] + j));
-        printf("%lf\n",*(b_sub+j));
-    }
-    
-    printf("------------------\n");
-    
-    results[i] = 0;
-    qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_f_temp,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
-    
-    printf("result: %lf\n" ,sqrt(2*results[i]));
-    printf("ierr: %d\n" ,ierr);
-    
-}
-
-void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results){
-    double* a;
-    int ierr;
-    int meq;
-    int* iters;
-    int nact; 
-    double* sol;
-    double* lagr;
-    double* work;
-    int* iact; 
-    double* b_sub;
-    double* A_t_trace;
-    double* G;
-    double* C_temp;
-    
-    long i;
-    
-    //double* C = transpose(C_f,n,m);
-    //double* b = transpose(b_f,1,m);
-    ierr = 0;
-    meq = 0;
-    nact = 0; 
-    //TODO: error check this mess
-    iters = (int*)malloc(2*sizeof(int));
-    
-    A_t_trace = (double*)malloc(m * 1 * sizeof(double));
-    //matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
-    
-    if(!(C_temp = (double*)malloc(n*m*sizeof(double)))){
-        perror("C_temp init error");
-        exit(EXIT_FAILURE);
-    }
-    
-    if(!(a = (double*)malloc(n*sizeof(double)))){
-        perror("a init error");
-        exit(EXIT_FAILURE);
-    }
-    sol = (double*)calloc(n*1,sizeof(double));
-    lagr = (double*)calloc(m,sizeof(double));
-    iact = (int*)calloc(m,sizeof(int));
-    work = (double*)calloc(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1,sizeof(double));
-    if(!(b_sub = (double*)malloc(m*sizeof(double)))){
-        perror("b_sub init error");
-        exit(EXIT_FAILURE);
-    }
-    
-    
-    G = (double*)calloc(n*n,sizeof(double));
-    
-    int positive_rob = false;
-    
-    //int p;
-    //for(p=0;p<(n*m);p++){
-        //printf("%lf",*(C+p));
-    //}
-        //printf("\n");
-    for( i = 0; i < length; i++){
-        //reset all memory to zero
+    for(i = 0; i < length; i++){
+        m = m_in;
+        n = n_in;
+        //printf("m: %d | n: %d\n",m,n);
         ierr = 0;
         meq = 0;
-        nact = 0;
-        
+        nact = 0; 
         memset(iters, 0, 2*sizeof(int));
         memset(a,0,n*sizeof(double));
         memset(sol,0,n*sizeof(double));
         memset(lagr,0,m*sizeof(double));
-        memset(iact,0,m*sizeof(double));
+        memset(iact,0,m*sizeof(int));
         memset(work,0,(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1) * sizeof(double));
-        memset(b_sub,0,m*sizeof(double));
+        memset(G, 0 , n*n*sizeof(double));    
+        memset(A_t_trace,0,m*sizeof(double));
         
-        memcpy(C_temp,C,n*m*sizeof(double));
+        memcpy(C_f_temp,C_f,m*n*sizeof(double));
         memcpy(b_sub,b,m*sizeof(double));
         
         
-        memset(G, 0 , n*n*sizeof(double));
-        int j;
-        double scaler = 1;
         
         //Fill G to be the idinity matrix n by n
         for(j=0;j<n;j++){
-             *(G + (j * n + j)) = scaler;
+             *(G + (j * n + j)) = 1.0;
         }
         
-        //Multiplies C(m by n) with a trace(n by 1) and stores the results n A_t_trace(m by 1)
-        matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
+        //printf("G\n");
+        //for(j=0;j<n;j++){
+            //for(w=0;w<n;w++){
+                //printf("%lf ",*(G + (w*n + j)));
+            //}
+            //printf("\n");
+        //}
+        //printf("------------------\n");
         
-        //checks if A_t_trace is less than
-        if(matlessthaneq(A_t_trace,b_sub,m,1)){
-            matscaler(-1.0,C_temp,m,n);
-            matscaler(-1.0,b_sub,m,1);
-            matmul(C_temp,m,n,traces[i],n,1,A_t_trace);
-            positive_rob = true;
-        }
+        
+    
+        //Multiply the current A by the current trace to see if we are calculating depth or distance
+        //double* Ct_f_temp = C_f_temp = transpose(C_f_temp,m,n);
+        matmulcol(C_f_temp,m,n,traces[i],n,1,A_t_trace);
+        
+        //for(w=0;w<m;w++){
+            //printf("A_t_trace: %lf | b_sub: %lf\n",A_t_trace[w],b_sub[w]);
+        //}
+    
+        //printf("C_f\n");
+        //for(j=0;j<m;j++){
+            //for(w=0;w<n;w++){
+                //printf("%lf ",*(C_f + (w*m + j)));
+            //}
+            //printf("\n");
+        //}
+        //printf("------------------\n");
+        
+        
+         
+        //printf("A_t_trace\n");
+        //for(j=0;j<m;j++){
+            ////printf("%lf\n",*(traces[i] + j));
+            //printf("%lf\n",*(A_t_trace+j));
+        //}
+        
+        //printf("------------------\n"); 
         
         matsub(b_sub,m,1,A_t_trace,m,1);
-
-
-        //int qpgen2_(doublereal *dmat, doublereal *dvec, integer *
-        //fddmat, integer *n, doublereal *sol, doublereal *lagr, doublereal *
-        //crval, doublereal *amat, doublereal *bvec, integer *fdamat, integer *
-        //q, integer *meq, integer *iact, integer *nact, integer *iter, 
-        //doublereal *work, integer *ierr)
         
         
-        qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C,b_sub,&m,&n,&meq,iact,&nact,iters,work,&ierr);
-
-        free(traces[i]);
-        if(positive_rob){
-            results[i] = sqrt(2*results[i]);
+        if(matlessthaneq(A_t_trace,b_sub,m,1)){
+                //matscaler(-1.0,C_f_temp,m,n);
+                matscaler(-1.0,b_sub,m,1);
+                matscaler(-1.0,C_f_temp,m,n);
+                //memset(A_t_trace,0,m*sizeof(double));
+                //matmulcol(C_f_temp,m,n,traces[i],n,1,A_t_trace);
+                //matscaler(-1.0,A_t_trace,m,1);
+                
         }
-        else{
-            results[i] = -1*sqrt(2*results[i]);
-        }
-        positive_rob = false;
-
+        
+        
+        
+        //printf("b_sub\n");
+        //for(j=0;j<m;j++){
+            ////printf("%lf\n",*(traces[i] + j));
+            //printf("%lf\n",*(b_sub+j));
+        //}
+        
+        //printf("------------------\n");
+        
+        
+        //printf("C_f_temp\n");
+        //for(j=0;j<m;j++){
+            //for(w=0;w<n;w++){
+                //printf("%lf ",*(C_f_temp + (w*m + j)));
+            //}
+            //printf("\n");
+        //}
+        //printf("------------------\n");
+        
+        
+        transpose(C_f_temp,m,n , C_t);
+        
+        qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_t,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
+        results[i] = sqrt(2*results[i]);
     }
-        free(C);
-        free(G);
-        free(iters);
-        free(sol);
-        free(lagr);
-        free(iact);
-        free(work);
-        free(b_sub);
-        free(A_t_trace);
-        free(a);
-        free(traces); 
+    //printf("result: %lf\n" ,sqrt(2*results[i]));
 
+    
+    //printf("ierr: %d\n" ,ierr);
+    //printf("DONE\n");
+    return results;
 }
-

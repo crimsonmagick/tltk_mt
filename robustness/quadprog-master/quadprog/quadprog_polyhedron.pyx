@@ -11,53 +11,53 @@ cdef extern:
                 int* q, int* meq, int* iact, int* nact, int* iter,
                 double* work, int* ierr)
 
-cdef extern:
-    void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results)
+#cdef extern:
+#    void wrap_polyhedron(double* C, double* b,int n, int m, double** traces,long length ,double* results)
 
 cdef extern:
-    void wrap_polyhedron_two(double** traces,double* C,double* b,int m,int n,long length)
+    void wrap_polyhedron_two(double** traces,double* C,double* b,double* results,int m,int n,long length)
 
 cdef extern:
     void wrap_polyhedron_thread(double* C, double* b,int n, int m, double** traces,long length ,double* results)
     
-def solve_polyhedron(list C, list b, list traces):
-    cdef double** traces_
+#def solve_polyhedron(list C, list b, list traces):
+#    cdef double** traces_
 
-    c_results = <double *>malloc(len(traces)*cython.sizeof(double))
-    traces_ = <double **>malloc(len(traces)*cython.sizeof(c_results))
+#    c_results = <double *>malloc(len(traces)*cython.sizeof(double))
+#    traces_ = <double **>malloc(len(traces)*cython.sizeof(c_results))
     
-    for time_step in xrange(len(traces)):
-        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
-        for i in xrange(len(traces[0])):
-            #print(traces[time_step][i], end=",")
-            traces_[time_step][i] = traces[time_step][i]
-            #sys.stdout.write("%lf," % traces[time_step][i])
-    n = len(C)
-    if type(C[0]) == list:
-        m = len(C[0])
-    else:
-        m = 1
-    cdef double* C_ = <double*>malloc(m*n*sizeof(double))
-    cdef double* b_ = <double*>malloc(m*sizeof(double))
-    for i in xrange(m):
-        b_[i] = b[i]
-    if m != 1:
-        for i in xrange(n):
-            for j in range(m):
-                C_[i * m + j] = C[i][j]
-    else:
-        for i in xrange(n):
-            C_[i] = C[i]
-    wrap_polyhedron(C_,b_, np.int32(n),np.int32(m),traces_,len(traces),c_results)
-    results = []
-    for i in xrange(len(traces)):
-        results.append(float(c_results[i]))
-    with nogil:
-        free(c_results)
-        free(b_)
-        free(C_)
-        free(traces_)
-    return results
+#    for time_step in xrange(len(traces)):
+#        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
+#        for i in xrange(len(traces[0])):
+#            #print(traces[time_step][i], end=",")
+#            traces_[time_step][i] = traces[time_step][i]
+#            #sys.stdout.write("%lf," % traces[time_step][i])
+#    n = len(C)
+#    if type(C[0]) == list:
+#        m = len(C[0])
+#    else:
+#        m = 1
+#    cdef double* C_ = <double*>malloc(m*n*sizeof(double))
+#    cdef double* b_ = <double*>malloc(m*sizeof(double))
+#    for i in xrange(m):
+#        b_[i] = b[i]
+#    if m != 1:
+#        for i in xrange(n):
+#            for j in range(m):
+#                C_[i * m + j] = C[i][j]
+#    else:
+#        for i in xrange(n):
+#            C_[i] = C[i]
+#    wrap_polyhedron(C_,b_, np.int32(n),np.int32(m),traces_,len(traces),c_results)
+#    results = []
+#    for i in xrange(len(traces)):
+#        results.append(float(c_results[i]))
+#    with nogil:
+#        free(c_results)
+#        free(b_)
+#        free(C_)
+#        free(traces_)
+#    return results
 
 
 def solve_polyhedron_test(C, b, traces):
@@ -83,38 +83,38 @@ def solve_polyhedron_test(C, b, traces):
     cdef double[::1] b_ = np.array(b, copy=True, order='F')
     cdef double[:] results = np.empty(length,dtype=np.float64)
 
-    wrap_polyhedron_two(traces_,&C_[0,0],&b_[0],m1,n3,length)
+    wrap_polyhedron_two(traces_,&C_[0,0],&b_[0],&results[0],m1,n3,length)
     
 
     return np.array(results,dtype=np.float32)
 
 
-def solve_polyhedron_numpy(C, b, traces):
+#def solve_polyhedron_numpy(C, b, traces):
 
-    n3, m1 = C.shape[1], C.shape[0]
+#    n3, m1 = C.shape[1], C.shape[0]
     
-    cdef double** traces_
-    cdef long length = len(traces)
-    c_results = <double *>malloc(len(traces)*cython.sizeof(double))
-    traces_ = <double **>malloc(len(traces)*cython.sizeof(c_results))
+#    cdef double** traces_
+#    cdef long length = len(traces)
+#    c_results = <double *>malloc(len(traces)*cython.sizeof(double))
+#    traces_ = <double **>malloc(len(traces)*cython.sizeof(c_results))
     
-    for time_step in xrange(len(traces)):
-        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
-        for i in xrange(len(traces[0])):
-            #print(traces[time_step][i], end=",")
-            traces_[time_step][i] = traces[time_step][i]
-            #sys.stdout.write("%lf," % traces[time_step][i])
+#    for time_step in xrange(len(traces)):
+#        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
+#        for i in xrange(len(traces[0])):
+#            #print(traces[time_step][i], end=",")
+#            traces_[time_step][i] = traces[time_step][i]
+#            #sys.stdout.write("%lf," % traces[time_step][i])
             
-   # C.transpose()
-    b.transpose()
-    cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
-    cdef double[::1] b_ = np.array(b, copy=True, order='F')
-    cdef double[:] results = np.empty(length,dtype=np.float64)
+#   # C.transpose()
+#    b.transpose()
+#    cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
+#    cdef double[::1] b_ = np.array(b, copy=True, order='F')
+#    cdef double[:] results = np.empty(length,dtype=np.float64)
 
-    wrap_polyhedron(&C_[0,0],&b_[0],n3,m1,traces_,length,&results[0])
+#    wrap_polyhedron(&C_[0,0],&b_[0],n3,m1,traces_,length,&results[0])
     
 
-    return np.array(results,dtype=np.float32)
+#    return np.array(results,dtype=np.float32)
     
     
 def solve_qp(double[:, :] G, double[:] a, double[:, :] C=None, double[:] b=None, int meq=0, factorized=False):
