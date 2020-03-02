@@ -939,19 +939,31 @@ double* translate_fortran_c(double* mat,double* translated ,int n, int m){
 }
 
 
-double calc_half_space(double* C,double* b, int n, int m){
-    double min_dist;
-    double min_location;
-    int i,j;
-    double* C_halfspce;
-    double* Ct_halfspace;
-    
-    
-    for(i=0;i<m; i++){
-        
-    
+double calc_projection(double* C,double* b,double* trace ,int m, int n, int current_row){
+    //Calculates the projection of the trace onto a plane
+    int i;
+    double dot_product = 0;
+    double norm = 0;
+    for(i=0;i<n;i++){
+        dot_product += (*(C +((i*m) + current_row))* *(trace + i));
+        norm += (*(C +((i*m) + current_row)))*(*(C +((i*m) + current_row)));
     }
+    dot_product -= *(b + current_row);
+    return fabs(dot_product)/sqrt(norm);
+    
+}
 
+double calc_depth(double* C, double* b, double* trace, int m, int n){
+    int i;
+    double min = INFINITY;
+    double row_distance;
+    for(i=0; i<m; i++){
+        row_distance = calc_projection(C,b,trace,m,n,i);
+        if(row_distance < min){
+            min = row_distance;
+        }
+    }
+    return -1*min;
 }
 
 void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long length){
@@ -1056,21 +1068,35 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,i
         //Multiply the current A by the current trace to see if we are calculating depth or distance
         matmulcol(C_f_temp,m,n,traces[i],n,1,A_t_trace);
         
-        // Subtract A*x from b (b - A*x) 
-        matsub(b_sub,m,1,A_t_trace,m,1);
+        
         
         //Check if Ax >= b if it is multiply (b - Ax) and A by -1
         //if(matgreaterthaneq(A_t_trace,b_sub,m,1)){
                 
-        matscaler(-1.0,b_sub,m,1);
-        matscaler(-1.0,C_f_temp,m,n);
+
+        //}
+
+        //Transpse A to be used with qpgen
+        //for(w=0; w < m; w ++){
+            //printf("A_t_trace: %lf || b: %lf\n",A_t_trace[w],b[w]);
+            
         //}
         
-        //Transpse A to be used with qpgen
-        transpose(C_f_temp,m,n , C_t);
-        
-        qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_t,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
-        results[i] = sqrt(2*results[i]);
+        if(!matlessthaneq(A_t_trace,b,m,1)){
+            results[i] = calc_depth(C_f,b,traces[0],m,n);
+        }else{
+            // Subtract A*x from b (b - A*x) 
+            matsub(b_sub,m,1,A_t_trace,m,1);
+            //Flip sign because qpgen works with Ax >= b
+            matscaler(-1.0,b_sub,m,1);
+            matscaler(-1.0,C_f_temp,m,n);
+                
+            //Transpse A to be used with qpgen
+            transpose(C_f_temp,m,n , C_t);
+            
+            qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_t,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
+            results[i] = sqrt(2*results[i]);
+        }
     }
     //printf("result: %f\n" ,results[0]);
     
