@@ -14,7 +14,7 @@ References
 """
 
 from setuptools import setup, Extension
-   
+from Cython.Build import cythonize
 ##########################
 VERSION = "0.1.7"
 __version__ = VERSION
@@ -57,5 +57,5 @@ setup(
     long_description="\n".join(DOCLINES[2:]),
     license='GPLv2+',
     zip_safe=False,
-    ext_modules=extensions,
+    ext_modules=cythonize(extensions, compiler_directives={'language_level' : "3"})
 )
