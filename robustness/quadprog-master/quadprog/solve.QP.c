@@ -963,7 +963,7 @@ double calc_depth(double* C, double* b, double* trace, int m, int n){
             min = row_distance;
         }
     }
-    return -1*min;
+    return min;
 }
 
 void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long length){
@@ -987,7 +987,7 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,i
     
     int j;
     long i = 0;
-    ierr = 0;
+    ierr = 1;
     meq = 0;
     nact = 0; 
     int m = m_in;
@@ -1095,7 +1095,7 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,i
             transpose(C_f_temp,m,n , C_t);
             
             qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_t,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
-            results[i] = sqrt(2*results[i]);
+            results[i] = -1*sqrt(2*results[i]);
         }
     }
     //printf("result: %f\n" ,results[0]);

@@ -14,7 +14,7 @@ list_range = (2**i for i in range(10,31))
 
 mode = 'cpu'
 
-i = 10000000
+i = 1000000
 
 g = 10000
 

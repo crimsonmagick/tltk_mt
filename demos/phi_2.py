@@ -30,7 +30,6 @@ for i in list_range:
     
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
     root = MTL.Not(MTL.And(MTL.Global(5,150,r3,mode), MTL.Finally(300,400,r4,mode),mode),mode)
-        
     t0 = time.time()
     root.eval_interval(traces, time_stamps)
     t1 = time.time()
