@@ -25,8 +25,8 @@ for i in list_range:
     traces['data2'] = np.array([[1,1,1]]*i,dtype=np.float64)
     #traces = {'data1': [[1,1,1]]*i,dtype=np.float32),'data2': [[1,1,1]]*i,dtype=np.float32)}
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
-    
-    root = MTL.Global(0,float('inf'), MTL.And(r7,MTL.Finally(0,100,r8,mode),mode))
+    root = r8
+    #root = MTL.Global(0,float('inf'), MTL.And(r7,MTL.Finally(0,100,r8,mode),mode))
             
     t0 = time.time()
     root.eval_interval(traces, time_stamps)

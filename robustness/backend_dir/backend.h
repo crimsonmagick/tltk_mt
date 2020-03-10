@@ -9,6 +9,7 @@ void c_and(float* left_robustness, float* right_robustness, long length);
 void c_not_threaded(float* robustness,long length);
 void c_or_threaded(float* left_robustness, float* right_robustness, long length);
 void c_and_threaded(float* left_robustness, float* right_robustness, long length);
+void c_next_no_malloc(float* robustness,long length);
 
 float* c_finally(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps, long length);
 float* c_finally_no_malloc(float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* finally_robustness ,long length);

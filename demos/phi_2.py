@@ -5,7 +5,7 @@ import MTL as MTL
 import numpy as np
 import time
 
-list_range = (2**i for i in range(4,31))
+list_range = (2**i for i in range(4,20))
 
 mode = 'cpu_threaded'
 

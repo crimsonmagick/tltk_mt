@@ -14,7 +14,7 @@ list_range = (2**i for i in range(10,31))
 
 mode = 'cpu'
 
-i = 10000000
+i = 1000000
 
 g = 10000
 
@@ -48,7 +48,7 @@ print(np.matmul(Ap11,data[0]))
 print('---------------')
 print("Solution:")   
 t0 = time.time()    
-sol=quadprog_polyhedron.solve_polyhedron_test(Ap11,bp11,data)[0]
+sol=np.array(quadprog_polyhedron.solve_polyhedron_threaded(Ap11,bp11,data))
 t1 = time.time()
 print('Time: ',t1-t0,'| result:', sol)
 

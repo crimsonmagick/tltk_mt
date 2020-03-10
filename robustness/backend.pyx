@@ -10,6 +10,9 @@ from ctypes import *
 import array 
 
 cdef extern from "backend.h":
+    void c_next_no_malloc(float* robustness,long length)
+
+cdef extern from "backend.h":
     void c_not(float* robustness,long length)
 
 cdef extern from "backend.h":
@@ -70,6 +73,10 @@ cdef extern from "backend.h":
     void c_one_dim_pred_threaded(float* traces, float A, float bound,long length);
 
 
+
+    
+
+
 #Wrapper for MTL not operation
 #   robustness: A list of python floats
 #   returns: A list of python floats
@@ -124,6 +131,12 @@ def py_and(list left_robustness,list right_robustness) -> float[::1]:
 
     return left_robustness
     
+
+def py_next_numpy(robustness):
+    cdef float[:] c_robustness = robustness
+    c_next_no_malloc(&c_robustness[0],len(robustness))
+    return c_robustness
+
 def py_and_numpy(left_robustness,right_robustness) -> float[::1]:
     cdef float[:] c_left_robustness = left_robustness
     cdef float[:] c_right_robustness = right_robustness

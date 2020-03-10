@@ -20,7 +20,7 @@ import quadprog_polyhedron
 # 0 robustness is a failure (will add an option to choose later)
 
 class Predicate:
-    def __init__(self,variable_name,A_Matrix,bound,process_type = 'cpu_threaded',thread_pool = False):
+    def __init__(self,variable_name,A_Matrix,bound,process_type = 'cpu',thread_pool = False):
         self.variable_name = variable_name
         self.value = None
         self.robustness_array = None
@@ -30,22 +30,6 @@ class Predicate:
         self.thread_pool = thread_pool
         self.process_type = process_type
         
-    # def optimize_polyhedron(self,trace):
-        # np_value = np.array(trace)
-        # np_A_Matrix = np.array(self.A_Matrix)
-        
-        # x = cp.Variable(np_value.size)
-        # objective = cp.Minimize(cp.norm(x - np_value))
-        # if np_value.size == 1 and np_A_Matrix.size == 1:
-            # return trace * self.A_Matrix - self.bound
-        # elif (self.A_Matrix*np_value <= self.bound).all():                        #calculate depth if np_value is in A*x <= b
-            # constraints = [self.A_Matrix*x >= self.bound]
-            # prob = cp.Problem(objective, constraints)
-            # return -prob.solve(solver=cp.ECOS)    #ECOS has fastest time of ones tested. Going to add this as an argument eventually
-        # else:                                                           #calculate distance if np_value is not in A*x <= b
-            # constraints = [self.A_Matrix*x <= self.bound]
-            # prob = cp.Problem(objective, constraints)
-            # return prob.solve(solver=cp.ECOS)
     
     def eval_interval(self,traces,time_stamps):
         trace = traces[self.variable_name]
@@ -68,7 +52,12 @@ class Predicate:
  
                 #traces = np.transpose(np.array(traces)).tolist()
                 #predicate_robustness = backend.py_higher_dim(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
-                predicate_robustness = quadprog_polyhedron.solve_polyhedron_test(self.A_Matrix,self.bound,trace)
+                if self.process_type == 'cpu':
+                    predicate_robustness = quadprog_polyhedron.solve_polyhedron_test(self.A_Matrix,self.bound,trace)
+                else:
+                    predicate_robustness = quadprog_polyhedron.solve_polyhedron_threaded(self.A_Matrix,self.bound,trace)
+                    
+                
                 # for value in trace:
                     # np_value = np.array(value)
                     # # if np_value.size == 1 and np_A_Matrix.size == 1:
@@ -98,7 +87,15 @@ class Predicate:
         self.robustness_array = predicate_robustness
         return predicate_robustness
         
-
+class Next:
+    def __init__(self,subformula):
+        self.subformula = subformula
+        self.robustness = None
+    def eval_interval(self,traces,time_stamps):
+        subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
+        next_robustness = backend.py_next_numpy(subformula_robustness)
+        self.robustness = next_robustness[0]
+        return next_robustness
 
 class Global:
     def __init__(self,lower_time_bound,upper_time_bound,subformula = None, process_type = 'cpu_threaded'):
@@ -109,7 +106,7 @@ class Global:
         self.upper_time_bound = upper_time_bound
         self.lower_time_bound = lower_time_bound
         self.process_type = process_type
-
+        
     def eval_interval(self,traces,time_stamps): 
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
         globally_robustness = []
@@ -147,7 +144,7 @@ class Finally:
         self.upper_time_bound = upper_time_bound
         self.lower_time_bound = lower_time_bound
         self.process_type = process_type
-
+        
     def eval_interval(self,traces,time_stamps): 
         subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
         finally_robustness = []
@@ -223,7 +220,6 @@ class And:
         self.robustness = 0
         self.value = None
         self.process_type = process_type
-
 
     def eval_interval(self,traces,time_stamps):
         left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)

@@ -15,8 +15,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <pthread.h>
+#include <omp.h>
 #include <sys/sysinfo.h>
+#include <unistd.h>
 
 const int true  = 0;
 const int false = 1;
@@ -876,33 +877,6 @@ struct thread_package
     long sub_length;
 };
 
-void wrap_polyhedron_threaded(double* C, double* b,int n, int m, double** traces,long length ,double* results){
-    int number_of_threads = get_nprocs();
-    struct thread_package** packages = (struct thread_package**)malloc(number_of_threads * sizeof(struct thread_package*));
-    
-    long current_start = 0;
-    int thread_id;
-    
-    long sub_length = (length / number_of_threads) + 1;
-    
-    for(thread_id=0; thread_id < number_of_threads; thread_id++){
-        packages[thread_id] = (struct thread_package*)malloc(sizeof(struct thread_package));
-        packages[thread_id]->C = C;
-        packages[thread_id]->b = b;
-        packages[thread_id]->n = n;
-        packages[thread_id]->m = m;
-        packages[thread_id]->traces = traces;
-        packages[thread_id]->length = length;
-        packages[thread_id]->results = results;
-        packages[thread_id]->start_index = current_start;
-        packages[thread_id]->sub_length = sub_length;
-
-        current_start += sub_length;
-        
-        
-    }
-}
-
 double* translate_c_fortran(double* mat, double* translated,int n, int m){
     int i,j;
     //double* translated = (double*)malloc(m * n * sizeof(double));
@@ -964,6 +938,166 @@ double calc_depth(double* C, double* b, double* trace, int m, int n){
         }
     }
     return min;
+}
+
+void wrap_polyhedron_thread_task(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long start, long stop, long length){
+    double* a;
+    int ierr;
+    int meq;
+    int* iters;
+    int nact; 
+    double* sol;
+    double* lagr;
+    double* work;
+    int* iact; 
+    double* b_sub;
+    double* A_t_trace;
+    double* G;
+    double* C_temp;
+    //double* results;
+    double* C_t;
+    double* C_f_temp;
+    //printf("m:%d n:%d\n",m,n);
+    
+    int j;
+    long i = 0;
+    ierr = 1;
+    meq = 0;
+    nact = 0; 
+    int m = m_in;
+    int n = n_in;
+    
+    iters = (int*)malloc(2*sizeof(int));
+    A_t_trace = (double*)malloc(m * 1 * sizeof(double));
+    //results = (double*)malloc(length * sizeof(double));
+    
+    
+    if(!(C_t = (double*)malloc(m*n*sizeof(double)))){
+        perror("C init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(C_temp = (double*)malloc(m*n*sizeof(double)))){
+        perror("C_temp init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(C_f_temp = (double*)malloc(m*n*sizeof(double)))){
+        perror("C_f_temp init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(b_sub = (double*)malloc(m*sizeof(double)))){
+        perror("b_sub init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(G = (double*)calloc(n*n,sizeof(double)))){
+        perror("G init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(a = (double*)malloc(n*sizeof(double)))){
+        perror("a init error");
+        exit(EXIT_FAILURE);
+    }
+    
+    sol = (double*)calloc(n*1,sizeof(double));
+    lagr = (double*)calloc(m,sizeof(double));
+    iact = (int*)calloc(m,sizeof(int));
+    work = (double*)calloc(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1,sizeof(double));
+    
+    //memcpy(C,C_f,m*n*sizeof(double));
+    
+    //translate_fortran_c(C_f,C,m,n);
+    
+    for(i = stop - 1; i >= start; i--){
+        //refresh values incase qpgen destroyed them
+        //printf("Time step: %ld\n",i);
+        m = m_in;
+        n = n_in;
+
+        ierr = 1;
+        meq = 0;
+        nact = 0; 
+        memset(iters, 0, 2*sizeof(int));
+        memset(a,0,n*sizeof(double));
+        memset(sol,0,n*sizeof(double));
+        memset(lagr,0,m*sizeof(double));
+        memset(iact,0,m*sizeof(int));
+        memset(work,0,(2*n+min(n, m)*(min(n, m)+5)/2 + 2*m +1) * sizeof(double));
+        memset(G, 0 , n*n*sizeof(double));    
+        memset(A_t_trace,0,m*sizeof(double));
+        
+        memcpy(C_f_temp,C_f,m*n*sizeof(double));
+        memcpy(b_sub,b,m*sizeof(double));
+        
+        
+        
+        //Fill G to be R^-1 n by n Matrix where 2*I = R^T * R
+        for(j=0;j<n;j++){
+             *(G + (j * n + j)) = 1;
+        }
+    
+        //Multiply the current A by the current trace to see if we are calculating depth or distance
+        matmulcol(C_f_temp,m,n,traces[i],n,1,A_t_trace);
+        
+        
+        
+        //Check if Ax >= b if it is multiply (b - Ax) and A by -1
+        //if(matgreaterthaneq(A_t_trace,b_sub,m,1)){
+                
+
+        //}
+
+        //Transpse A to be used with qpgen
+        //for(w=0; w < m; w ++){
+            //printf("A_t_trace: %lf || b: %lf\n",A_t_trace[w],b[w]);
+            
+        //}
+        
+        if(!matlessthaneq(A_t_trace,b,m,1)){
+            results[i] = calc_depth(C_f,b,traces[0],m,n);
+        }else{
+            // Subtract A*x from b (b - A*x) 
+            matsub(b_sub,m,1,A_t_trace,m,1);
+            //Flip sign because qpgen works with Ax >= b
+            matscaler(-1.0,b_sub,m,1);
+            matscaler(-1.0,C_f_temp,m,n);
+                
+            //Transpse A to be used with qpgen
+            transpose(C_f_temp,m,n , C_t);
+            
+            qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_t,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
+            results[i] = -1*sqrt(2*results[i]);
+        }
+        //free(traces[i]);
+    }
+    //printf("result: %f\n" ,results[0]);
+    
+    //printf("ierr: %d\n" ,ierr);
+    //printf("DONE\n");
+}
+
+void wrap_polyhedron_threaded(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long length){
+    long thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+    //long current_time_step;
+    long division_length = length / thread_count;
+    long overflow_work = length % thread_count;
+    long task;
+    //printf("task over_flow: %ld\n", overflow_work);
+    #pragma omp parallel for num_threads(thread_count)
+    for(task = 0; task < thread_count; task++){
+        long start_index = task * division_length;
+        long end_index = (task + 1) * division_length;
+        
+        if(task == (thread_count - 1)){
+            end_index += overflow_work;
+        }
+        
+        //finally_thread_task(start_index,end_index,lower_time_bound,upper_time_bound,robustness,time_stamps,finally_robustness,length
+        wrap_polyhedron_thread_task(traces,C_f,b,results,m_in,n_in,start_index,end_index,length);
+    }
 }
 
 void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long length){
@@ -1097,6 +1231,7 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,i
             qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_t,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
             results[i] = -1*sqrt(2*results[i]);
         }
+        free(traces[i]);
     }
     //printf("result: %f\n" ,results[0]);
     

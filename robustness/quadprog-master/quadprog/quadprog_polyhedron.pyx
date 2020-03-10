@@ -18,7 +18,7 @@ cdef extern:
     void wrap_polyhedron_two(double** traces,double* C,double* b,double* results,int m,int n,long length)
 
 cdef extern:
-    void wrap_polyhedron_thread(double* C, double* b,int n, int m, double** traces,long length ,double* results)
+    void wrap_polyhedron_threaded(double** traces,double* C,double* b,double* results,int m,int n,long length)
     
 #def solve_polyhedron(list C, list b, list traces):
 #    cdef double** traces_
@@ -88,6 +88,33 @@ def solve_polyhedron_test(C, b, traces):
 
     return np.array(results,dtype=np.float32)
 
+def solve_polyhedron_threaded(C, b, traces):
+
+    n3, m1 = C.shape[1], C.shape[0]
+    
+    cdef double** traces_
+    cdef long length = len(traces)
+    cdef double* size;
+    traces_ = <double **>malloc(len(traces)*cython.sizeof(size))
+    #make traces a double* to speed things up
+    for time_step in xrange(len(traces)):
+        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
+        for i in xrange(len(traces[0])):
+            #print(traces[time_step][i], end=",")
+            traces_[time_step][i] = traces[time_step][i]
+            #sys.stdout.write("%lf," % traces[time_step][i])
+            
+    #C.transpose()
+    #b.transpose()
+    
+    cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
+    cdef double[::1] b_ = np.array(b, copy=True, order='F')
+    cdef double[:] results = np.empty(length)
+
+    wrap_polyhedron_threaded(traces_,&C_[0,0],&b_[0],&results[0],m1,n3,length)
+    
+
+    return np.array(results,dtype=np.float32)
 
 #def solve_polyhedron_numpy(C, b, traces):
 

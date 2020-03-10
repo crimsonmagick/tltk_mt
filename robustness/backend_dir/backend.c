@@ -587,6 +587,7 @@ void finally_thread_task(long start_index,long end_index,float lower_time_bound,
     }
 }
 
+
 void global_thread_task(long start_index,long end_index,float lower_time_bound, float upper_time_bound, float* robustness, float* time_stamps,float* global_robustness,long length){
     long current_time_step;
      //printf("Start index: %ld | End index: %ld\n",start_index,end_index - 1);
@@ -905,3 +906,13 @@ float* c_until_no_malloc(float lower_time_bound, float upper_time_bound, float* 
     return until_robustness;
 }
 
+void c_next_no_malloc(float* robustness,long length){
+    long current_time_step;
+    //this can be changed to pointer manipulation later so there wont have to be a loop
+    for(current_time_step = 0; current_time_step < length; current_time_step++){
+        if((current_time_step + 1) != length){
+            *(robustness + current_time_step) = *(robustness + (current_time_step + 1)); 
+        }
+    }
+
+}

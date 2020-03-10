@@ -38,7 +38,7 @@ extensions = [
                            'quadprog/util.c', 'quadprog/dpofa.c',
                            'quadprog/daxpy.c', 'quadprog/ddot.c',
                            'quadprog/dscal.c', 'quadprog/f2c_lite.c'],
-             include_dirs=['quadprog'], language='c')
+             include_dirs=['quadprog'], language='c',extra_compile_args= ['-fopenmp'],extra_link_args=['-fopenmp'])
 ]
 
 setup(
