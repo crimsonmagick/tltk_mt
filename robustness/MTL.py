@@ -52,10 +52,10 @@ class Predicate:
  
                 #traces = np.transpose(np.array(traces)).tolist()
                 #predicate_robustness = backend.py_higher_dim(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
-                if self.process_type == 'cpu':
+                #if self.process_type == 'cpu':
                     predicate_robustness = quadprog_polyhedron.solve_polyhedron_test(self.A_Matrix,self.bound,trace)
-                else:
-                    predicate_robustness = quadprog_polyhedron.solve_polyhedron_threaded(self.A_Matrix,self.bound,trace)
+                #else:
+                    #predicate_robustness = quadprog_polyhedron.solve_polyhedron_threaded(self.A_Matrix,self.bound,trace)
                     
                 
                 # for value in trace:

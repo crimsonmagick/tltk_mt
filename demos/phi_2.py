@@ -21,17 +21,18 @@ for i in list_range:
     Ar4 = np.array([[1,0,0],[-1,0,0]],dtype=np.float64)
     br4 = np.array([240,-230],dtype=np.float64)
     
-    r3 = MTL.Predicate('data1',Ar3,br3)
-    r4 = MTL.Predicate('data2',Ar4,br4)
+    r3 = MTL.Predicate('data1',Ar3,br3,mode)
+    r4 = MTL.Predicate('data2',Ar4,br4,mode)
 
     traces = {} 
     traces['data1'] = np.array([[1,1,1]]*i,dtype=np.float64)
     traces['data2'] = np.array([[1,1,1]]*i,dtype=np.float64)
     
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
-    root = MTL.Not(MTL.And(MTL.Global(5,150,r3,mode), MTL.Finally(300,400,r4,mode),mode),mode)
+    #root = MTL.Not(MTL.And(MTL.Global(5,150,r3,mode), MTL.Finally(300,400,r4,mode),mode),mode)
+    root = r3
     t0 = time.time()
-    root.eval_interval(traces, time_stamps)
+    print(np.array(root.eval_interval(traces, time_stamps)))
     t1 = time.time()
     print("phi_2\t","| Mode:" ,mode,'\t| Samples:', "{:,}".format(i), '\t| Time: ', '%.4f'%(t1 - t0), '    \t| robustness', root.robustness)
     del traces
