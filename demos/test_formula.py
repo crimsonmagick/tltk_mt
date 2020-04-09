@@ -15,4 +15,4 @@ pred3 = MTL.Predicate('speed',Ar3,br3)
 pred4 = MTL.Predicate('rpm',Ar4,br4)
 
 root = MTL.Not(MTL.And(MTL.Finally(0,float('inf'),pred3,mode),MTL.Global(0,float('inf'),MTL.And(pred4, MTL.Global(0,float('inf'),MTL.Finally(0,float('inf'),MTL.And(pred3,MTL.Until(0,float('inf'),pred3,pred4,mode),mode),mode),mode),mode),mode),mode),mode)
- 
+

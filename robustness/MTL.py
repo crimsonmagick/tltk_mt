@@ -5,7 +5,7 @@ try:
     import gpubackend
 except:
     GPU_LIB_FOUND = False
-    print("WARNING: No gpu libary found")
+    #print("WARNING: No gpu libary found")
 import ctypes
 # import cvxpy as cp
 import numpy as np
