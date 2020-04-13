@@ -32,7 +32,14 @@ class Predicate:
         
     
     def eval_interval(self,traces,time_stamps):
-        trace = traces[self.variable_name]
+        if type(self.variable_name) != list:
+            trace = traces[self.variable_name]
+        else:
+            iterts = []
+            for name in self.variable_name:
+                iterts.append(traces[name])
+            trace = np.array(list(zip(*iterts)),dtype=np.float64)
+
         predicate_robustness = []
         np_A_Matrix = np.array(self.A_Matrix)
         
