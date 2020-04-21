@@ -7,7 +7,7 @@ import numpy as np
 import tltk as tltk
 import robustness.MTL as MTL
 
-model = 'sldemo_autotrans_mod01'
+model = 'data/sldemo_autotrans_mod01'
 
 step = 0.05
 inp_range = [0, 100]

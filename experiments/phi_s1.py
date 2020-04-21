@@ -40,7 +40,7 @@ for i in list_range:
     del traces
     del time_stamps
 
-fig = plt.scatter(x_length, y_time)
-plt.xlabel('Trace Length')
-plt.ylabel('Computation Time')
-plt.savefig('phi_1.pdf')
+# fig = plt.scatter(x_length, y_time)
+# plt.xlabel('Trace Length')
+# plt.ylabel('Computation Time')
+# plt.savefig('phi_1.pdf')

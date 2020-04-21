@@ -2,10 +2,10 @@
 #Please do not use this for large amounts of data. It is probably really slow 
 import csv
 import sys
-sys.path.insert(1, '../robustness')
+sys.path.insert(1, 'robustness')
 import MTL as MTL 
 import numpy as np
-import importlib
+from importlib.machinery import SourceFileLoader
 import time
 
 skip = 0
@@ -55,8 +55,7 @@ with open(csv_filename, newline='') as csvfile:
             else:
                 time_stamps = np.array(row[1:],dtype=np.float32)
       
-formula = importlib.import_module(formula_filename[:-3])
-
+formula = SourceFileLoader(formula_filename[:-3], formula_filename).load_module()
 
 t0 = time.time()
 formula.root.eval_interval(traces, time_stamps)

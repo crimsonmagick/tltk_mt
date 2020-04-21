@@ -1,5 +1,53 @@
-site_name: MKLorum
+site_name: Temporal Logic Toolkit
+site_author: Bardh Hoxha
+site_description: >-
+  Documentation tool for the Temporal Logic Toolkit (TLTk).
+copyright: Copyright &copy; 2019 Bardh Hoxha
 nav:
     - Home: index.md
-    - About: about.md
-theme: readthedocs
+    - Getting Started: getting_started.md
+    - Examples: examples.md
+theme: 
+  name: material
+  custom_dir: 'theme/' # readthedocs modified
+  palette:
+    primary: teal
+    accent: light blue
+  font:
+    text: Roboto
+    code: Roboto Mono
+markdown_extensions:
+  - codehilite
+  - admonition
+  - def_list
+  - meta
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg  
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed
+  - pymdownx.tilde
+
+extra_css:
+  - extra.css
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
+  - https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.6.0/clipboard.min.js
+  - extra.js
+
