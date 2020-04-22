@@ -1217,7 +1217,7 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,i
         //}
         
         if(!matlessthaneq(A_t_trace,b,m,1)){
-            results[i] = calc_depth(C_f,b,traces[0],m,n);
+            results[i] = calc_depth(C_f,b,traces[i],m,n);
         }else{
             // Subtract A*x from b (b - A*x) 
             matsub(b_sub,m,1,A_t_trace,m,1);
@@ -1233,8 +1233,9 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,i
         }
         free(traces[i]);
     }
-    //printf("result: %f\n" ,results[0]);
-    
+    for(i = 0; i < length;i++){
+        printf("result: %f\n" ,results[i]);
+    }
     //printf("ierr: %d\n" ,ierr);
     //printf("DONE\n");
 }
