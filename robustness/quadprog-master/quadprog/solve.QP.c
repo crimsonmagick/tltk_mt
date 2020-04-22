@@ -1233,9 +1233,6 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,i
         }
         free(traces[i]);
     }
-    for(i = 0; i < length;i++){
-        printf("result: %f\n" ,results[i]);
-    }
     //printf("ierr: %d\n" ,ierr);
     //printf("DONE\n");
 }
