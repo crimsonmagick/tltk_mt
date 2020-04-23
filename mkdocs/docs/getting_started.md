@@ -35,9 +35,88 @@ If you have completed these steps, continue to the next section.
 
 ### Building from Source (Linux Only)
 
-Instructions to install from source.
 
-If you have completed these steps, continue to the next section. 
+#### Downloading TLTk
+
+TLTk is currenlty hosted on bitbucket and is downloaded with the git clone command 
+
+```Bash
+git clone ~~~~~~~~~~~~~~~~~~~~~~~~~
+```
+#### Dependencies for robustness calculation
+The following section describes how to install TLTk manually. There is a script that will do it automaticly skip to the bottom of the section for instructions on how to use the script
+##### Operating System
+TLTk is tested on Ubuntu linux. It can be installed on any linux distribution but is untested. This guide will be focused installing on the Ubuntu distribution of linux. 
+
+##### Installing Git
+To download TLTk source git is needed. If you do not have git it can be downloaded with the command:
+```Bash
+sudo apt install git 
+```
+
+##### CPU Compiler
+
+TLTk has been tested with the gcc compiler. If gcc is not on your system it can be installed with:
+```Bash
+sudo apt install gcc
+```
+
+##### Installing python3
+```Bash
+sudo apt install python3
+```
+##### GPU Compiler
+
+!!! warning 
+    Not required unless you are using a GPU
+    
+    
+To compile the gpu code you need the NVCC compiler. This compiler can be found:
+[Here](https://developer.nvidia.com/cuda-downloads)
+
+
+##### Installing python packages
+Next, we need to install the python repositories we need. To do this we will use pip3, which we installed in the previous step.
+The libaries that TLTk need are numpy, scipy, and cython. 
+To install these, you can run the following command:
+```Bash
+pip3 install --user numpy scipy cython
+```
+
+##### Installing MATLAB for SimuLink model simulations
+
+!!! warning
+    Only needed if planing on using TLTk with simulink
+    
+Detailed steps can be found [here](https://www.scivision.dev/matlab-engine-callable-from-python-how-to-install-and-setup/)
+
+The following two commands need to be executed (depending on the MATLAB version and directory structure) for Linux using python3:
+```Bash
+cd /usr/local/matlab/extern/engines/python/ 
+python3 setup.py build --build-base=$(mktemp -d) install
+```
+
+##### Install script
+There is a script that installs all the needed packages. At the start of the script it runs an apt update and upgrade.
+The script can be found at
+```Bash
+tltk/robustness/install.sh
+```
+
+#### Compiling TLTk
+Once all the dependencies are installed, TLTk needs to be compiled. To do this, there is a Make file in 
+```Bash
+tltk/robustness/make
+```
+This make file is uses GNU make which can be installed with
+```Bash
+sudo apt install make
+```
+To make the gpu code the make file can be ran like this
+```Bash
+make gpu
+```
+
 
 ## Running Your First Script
 
