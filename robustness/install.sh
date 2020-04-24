@@ -2,7 +2,7 @@
 
 sudo apt update 
 sudo apt upgrade
-sudo apt install libomp-dev git python3 python3-venv python3-pip cmake gcc g++
+sudo apt install libomp-dev git python3 python3-venv python3-pip cmake gcc
 sudo pip3 install numpy scipy cython
 
 if [ "$1" == "-gpu" ]
