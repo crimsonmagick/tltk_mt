@@ -44,19 +44,19 @@ TLTk is currenlty hosted on bitbucket and is downloaded with the git clone comma
 git clone ~~~~~~~~~~~~~~~~~~~~~~~~~
 ```
 #### Dependencies for robustness calculation
-The following section describes how to install TLTk manually. There is a script that will do it automaticly skip to the bottom of the section for instructions on how to use the script
+The following section describes how to install TLTk manually. There is a script that will do it automatically; skip to the bottom of the section for instructions on how to use the script
 ##### Operating System
-TLTk is tested on Ubuntu linux. It can be installed on any linux distribution but is untested. This guide will be focused installing on the Ubuntu distribution of linux. 
+TLTk is tested on Ubuntu linux. It can be installed on any linux distribution, but it is untested. This guide will be focused installing on the Ubuntu distribution of linux. 
 
 ##### Installing Git
-To download TLTk source git is needed. If you do not have git it can be downloaded with the command:
+Git is needed to download TLTk source. If you do not have git, it can be downloaded with the command:
 ```Bash
 sudo apt install git 
 ```
 
 ##### CPU Compiler
 
-TLTk has been tested with the gcc compiler. If gcc is not on your system it can be installed with:
+TLTk has been tested with the gcc compiler. If gcc is not on your system, it can be installed with:
 ```Bash
 sudo apt install gcc
 ```
@@ -76,8 +76,8 @@ To compile the gpu code you need the NVCC compiler. This compiler can be found:
 
 
 ##### Installing python packages
-Next, we need to install the python repositories we need. To do this we will use pip3, which we installed in the previous step.
-The libaries that TLTk need are numpy, scipy, and cython. 
+We need to install the needed python repositories. To do this we will use pip3, which we installed in the previous step.
+The libraries that TLTk need are numpy, scipy, and cython. 
 To install these, you can run the following command:
 ```Bash
 pip3 install --user numpy scipy cython
@@ -108,18 +108,48 @@ Once all the dependencies are installed, TLTk needs to be compiled. To do this, 
 ```Bash
 tltk/robustness/make
 ```
-This make file is uses GNU make which can be installed with
+This make file uses GNU make, which can be installed with
 ```Bash
 sudo apt install make
 ```
-To make the gpu code the make file can be ran like this
+To make the gpu code, the make file can be ran like this
 ```Bash
 make gpu
 ```
 
 
 ## Running Your First Script
-
 ### Docker
 
 ### Source
+#### Adding TLTk to path
+If you built TLTk by source, python needs to know where to look to find TLTk. One method is to add the directory to path at run time by using the python sys libary. For example
+```Python
+import sys
+sys.path.insert(1,’(path from working directory)/pytaliro/robustness’)
+import MTL
+```
+It can also be added to the python path at the startup of a bash instance by adding the following line to your .bashrc and restarting the bash instance.
+
+```Bash
+export PYTHONPATH=(path from root)/tltk/robustness:$PYTHONPATH
+```
+
+Below is a simple test script to check your setup of TLTk
+
+```Python
+#import sys #uncomment if not using export statment for bash
+#sys.path.insert(1, 'robustness') #uncomment if not using export for bash
+import MTL as MTL 
+import numpy as np
+#predicate definition
+predicate = MTL.Predicate('example data',1,1)
+
+#signal and time stamps
+signal = {'example data':np.array([95,96,97,96,95],dtype=np.float32)}
+time_stamps = np.array([0,.5,.7,.8,1],dtype=np.float32)
+
+#calculate predicate and print results 
+print(predicate.eval_interval(signal,time_stamps))
+```
+

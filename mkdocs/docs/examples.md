@@ -93,7 +93,7 @@ Where $x_1$ and $x_2$ are the signals the trajectory is defined over.
 We define the MTL formula $\varphi=F_{[0,3.14]} (r1)$ as: 
 
 ``` python
-phi = MTL.Eventually(0,3.14,r1) 
+phi = MTL.Finally(0,3.14,r1) 
 ```
 
 ## Automotive Transmission
