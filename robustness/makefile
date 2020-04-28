@@ -19,6 +19,7 @@ clean:
 	rm -f  quadprog-master/build/lib.linux-x86_64-3.8/*.so
 	rm -f  quadprog-master/build/temp.linux-x86_64-3.8/quadprog/*.o
 	rm -f -r ../__pycache__
+	rm -f -r ../mkdocs/site
 gpu: $(LIB_DIR)/libgpubackend.so
 	python3 setup_gpu.py build_ext --inplace && rm -f gpubackend.cpp &&rm -Rf build
 
