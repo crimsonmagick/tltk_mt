@@ -1,7 +1,7 @@
 import sys
-sys.path.insert(1, '../robustness')
+#sys.path.insert(1, '../robustness')
 import os
-import tltk 
+import tltk_rob
 import numpy as np
 import time
 
@@ -21,8 +21,8 @@ for i in list_range:
     Ar4 = np.array([[1,0,0],[-1,0,0]],dtype=np.float64)
     br4 = np.array([240,-230],dtype=np.float64)
     
-    r3 = tltk.Predicate('data1',Ar3,br3,mode)
-    r4 = tltk.Predicate('data2',Ar4,br4,mode)
+    r3 = tltk_rob.Predicate('data1',Ar3,br3,mode)
+    r4 = tltk_rob.Predicate('data2',Ar4,br4,mode)
 
     traces = {} 
     traces['data1'] = np.array([[1,1,1]]*i,dtype=np.float64)

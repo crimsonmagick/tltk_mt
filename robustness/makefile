@@ -1,4 +1,4 @@
-LIB_DIR=backend_dir
+LIB_DIR=tltk_rob
 QUADPROG_DIR=quadprog-master
 default: backend
 
