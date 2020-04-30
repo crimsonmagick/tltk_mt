@@ -43,7 +43,7 @@ else:
 setuptools.setup(
     name="tltk_mtl",
     ext_modules=cythonize(extension, compiler_directives={'language_level' : "3"}),
-    version="0.0.1",
+    version="0.0.3",
     author="Kole Cralley",
     author_email="jkolecr@gmail.com",
     description="A libary for effecient Metric temporal logic calculation",

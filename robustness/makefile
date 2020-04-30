@@ -1,4 +1,4 @@
-LIB_DIR=tltk_rob
+LIB_DIR=tltk_mtl
 QUADPROG_DIR=quadprog-master
 default: backend
 
@@ -20,7 +20,7 @@ clean:
 	rm -f  quadprog-master/build/temp.linux-x86_64-3.8/quadprog/*.o
 	rm -f -r ../__pycache__
 	rm -f -r ../mkdocs/site
-	rm -f -r build dist tltk_rob.egg-info
+	rm -f -r build dist tltk_mtl.egg-info
 gpu: $(LIB_DIR)/libgpubackend.so
 	python3 $(LIB_DIR)/setup_gpu.py build_ext --inplace && rm -f gpubackend.cpp &&rm -Rf build
 

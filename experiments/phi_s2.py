@@ -1,7 +1,9 @@
-import sys
-#sys.path.insert(1, '../robustness')
+import importlib.util
+spec = importlib.util.spec_from_file_location("tltk_mtl", "../robustness/tltk_mtl.cpython-38-x86_64-linux-gnu.so")
+tltk_mtl = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(tltk_mtl)
 import os
-import tltk_rob
+#import tltk_mtl
 import numpy as np
 import time
 
@@ -15,18 +17,18 @@ for i in list_range:
 # r3: [1 0 0; -1 0 0] x <= [250; -240]
 # r4: [1 0 0; -1 0 0] x <= [240; -230]
     
-    Ar3 = np.array([[1,0,0],[-1,0,0]],dtype=np.float64)
-    br3 = np.array([250,-240],dtype=np.float64)
+    Ar3 = [[1,0,0],[-1,0,0]]
+    br3 = [250,-240]
     
-    Ar4 = np.array([[1,0,0],[-1,0,0]],dtype=np.float64)
-    br4 = np.array([240,-230],dtype=np.float64)
+    Ar4 = [[1,0,0],[-1,0,0]]
+    br4 = [240,-230]
     
-    r3 = tltk_rob.Predicate('data1',Ar3,br3,mode)
-    r4 = tltk_rob.Predicate('data2',Ar4,br4,mode)
+    r3 = tltk_mtl.Predicate('data1',Ar3,br3,mode)
+    r4 = tltk_mtl.Predicate('data2',Ar4,br4,mode)
 
     traces = {} 
-    traces['data1'] = np.array([[1,1,1]]*i,dtype=np.float64)
-    traces['data2'] = np.array([[1,1,1]]*i,dtype=np.float64)
+    traces['data1'] = [[1,1,1]]*i
+    traces['data2'] = [[1,1,1]]*i
     
     time_stamps = np.arange(1, i + 1,dtype=np.float32)
     #root = MTL.Not(MTL.And(MTL.Global(5,150,r3,mode), MTL.Finally(300,400,r4,mode),mode),mode)

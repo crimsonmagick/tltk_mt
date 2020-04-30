@@ -515,9 +515,15 @@ class Predicate:
         self.variable_name = variable_name
         self.value = None
         self.robustness_array = None
-        self.bound = bound
+        if type(bound) == list:
+            self.bound = np.array(bound,dtype=np.float64)
+        else:
+            self.bound = bound
         self.robustness = 0
-        self.A_Matrix = A_Matrix
+        if type(A_Matrix) == list:
+            self.A_Matrix = np.array(A_Matrix,dtype=np.float64)
+        else:
+            self.A_Matrix = A_Matrix
         self.thread_pool = thread_pool
         self.process_type = process_type
         
@@ -536,9 +542,13 @@ class Predicate:
         
         if type(self.robustness_array) != type(None):
             return self.robustness_array
+         
+        if type(trace) == list:
+                trace = np.array(trace,dtype=np.float64)
         
         if self.thread_pool == False:
             if ((len(trace.shape) == 1) and (type(self.A_Matrix) == int or type(self.A_Matrix) == float)):
+                trace = np.array(trace,dtype=np.float32)
                 if self.process_type == 'cpu':
                     predicate_robustness = py_one_dim_pred_numpy(trace, self.A_Matrix, self.bound)
                     #predicate_robustness = py_one_dim_pred(list(trace), self.A_Matrix, self.bound)
@@ -547,7 +557,7 @@ class Predicate:
                 else:
                     predicate_robustness = gpubackend.py_one_dim_pred_numpy_gpu(list(trace), self.A_Matrix, self.bound)   
             else:
- 
+               
                 #traces = np.transpose(np.array(traces)).tolist()
                 #predicate_robustness = py_higher_dim(trace_size, n, m, q, l, u, init_A, init_P, traces, length, results)
                 #if self.process_type == 'cpu':
@@ -610,6 +620,9 @@ class Global:
         globally_robustness = []
         max_robustness = float('-inf')
         
+        if type(time_stamps) == list:
+            time_stamps = np.array(time_stamps,dtype=np.float32)
+        
         #subformula_robustness.reverse()
         #time_stamps.reverse()
         
@@ -649,7 +662,8 @@ class Finally:
         max_robustness = float('-inf')
         #subformula_robustness.reverse()
         #time_stamps.reverse()
-        t0 = time()
+        if type(time_stamps) == list:
+            time_stamps = np.array(time_stamps,dtype=np.float32)
         if self.process_type == 'cpu':
             #print("finally CPU computation")
             #finally_robustness = py_finally(self.lower_time_bound,self.upper_time_bound,list(subformula_robustness),list(time_stamps))
@@ -815,7 +829,10 @@ class Until:
     def eval_interval(self,traces,time_stamps): 
         left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
         right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
-    
+        
+        if type(time_stamps) == list:
+            time_stamps = np.array(time_stamps,dtype=np.float32)
+        
         until_robustness = []
         left_subformula_robustness_history = []
         inner_formula_min = []
