@@ -29,3 +29,5 @@ $(LIB_DIR)/libgpubackend.so:
 
 wheel:
 	python3 setup.py sdist bdist_wheel
+upload:
+	python3 -m twine upload --repository testpypi dist/tltk_rob-0.0.?.tar.gz

@@ -3,7 +3,7 @@ import os
 from distutils.extension import Extension
 from Cython.Build import cythonize
 
-if os.path.isfile("tltk_rob/tltk_rob.pyx"):
+if os.path.isfile("tltk_mtl/tltk_mtl.pyx"):
     use_cython = True
 else:
     use_cython = False
@@ -11,8 +11,8 @@ else:
 quadprog_path = "quadprog-master/quadprog/"
 if use_cython:
     extension = [Extension(
-        name="tltk_rob",
-        sources=["tltk_rob/tltk_rob.pyx", "tltk_rob/backend.c",
+        name="tltk_mtl",
+        sources=["tltk_mtl/tltk_mtl.pyx", "tltk_mtl/backend.c",
         quadprog_path+"aind.c",quadprog_path+"solve.QP.c",quadprog_path+"util.c",
         quadprog_path+"dpofa.c",quadprog_path+"daxpy.c",quadprog_path+"ddot.c",
         quadprog_path+"dscal.c",quadprog_path+"f2c_lite.c"
@@ -26,8 +26,8 @@ if use_cython:
     )]   
 else:
     extension = [Extension(
-        name="tltk_rob",
-        sources=["tltk_rob/tltk_rob.c", "tltk_rob/backend.c",
+        name="tltk_mtl",
+        sources=["tltk_mtl/tltk_mtl.c", "tltk_mtl/backend.c",
         quadprog_path+"aind.c",quadprog_path+"solve.QP.c",quadprog_path+"util.c",
         quadprog_path+"dpofa.c",quadprog_path+"daxpy.c",quadprog_path+"ddot.c",
         quadprog_path+"dscal.c",quadprog_path+"f2c_lite.c"
@@ -36,14 +36,14 @@ else:
         extra_compile_args= ['-fopenmp'],
         extra_link_args=['-fopenmp'],
         library_dirs=["backend_dir"],
-        include_dirs=["tltk_rob","quadprog-master/quadprog"],
+        include_dirs=["tltk_mtl","quadprog-master/quadprog"],
         language='c',
     )]   
 
 setuptools.setup(
-    name="tltk_rob",
+    name="tltk_mtl",
     ext_modules=cythonize(extension, compiler_directives={'language_level' : "3"}),
-    version="0.0.6",
+    version="0.0.1",
     author="Kole Cralley",
     author_email="jkolecr@gmail.com",
     description="A libary for effecient Metric temporal logic calculation",

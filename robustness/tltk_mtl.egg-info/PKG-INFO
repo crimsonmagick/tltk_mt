@@ -1,0 +1,13 @@
+Metadata-Version: 1.2
+Name: tltk-mtl
+Version: 0.0.1
+Summary: A libary for effecient Metric temporal logic calculation
+Home-page: UNKNOWN
+Author: Kole Cralley
+Author-email: jkolecr@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: POSIX :: Linux
+Requires-Python: >=3.6
