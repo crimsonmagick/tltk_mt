@@ -511,10 +511,11 @@ from time import time
 # 0 robustness is a failure (will add an option to choose later)
 
 class Predicate:
-    def __init__(self,variable_name,A_Matrix,bound,process_type = 'cpu',thread_pool = False):
+    def __init__(self,variable_name,A_Matrix,bound,param_name=None,process_type = 'cpu',thread_pool = False):
         self.variable_name = variable_name
         self.value = None
         self.robustness_array = None
+        self.param_name = param_name
         if type(bound) == list:
             self.bound = np.array(bound,dtype=np.float64)
         else:
@@ -528,7 +529,7 @@ class Predicate:
         self.process_type = process_type
         
     
-    def eval_interval(self,traces,time_stamps):
+    def eval_interval(self,traces,time_stamps,param_names=None):
         if type(self.variable_name) != list:
             trace = traces[self.variable_name]
         else:
@@ -599,14 +600,14 @@ class Next:
     def __init__(self,subformula):
         self.subformula = subformula
         self.robustness = None
-    def eval_interval(self,traces,time_stamps):
-        subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
+    def eval_interval(self,traces,time_stamps,param_names=None):
+        subformula_robustness = self.subformula.eval_interval(traces,time_stamps,param_names)
         next_robustness = py_next_numpy(subformula_robustness)
         self.robustness = next_robustness[0]
         return next_robustness
 
 class Global:
-    def __init__(self,lower_time_bound,upper_time_bound,subformula = None, process_type = 'cpu_threaded'):
+    def __init__(self,lower_time_bound,upper_time_bound,subformula = None,param_name=None,process_type = 'cpu_threaded'):
         self.value = True
         self.subformula = subformula
         self.truth_value_history = []
@@ -614,9 +615,10 @@ class Global:
         self.upper_time_bound = upper_time_bound
         self.lower_time_bound = lower_time_bound
         self.process_type = process_type
+        self.param_name=param_name
         
-    def eval_interval(self,traces,time_stamps): 
-        subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
+    def eval_interval(self,traces,time_stamps,param_names=None): 
+        subformula_robustness = self.subformula.eval_interval(traces,time_stamps,param_names)
         globally_robustness = []
         max_robustness = float('-inf')
         
@@ -648,16 +650,17 @@ class Global:
         return self.subformula
 
 class Finally:
-    def __init__(self,lower_time_bound,upper_time_bound,subformula = None, process_type = 'cpu_threaded'):
+    def __init__(self,lower_time_bound,upper_time_bound,subformula = None,param_name=None,process_type='cpu_threaded'):
         self.subformula = subformula
         self.truth_value_history = []
         self.robustness = float('-inf')
         self.upper_time_bound = upper_time_bound
         self.lower_time_bound = lower_time_bound
         self.process_type = process_type
+        self.param_name = param_name
         
-    def eval_interval(self,traces,time_stamps): 
-        subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
+    def eval_interval(self,traces,time_stamps,param_names=None): 
+        subformula_robustness = self.subformula.eval_interval(traces,time_stamps,param_names)
         finally_robustness = []
         max_robustness = float('-inf')
         #subformula_robustness.reverse()
@@ -699,8 +702,8 @@ class Not:
         self.process_type = process_type
 
 
-    def eval_interval(self,traces,time_stamps): 
-        subformula_robustness = self.subformula.eval_interval(traces,time_stamps)
+    def eval_interval(self,traces,time_stamps,param_names=None): 
+        subformula_robustness = self.subformula.eval_interval(traces,time_stamps,param_names)
         not_robustness = []
         # t0 = time()
         #not_robustness = [i * -1 for i in subformula_robustness]
@@ -733,9 +736,9 @@ class And:
         self.value = None
         self.process_type = process_type
 
-    def eval_interval(self,traces,time_stamps):
-        left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
-        right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
+    def eval_interval(self,traces,time_stamps,param_names=None):
+        left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps,param_names)
+        right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps,param_names)
         and_robustness = []
         # t0 = time()
         #for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
@@ -764,9 +767,9 @@ class Or:
         self.value = None
         self.process_type = process_type
 
-    def eval_interval(self,traces,time_stamps): 
-        left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
-        right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
+    def eval_interval(self,traces,time_stamps,param_names=None): 
+        left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps,param_names)
+        right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps,param_names)
         or_robustness = []
         t0 = time()
         # for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
@@ -796,9 +799,9 @@ class Implication:
         self.value = None
         self.process_type = process_type
 
-    def eval_interval(self,traces,time_stamps): 
-        left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
-        right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
+    def eval_interval(self,traces,time_stamps,param_names=None): 
+        left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps,param_names)
+        right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps,param_names)
         or_robustness = []
 
         for left_robustness,right_robustness in zip(left_subformula_robustness,right_subformula_robustness):
@@ -814,7 +817,7 @@ class Implication:
         return or_robustness
 
 class Until:
-    def __init__(self,lower_time_bound,upper_time_bound,left_subformula = None,right_subformula = None,process_type = 'cpu_threaded'):
+    def __init__(self,lower_time_bound,upper_time_bound,left_subformula = None,right_subformula = None,param_name=None,process_type = 'cpu_threaded'):
         self.left_subformula = left_subformula
         self.right_subformula = right_subformula
         self.upper_time_bound = upper_time_bound
@@ -824,11 +827,11 @@ class Until:
         self.value = True
         self.right_subformula_true = False
         self.process_type = process_type 
+        self.param_name = param_name
 
-
-    def eval_interval(self,traces,time_stamps): 
-        left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps)
-        right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps)
+    def eval_interval(self,traces,time_stamps,param_names=None): 
+        left_subformula_robustness = self.left_subformula.eval_interval(traces,time_stamps,param_names)
+        right_subformula_robustness = self.right_subformula.eval_interval(traces,time_stamps,param_names)
         
         if type(time_stamps) == list:
             time_stamps = np.array(time_stamps,dtype=np.float32)

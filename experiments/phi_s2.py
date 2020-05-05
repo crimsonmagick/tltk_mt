@@ -1,9 +1,6 @@
-import importlib.util
-spec = importlib.util.spec_from_file_location("tltk_mtl", "../robustness/tltk_mtl.cpython-38-x86_64-linux-gnu.so")
-tltk_mtl = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(tltk_mtl)
+
 import os
-#import tltk_mtl
+import tltk_mtl
 import numpy as np
 import time
 

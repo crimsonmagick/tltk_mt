@@ -3,6 +3,11 @@ import os
 from distutils.extension import Extension
 from Cython.Build import cythonize
 
+
+with open("../mkdocs/docs/getting_started.md", "r") as fh:
+    long_description = fh.read()
+
+
 if os.path.isfile("tltk_mtl/tltk_mtl.pyx"):
     use_cython = True
 else:
@@ -43,7 +48,7 @@ else:
 setuptools.setup(
     name="tltk_mtl",
     ext_modules=cythonize(extension, compiler_directives={'language_level' : "3"}),
-    version="0.0.3",
+    version="0.0.4",
     author="Kole Cralley",
     author_email="jkolecr@gmail.com",
     description="A libary for effecient Metric temporal logic calculation",
@@ -51,4 +56,7 @@ setuptools.setup(
     classifiers=["Programming Language :: Python :: 3",
                   "Operating System :: POSIX :: Linux"],
     Platform="Linux",
+    packages=setuptools.find_packages(),
+    long_description=long_description,
+    long_description_content_type="text/markdown"
 )

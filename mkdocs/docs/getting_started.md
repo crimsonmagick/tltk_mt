@@ -1,3 +1,7 @@
+#Description
+TLTK is a tool for computing Metric Temporal logic robustness. This is done by specifing 
+predicates in the form Ax <= b and using those in MTL formulas. 
+
 # Getting Started
 
 ## Building TLTk
@@ -32,6 +36,17 @@ docker cp source_file tltk_cont:/usr/src/tltk/destination_file
 ```
 
 If you have completed these steps, continue to the next section. 
+### Pip install (Linux Only)
+
+To install tltk with pip3 the command below can be ran in Bash
+```Bash
+pip3 install --user tltk_mtl
+```
+
+If pip3 is not installed the command below will install it on Ubuntu
+```Bash
+sudo apt install python3-pip
+``` 
 
 ### Building from Source (Linux Only)
 
@@ -140,7 +155,8 @@ Below is a simple test script to check your setup of TLTk
 ```Python
 #import sys #uncomment if not using export statment for bash
 #sys.path.insert(1, 'robustness') #uncomment if not using export for bash
-import MTL as MTL 
+#import MTL as MTL #Uncomment if .bashrc was eddited
+import tltk_mtl as MTL #This is used if pip3 install was used
 import numpy as np
 #predicate definition
 predicate = MTL.Predicate('example data',1,1)
