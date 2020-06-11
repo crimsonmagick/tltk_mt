@@ -1,6 +1,6 @@
 import sys
 import os
-import MTL as MTL 
+import tltk_rob as MTL
 import numpy as np
 import time
 
@@ -16,11 +16,11 @@ r1 = MTL.Predicate('data1',Ar1,br1)
 root = MTL.Not(MTL.Finally(0,float('inf'),r1))
 
 Ar2 = -1
-br2 = -160
+br2 = -4500
 r2 = MTL.Predicate('data2',Ar2,br2)
 
 # root = F(r1 /\ r2)
-root = MTL.Finally(0,float('inf'),MTL.And(r1,r2))
+root = MTL.Not(MTL.Finally(0,float('inf'),MTL.And(r1,r2)))
 
 ## Trace and Time Stamps
 
