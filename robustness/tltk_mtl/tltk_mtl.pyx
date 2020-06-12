@@ -885,3 +885,6 @@ def solve_polyhedron_test(C, b, traces):
 
     return np.array(results,dtype=np.float32)
     
+def load_trace_csv(file_path):
+    trace = np.genfromtxt(file_path,delimiter=",")
+    return trace

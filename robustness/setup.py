@@ -1,25 +1,27 @@
-import pip
-
-
-def install(package):
-    if hasattr(pip, 'main'):
-        pip.main(['install', package])
-    else:
-        pip._internal.main(['install', package])
-trys = 0
-while trys < 5:
-    try:
-        from Cython.Build import cythonize
-        break
-    except ImportError as e:
-        install('cython')
-        trys += 1
-
-if trys == 5:
-    print("Failed to install cython",file=sys.stderr)
-    sys.exit(1)
-
+# import pip
 import setuptools
+
+#setuptools.setup()
+
+# def install(package):
+    # if hasattr(pip, 'main'):
+        # pip.main(['install', package])
+    # else:
+        # pip._internal.main(['install', package])
+# trys = 0
+# while trys < 5:
+    # try:
+        # 
+        # break
+    # except ImportError as e:
+        # install('cython')
+        # trys += 1
+
+# if trys == 5:
+    # print("Failed to install cython",file=sys.stderr)
+    # sys.exit(1)
+
+from Cython.Build import cythonize
 import os
 from distutils.extension import Extension
 
@@ -28,7 +30,7 @@ from distutils.extension import Extension
 #with open("../mkdocs/docs/getting_started.md", "r") as fh:
 #    long_description = fh.read()
 
-version = "0.0.13"
+version = "0.0.16"
 
 if os.path.isfile("tltk_mtl/tltk_mtl.pyx"):
     use_cython = True
