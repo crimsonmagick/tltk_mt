@@ -4,7 +4,6 @@
 import numpy as np
 cimport cython 
 from cpython cimport array
-from scipy.sparse import csc_matrix
 from libc.stdlib cimport malloc, free
 from ctypes import *
 import array 
@@ -500,10 +499,10 @@ except:
 import ctypes
 # import cvxpy as cp
 import numpy as np
-import scipy as sp
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 from time import time
+import pickle
 #import quadprog_polyhedron
 
 # trace[name] <= bound
@@ -887,4 +886,10 @@ def solve_polyhedron_test(C, b, traces):
     
 def load_trace_csv(file_path):
     trace = np.genfromtxt(file_path,delimiter=",")
+    return trace
+
+def load_trace_pickle(file_path):
+    file_descripter = open(file_path, "rb")
+    trace = pickle.load(file_descripter)
+    file_descripter.close()
     return trace

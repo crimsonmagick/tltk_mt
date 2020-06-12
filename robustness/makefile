@@ -1,5 +1,6 @@
 LIB_DIR=tltk_mtl
 QUADPROG_DIR=quadprog-master
+API_KEY = $(cat ~/Documents/test.pypi.api)
 default: backend
 
 backend: setup.py $(LIB_DIR)/libbackend.a #$(QUADPROG_DIR)/'quadprog_polyhedron%.so' 
@@ -30,4 +31,4 @@ $(LIB_DIR)/libgpubackend.so:
 wheel:
 	python3 setup.py sdist bdist_wheel
 upload:
-	python3 -m twine upload --repository pypi dist/tltk_mtl-0.0.??.tar.gz -u "__token__" -p $(cat ~/Documents/test.pypi.api)
+	python3 -m twine upload --repository pypi dist/tltk_mtl-0.0.??.tar.gz -u "__token__" -p $(API_KEY)
