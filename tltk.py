@@ -49,6 +49,7 @@ def sim_and_return_rob(z, *params):
     # print(traces)
     # print(time_data)    
     # Calculate robustness
+    rt.reset()
     
     rt.eval_interval(traces, time_data)
 
