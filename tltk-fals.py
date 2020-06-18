@@ -43,6 +43,8 @@ def sim_and_return_rob(z, *params):
     time_stamps = np.ravel(time_stamps)
     time_data = np.transpose(time_stamps)
     
+    rt.reset()
+    
     # Calculate robustness
     rt.eval_interval(traces, time_data)
 

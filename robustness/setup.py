@@ -30,7 +30,7 @@ from distutils.extension import Extension
 #with open("../mkdocs/docs/getting_started.md", "r") as fh:
 #    long_description = fh.read()
 
-version = "0.0.17"
+version = "0.0.18"
 
 if os.path.isfile("tltk_mtl/tltk_mtl.pyx"):
     use_cython = True
