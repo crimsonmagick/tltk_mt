@@ -595,7 +595,7 @@ class Predicate:
         self.robustness_array = predicate_robustness
         return predicate_robustness
         
-    def reset():
+    def reset(self):
         self.robustness_array = None
         
 class Next:
@@ -607,7 +607,7 @@ class Next:
         next_robustness = py_next_numpy(subformula_robustness)
         self.robustness = next_robustness[0]
         return next_robustness
-    def reset():
+    def reset(self):
         self.robustness = None
         self.subformula.reset()
 
@@ -649,7 +649,7 @@ class Global:
         #globally_robustness.reverse()
         return globally_robustness
 
-    def reset():
+    def reset(self):
         self.subformula.reset()
 
 class Finally:
@@ -690,7 +690,7 @@ class Finally:
 
         return  finally_robustness
         
-    def reset():
+    def reset(self):
         self.subformula.reset()
 
 class Not:
@@ -721,7 +721,7 @@ class Not:
         
         return not_robustness
 
-    def reset():
+    def reset(self):
         self.subformula.reset()
 
 class And:
@@ -755,8 +755,9 @@ class And:
         self.robustness = min(self.left_subformula.robustness,self.right_subformula.robustness)
         return and_robustness
     
-    def reset():
-        self.subformula.reset()
+    def reset(self):
+        self.left_subformula.reset()
+        self.right_subformula.reset()
 
 class Or:
     def __init__(self,left_subformula = None,right_subformula = None, process_type = "cpu_threaded"):
@@ -790,8 +791,9 @@ class Or:
         self.robustness = max(self.left_subformula.robustness,self.right_subformula.robustness)
         return or_robustness
     
-    def reset():
-        self.subformula.reset()
+    def reset(self):
+        self.left_subformula.reset()
+        self.right_subformula.reset()
 
 class Implication:
     def __init__(self,left_subformula = None,right_subformula = None, process_type = 'cpu'):
@@ -819,7 +821,7 @@ class Implication:
 
         return or_robustness
 
-    def reset():
+    def reset(self):
         self.subformula.reset()
 class Until:
     def __init__(self,lower_time_bound,upper_time_bound,left_subformula = None,right_subformula = None,param_name=None,process_type = 'cpu_threaded'):
@@ -854,7 +856,7 @@ class Until:
         self.robustness = until_robustness[0]
         return until_robustness
     
-    def reset():
+    def reset(self):
         self.left_subformula.reset()
         self.right_subformula.reset()
 #_______________quadprog.pyx______________
