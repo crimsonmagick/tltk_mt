@@ -13,7 +13,6 @@ mode = 'cpu_threaded'
 Ar1 = -1
 br1 = -160
 r1 = MTL.Predicate('data1',Ar1,br1)
-root = MTL.Not(MTL.Finally(0,float('inf'),r1))
 
 Ar2 = -1
 br2 = -4500

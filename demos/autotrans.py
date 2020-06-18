@@ -1,11 +1,10 @@
 import matlab.engine
 import sys
 sys.path.insert(1, '../')
-sys.path.insert(1, '../robustness')
 
 import numpy as np
-import tltk as tltk
-import robustness.MTL as MTL
+import tltk
+import tltk_mtl as MTL
 
 model = 'data/sldemo_autotrans_mod01'
 
@@ -17,23 +16,15 @@ opt = ['simulink', step, inp_range, simulation_time]
 
 interpolation = 'pchip'
 
-mode = 'gpu'
-#pred_tags = ['speed', 'rpm']
-pred_tags = ['test']
-test_pred = MTL.Predicate(pred_tags[0],[1,0],[150], mode)
-#speed_pred = MTL.Predicate(pred_tags[0], Aspeed, bspeed, mode)
-#rpm_pred = MTL.Predicate(pred_tags[1], Arpm, brpm, mode)
+mode = 'cpu_threaded'
+pred_tags = ['speed', 'rpm']
+# pred_tags = ['test']
+speed_pred = MTL.Predicate('speed',-1,-120)
+rpm_pred = MTL.Predicate('rpm',-1,-4500)
 
-#root = MTL.Not(MTL.Or(MTL.Finally(0,float('inf'),speed_pred),MTL.Finally(0,float('inf'),rpm_pred)))
-# vvvvvvvvvvvvvvvv THIS ONE WORKED
-# root = MTL.Not(MTL.And(MTL.Finally(0,100,speed_pred),MTL.Finally(0,100,rpm_pred)))
-#comb_pred =  MTL.Predicate(pred_tags[0], Acomb, bcomb, mode);
-#predicates = [pred_tags, speed_pred, rpm_pred]
-
-#predicates = [pred_tags, comb_pred]
+predicates = [speed_pred, rpm_pred]
 cp_samples = np.random.uniform(low=inp_range[0], high=inp_range[1], size=(2,))
 #predicates = [pred_tags, speed_pred, rpm_pred]
-predicates = [pred_tags,test_pred]
 #root = MTL.Not((MTL.Finally(0, 30, speed_pred, mode)))
-root = MTL.Not(MTL.Finally(0,100,test_pred))
+root = MTL.Not(MTL.And(MTL.Finally(0,float('inf'),speed_pred), MTL.Finally(0,float('inf'),rpm_pred)))
 results = tltk.falsify(model, interpolation, cp_samples, predicates, root, opt)
