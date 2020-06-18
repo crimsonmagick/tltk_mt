@@ -36,23 +36,26 @@ def sim_and_return_rob(z, *params):
 
     # Initialize traces dictionary and fill from simulation output
     traces = {}
-    tempArray = np.array(output) 
-    tempArray = np.stack(tempArray, axis = 1)
-    for i in range(0,len(predicates)):
-        traces[predicates[i].variable_name] = np.float32(tempArray[i])
-        
-        
-        
+    #tempArray = np.array(output) 
+    # tempArray = np.stack(tempArray, axis = 1)
+    # for i in range(0,len(predicates)-1):
+    #     traces[predicates[i].variable_name] = np.float32(tempArray[i])
+    #traces['data'] = np.float32(tempArray[i])
+    traces['data'] = np.array(output)
+             
     # Get time stamps from simulation output
     time_stamps = np.ravel(time_stamps)
+    #time_data = np.float32(np.transpose(time_stamps))
+
     time_data = np.float32(np.transpose(time_stamps))
+
     # print(traces)
     # print(time_data)    
     # Calculate robustness
-    
+    rt.reset()
     rt.eval_interval(traces, time_data)
 
-    print('---', rt.robustness, ' cps: ', z)
+    print('Rob:', rt.robustness, 'CPs: ', z)
 
     return rt.robustness
 
@@ -67,7 +70,7 @@ def falsify(model, interpolation, cp_samples, predicates, root, opt):
     params = (model, opt, interpolation, predicates, root, engine)
 
     my_opt = {'maxiter': 300, 'disp': True}
-    res2 = minimize(sim_and_return_rob, cp_samples, args=params, method='Powell', options=my_opt)
+    res2 = minimize(sim_and_return_rob, cp_samples, args=params, method='Nelder-Mead', options=my_opt)
     print(res2)
 
     # Uncomment the section below to use stochasticOptimization functions
