@@ -595,6 +595,9 @@ class Predicate:
         self.robustness_array = predicate_robustness
         return predicate_robustness
         
+    def reset():
+        self.robustness_array = None
+        
 class Next:
     def __init__(self,subformula):
         self.subformula = subformula
@@ -604,6 +607,9 @@ class Next:
         next_robustness = py_next_numpy(subformula_robustness)
         self.robustness = next_robustness[0]
         return next_robustness
+    def reset():
+        self.robustness = None
+        self.subformula.reset()
 
 class Global:
     def __init__(self,lower_time_bound,upper_time_bound,subformula = None,param_name=None,process_type = 'cpu_threaded'):
@@ -642,11 +648,9 @@ class Global:
             self.value = True
         #globally_robustness.reverse()
         return globally_robustness
-    
-    def add_subformula(self,subformula):
-        self.subformula = subformula
-    def get_subformula(self):
-        return self.subformula
+
+    def reset():
+        self.subformula.reset()
 
 class Finally:
     def __init__(self,lower_time_bound,upper_time_bound,subformula = None,param_name=None,process_type='cpu_threaded'):
@@ -686,11 +690,8 @@ class Finally:
 
         return  finally_robustness
         
-        
-    def add_subformula(self,subformula):
-        self.subformula = subformula
-    def get_subformula(self):
-        return self.subformula
+    def reset():
+        self.subformula.reset()
 
 class Not:
     def __init__(self,subformula = None, process_type = "cpu_threaded"):
@@ -720,11 +721,8 @@ class Not:
         
         return not_robustness
 
-
-    def add_subformula(self,subformula):
-        self.subformula = subformula
-    def get_subformula(self):
-        return self.subformula
+    def reset():
+        self.subformula.reset()
 
 class And:
     def __init__(self,left_subformula = None,right_subformula = None, process_type = 'cpu_threaded'):
@@ -756,6 +754,9 @@ class And:
             and_robustness = gpubackend.py_and_numpy_gpu(left_subformula_robustness,right_subformula_robustness)
         self.robustness = min(self.left_subformula.robustness,self.right_subformula.robustness)
         return and_robustness
+    
+    def reset():
+        self.subformula.reset()
 
 class Or:
     def __init__(self,left_subformula = None,right_subformula = None, process_type = "cpu_threaded"):
@@ -788,6 +789,9 @@ class Or:
         
         self.robustness = max(self.left_subformula.robustness,self.right_subformula.robustness)
         return or_robustness
+    
+    def reset():
+        self.subformula.reset()
 
 class Implication:
     def __init__(self,left_subformula = None,right_subformula = None, process_type = 'cpu'):
@@ -815,6 +819,8 @@ class Implication:
 
         return or_robustness
 
+    def reset():
+        self.subformula.reset()
 class Until:
     def __init__(self,lower_time_bound,upper_time_bound,left_subformula = None,right_subformula = None,param_name=None,process_type = 'cpu_threaded'):
         self.left_subformula = left_subformula
@@ -847,7 +853,10 @@ class Until:
             until_robustness = gpubackend.py_until_numpy_gpu(self.lower_time_bound,self.upper_time_bound,left_subformula_robustness,right_subformula_robustness,list(time_stamps))
         self.robustness = until_robustness[0]
         return until_robustness
-
+    
+    def reset():
+        self.left_subformula.reset()
+        self.right_subformula.reset()
 #_______________quadprog.pyx______________
 
 cdef extern:

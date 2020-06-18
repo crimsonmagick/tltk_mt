@@ -1,7 +1,6 @@
 import sys
-sys.path.insert(1, '../robustness')
 import os
-import MTL as MTL 
+import tltk_mtl as MTL 
 import numpy as np
 import time
 
@@ -19,7 +18,7 @@ for i in list_range:
     
     r7 = MTL.Predicate('data1',Ar7,br7)
     r8 = MTL.Predicate('data2',Ar8,br8)
-
+    
     traces = {} 
     traces['data1'] = np.array([[1,1,1]]*i,dtype=np.float64)
     traces['data2'] = np.array([[1,1,1]]*i,dtype=np.float64)
@@ -31,6 +30,7 @@ for i in list_range:
     t0 = time.time()
     root.eval_interval(traces, time_stamps)
     t1 = time.time()
+
     print("phi_2\t","| Mode:" ,mode,'\t| Samples:', "{:,}".format(i), '\t| Time: ', '%.4f'%(t1 - t0), '    \t| robustness', root.robustness)
     del traces
     del time_stamps
