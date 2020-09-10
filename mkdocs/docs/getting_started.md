@@ -1,3 +1,4 @@
+
 #Description
 TLTK is a tool for computing Metric Temporal logic robustness. This is done by specifing 
 predicates in the form Ax <= b and using those in MTL formulas. 
@@ -168,4 +169,29 @@ time_stamps = np.array([0,.5,.7,.8,1],dtype=np.float32)
 #calculate predicate and print results 
 print(predicate.eval_interval(signal,time_stamps))
 ```
+The MTL formula stores information for later use. If you want to use the same formula more than once the reset() method needs to be called as seen below.
 
+
+```Python
+#import sys #uncomment if not using export statment for bash
+#sys.path.insert(1, 'robustness') #uncomment if not using export for bash
+#import MTL as MTL #Uncomment if .bashrc was eddited
+import tltk_mtl as MTL #This is used if pip3 install was used
+import numpy as np
+#predicate definition
+predicate = MTL.Predicate('example data',1,1)
+
+#signal and time stamps
+signal = {'example data':np.array([95,96,97,96,95],dtype=np.float32)}
+time_stamps = np.array([0,.5,.7,.8,1],dtype=np.float32)
+
+#calculate predicate and print results 
+print(predicate.eval_interval(signal,time_stamps))
+
+predicate.reset()
+
+signal = {'example data':np.array([92,95,92,100,95],dtype=np.float32)}
+time_stamps = np.array([0,.4,.10,.80,1],dtype=np.float32)
+
+print(predicate.eval_interval(signal,time_stamps))
+```

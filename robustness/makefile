@@ -31,5 +31,11 @@ $(LIB_DIR)/libgpubackend.so:
 
 wheel:
 	python3 setup.py sdist bdist_wheel
+	
+install:
+	make clean
+	make wheel
+	pip uninstall tltk-mtl
+	pip install dist/tltk_mtl-0.0.??.tar.gz
 upload:
 	python3 -m twine upload --repository pypi dist/tltk_mtl-0.0.??.tar.gz -u "__token__" -p $(API_KEY)
