@@ -1100,7 +1100,7 @@ void wrap_polyhedron_threaded(double** traces,double* C_f,double *b,double* resu
     }
 }
 
-void wrap_polyhedron_two(double* traces,double* C_f,double *b,double* results,int m_in , int n_in,long length){
+void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long length){
     double* a;
     int ierr;
     int meq;
@@ -1200,8 +1200,7 @@ void wrap_polyhedron_two(double* traces,double* C_f,double *b,double* results,in
         }
     
         //Multiply the current A by the current trace to see if we are calculating depth or distance
-        printf("First %lf \n",traces[i*m + 2]);
-        matmulcol(C_f_temp,m,n,&traces[m*i],n,1,A_t_trace);
+        matmulcol(C_f_temp,m,n,traces[i],n,1,A_t_trace);
         
         
         
@@ -1218,25 +1217,22 @@ void wrap_polyhedron_two(double* traces,double* C_f,double *b,double* results,in
         //}
         
         if(!matlessthaneq(A_t_trace,b,m,1)){
-            results[i] = calc_depth(C_f,b,&traces[m*i],m,n);
+            results[i] = calc_depth(C_f,b,traces[i],m,n);
         }else{
             // Subtract A*x from b (b - A*x) 
             matsub(b_sub,m,1,A_t_trace,m,1);
             //Flip sign because qpgen works with Ax >= b
             matscaler(-1.0,b_sub,m,1);
             matscaler(-1.0,C_f_temp,m,n);
-
+                
             //Transpse A to be used with qpgen
             transpose(C_f_temp,m,n , C_t);
             
-            
             qpgen2_(G,a,&n,&n,sol,lagr,&results[i],C_t,b_sub,&n,&m,&meq,iact,&nact,iters,work,&ierr);
             results[i] = -1*sqrt(2*results[i]);
-            
         }
-        
+        free(traces[i]);
     }
-    free(traces);
     //printf("ierr: %d\n" ,ierr);
     //printf("DONE\n");
 }

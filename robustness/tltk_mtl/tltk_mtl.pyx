@@ -549,13 +549,13 @@ class Predicate:
         if self.thread_pool == False:
             if ((len(trace.shape) == 1) and (type(self.A_Matrix) == int or type(self.A_Matrix) == float)):
                 trace = np.array(trace,dtype=np.float32)
-                if self.process_type == 'cpu':
-                    predicate_robustness = py_one_dim_pred_numpy(trace, self.A_Matrix, self.bound)
+#                if self.process_type == 'cpu':
+                predicate_robustness = py_one_dim_pred_numpy(trace, self.A_Matrix, self.bound)
                     #predicate_robustness = py_one_dim_pred(list(trace), self.A_Matrix, self.bound)
-                elif self.process_type == 'cpu_threaded':
-                    predicate_robustness = py_one_dim_pred_threaded_numpy(trace, self.A_Matrix, self.bound)
-                else:
-                    predicate_robustness = gpubackend.py_one_dim_pred_numpy_gpu(list(trace), self.A_Matrix, self.bound)   
+#                elif self.process_type == 'cpu_threaded':
+#                    predicate_robustness = py_one_dim_pred_threaded_numpy(trace, self.A_Matrix, self.bound)
+#                else:
+#                    predicate_robustness = gpubackend.py_one_dim_pred_numpy_gpu(list(trace), self.A_Matrix, self.bound)   
             else:
                
                 #traces = np.transpose(np.array(traces)).tolist()
@@ -862,7 +862,7 @@ class Until:
 #_______________quadprog.pyx______________
 
 cdef extern:
-    void wrap_polyhedron_two(double* traces,double* C,double* b,double* results,int m,int n,long length)
+    void wrap_polyhedron_two(double** traces,double* C,double* b,double* results,int m,int n,long length)
 
 cdef extern:
     void wrap_polyhedron_threaded(double** traces,double* C,double* b,double* results,int m,int n,long length)
@@ -871,27 +871,27 @@ def solve_polyhedron_test(C, b, traces):
 
     n3, m1 = C.shape[1], C.shape[0]
     
-    #cdef double** traces_
+    cdef double** traces_
     cdef long length = len(traces)
-#    c_results = <double *>malloc(len(traces)*cython.sizeof(double))
-#    traces_ = <double **>malloc(len(traces)*cython.sizeof(c_results))
+    c_results = <double *>malloc(len(traces)*cython.sizeof(double))
+    traces_ = <double **>malloc(len(traces)*cython.sizeof(c_results))
     
-#    for time_step in xrange(len(traces)):
-#        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
-#        for i in xrange(len(traces[0])):
-#            #print(traces[time_step][i], end=",")
-#            traces_[time_step][i] = traces[time_step][i]
-#            #sys.stdout.write("%lf," % traces[time_step][i])
+    for time_step in xrange(len(traces)):
+        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
+        for i in xrange(len(traces[0])):
+            #print(traces[time_step][i], end=",")
+            traces_[time_step][i] = traces[time_step][i]
+            #sys.stdout.write("%lf," % traces[time_step][i])
             
     C.transpose()
     b.transpose()
     
-    cdef double[::1, :] traces_ = np.array(traces, copy=True, order='F')
+    #cdef double[::1, :] traces_ = np.array(traces, copy=True, order='F')
     cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
     cdef double[::1] b_ = np.array(b, copy=True, order='F')
     cdef double[:] results = np.empty(length)
 
-    wrap_polyhedron_two(&traces_[0,0],&C_[0,0],&b_[0],&results[0],m1,n3,length)
+    wrap_polyhedron_two(traces_,&C_[0,0],&b_[0],&results[0],m1,n3,length)
     
 
     return np.array(results,dtype=np.float32)
