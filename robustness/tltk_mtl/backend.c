@@ -566,21 +566,23 @@ void finally_thread_task(long start_index,long end_index,float lower_time_bound,
                 *(finally_robustness + current_time_step) = *(robustness + lower_bound_index);
             }
             else{
-                if(max_index == -1){
-                    max_index = find_max(robustness,lower_bound_index,upper_bound_index);
-                    *(finally_robustness + current_time_step) = *(robustness + max_index);
-                }
-                else if(max_index > upper_bound_index){
-                    max_index = find_max(robustness,lower_bound_index,upper_bound_index);
-                    *(finally_robustness + current_time_step) = *(robustness + max_index);
-                }
-                else{
-                    long possible_max_index = find_max(robustness,lower_bound_index,previous_lower_bound_index);
-                    if(*(robustness+possible_max_index) <= max){
-                        max_index = possible_max_index;
-                    }
-                    *(finally_robustness + current_time_step) = *(robustness + max_index);
-                }
+                max_index = find_max(robustness,lower_bound_index,upper_bound_index);
+                *(finally_robustness + current_time_step) = *(robustness + max_index);
+                //if(max_index == -1){
+                    //max_index = find_max(robustness,lower_bound_index,upper_bound_index);
+                    //*(finally_robustness + current_time_step) = *(robustness + max_index);
+                //}
+                //else if(max_index > upper_bound_index){
+                    //max_index = find_max(robustness,lower_bound_index,upper_bound_index);
+                    //*(finally_robustness + current_time_step) = *(robustness + max_index);
+                //}
+                //else{
+                    //long possible_max_index = find_max(robustness,lower_bound_index,previous_lower_bound_index);
+                    //if(*(robustness+possible_max_index) <= max){
+                        //max_index = possible_max_index;
+                    //}
+                    //*(finally_robustness + current_time_step) = *(robustness + max_index);
+                //}
             }
             previous_lower_bound_index = lower_bound_index;
             max = *(robustness + max_index);
@@ -611,22 +613,25 @@ void global_thread_task(long start_index,long end_index,float lower_time_bound, 
                 *(global_robustness + current_time_step) = *(robustness + lower_bound_index);
             }
             else{
-                if(min_index == -1){
-                    min_index = find_min(robustness,lower_bound_index,upper_bound_index);
-                    *(global_robustness + current_time_step) = *(robustness + min_index);
-                }
-                else if(min_index > upper_bound_index){
-                    min_index = find_min(robustness,lower_bound_index,upper_bound_index);
-                    *(global_robustness + current_time_step) = *(robustness + min_index);
-                }
-                else{
-                    long possible_min_index = find_min(robustness,lower_bound_index,previous_lower_bound_index);
-                    if(*(robustness+possible_min_index) <= min){
-                        min_index = possible_min_index;
-                    }
-                    *(global_robustness + current_time_step) = *(robustness + min_index);
-                }
+                min_index = find_min(robustness,lower_bound_index,upper_bound_index); //remove later
+                *(global_robustness + current_time_step) = *(robustness + min_index); //remove later 
+                //if(min_index == -1){
+                    //min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                    //*(global_robustness + current_time_step) = *(robustness + min_index);
+                //}
+                //else if(min_index > upper_bound_index){
+                    //min_index = find_min(robustness,lower_bound_index,upper_bound_index);
+                    //*(global_robustness + current_time_step) = *(robustness + min_index);
+                //}
+                //else{
+                    //long possible_min_index = find_min(robustness,lower_bound_index,previous_lower_bound_index);
+                    //if(*(robustness+possible_min_index) <= min){
+                        //min_index = possible_min_index;
+                    //}
+                    //*(global_robustness + current_time_step) = *(robustness + min_index);
+                //}
             }
+            //printf("time_step %ld : robust: %f\n",current_time_step,*(global_robustness + current_time_step));
             previous_lower_bound_index = lower_bound_index;
             min = *(robustness + min_index);
     }

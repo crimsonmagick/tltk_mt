@@ -646,6 +646,7 @@ class Global:
         if self.robustness > 0:
             self.value = True
         #globally_robustness.reverse()
+        
         return globally_robustness
 
     def reset(self):
