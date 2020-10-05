@@ -861,7 +861,7 @@ class Until:
         self.right_subformula.reset()
 #_______________quadprog.pyx______________
 
-cdef extern:
+cdef extern from "../quadprog-master/quadprog/solve.QP.h":
     void wrap_polyhedron_two(double** traces,double* C,double* b,double* results,int m,int n,long length)
 
 cdef extern:

@@ -1,3 +1,4 @@
 global-include *.pyx
 global-include *.pxd
 include quadprog/f2c.h
+include quadprog/solve.QP.h

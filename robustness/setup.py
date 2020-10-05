@@ -38,6 +38,7 @@ else:
     use_cython = False
 
 quadprog_path = "quadprog-master/quadprog/"
+os.environ["CC"] = "g++"
 if use_cython:
     with open("../mkdocs/docs/getting_started.md", "r") as fh:
         long_description = fh.read()
@@ -53,7 +54,7 @@ if use_cython:
         extra_link_args=['-fopenmp'],
         library_dirs=["backend_dir"],
         include_dirs=["backend_dir","quadprog-master/quadprog"],
-        language='c',
+        language='c++',
     )] 
     setuptools.setup(
         name="tltk_mtl",
@@ -77,7 +78,7 @@ if use_cython:
 else:
     extension = [Extension(
         name="tltk_mtl",
-        sources=["tltk_mtl/tltk_mtl.c", "tltk_mtl/backend.c",
+        sources=["tltk_mtl/tltk_mtl.cpp", "tltk_mtl/backend.c",
         quadprog_path+"aind.c",quadprog_path+"solve.QP.c",quadprog_path+"util.c",
         quadprog_path+"dpofa.c",quadprog_path+"daxpy.c",quadprog_path+"ddot.c",
         quadprog_path+"dscal.c",quadprog_path+"f2c_lite.c"
@@ -87,7 +88,7 @@ else:
         extra_link_args=['-fopenmp'],
         library_dirs=["backend_dir"],
         include_dirs=["tltk_mtl","quadprog-master/quadprog"],
-        language='c',
+        language='c++',
     )]   
 
     setuptools.setup(
