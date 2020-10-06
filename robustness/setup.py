@@ -30,7 +30,7 @@ from distutils.extension import Extension
 #with open("../mkdocs/docs/getting_started.md", "r") as fh:
 #    long_description = fh.read()
 
-version = "0.0.21"
+version = "0.0.24"
 
 if os.path.isfile("tltk_mtl/tltk_mtl.pyx"):
     use_cython = True
@@ -39,6 +39,7 @@ else:
 
 quadprog_path = "quadprog-master/quadprog/"
 os.environ["CC"] = "g++"
+os.environ["CXX"] = "g++"
 if use_cython:
     with open("../mkdocs/docs/getting_started.md", "r") as fh:
         long_description = fh.read()
