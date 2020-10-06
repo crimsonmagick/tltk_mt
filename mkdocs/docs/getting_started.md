@@ -72,10 +72,14 @@ sudo apt install git
 
 ##### CPU Compiler
 
-TLTk has been tested with the gcc compiler. If gcc is not on your system, it can be installed with:
+TLTk has been tested with the g++ compiler. If g++ is not on your system, it can be installed with:
+
 ```Bash
-sudo apt install gcc
+sudo apt install g++
 ```
+
+!!! warning
+    tltk can be compiled with gcc however higher diminsional predicates may produce the wrong result
 
 ##### Installing python3
 ```Bash
