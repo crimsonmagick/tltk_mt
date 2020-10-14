@@ -510,11 +510,12 @@ import pickle
 # 0 robustness is a failure (will add an option to choose later)
 
 class Predicate:
-    def __init__(self,variable_name,A_Matrix,bound,param_name=None,process_type = 'cpu',thread_pool = False):
+    def __init__(self,variable_name,A_Matrix,bound,robustness=None,param_name=None,process_type = 'cpu',thread_pool = False):
         self.variable_name = variable_name
         self.value = None
         self.robustness_array = None
         self.param_name = param_name
+        self.robustness = np.array(robustness,dtype=np.float64)
         if type(bound) == list:
             self.bound = np.array(bound,dtype=np.float64)
         else:
@@ -529,6 +530,9 @@ class Predicate:
         
     
     def eval_interval(self,traces,time_stamps,param_names=None):
+        if self.robustness != None:
+            return self.robustness
+        
         if type(self.variable_name) != list:
             trace = traces[self.variable_name]
         else:
