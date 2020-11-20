@@ -692,6 +692,29 @@ void c_one_dim_pred(float* traces, float A, float bound,long length){
     }
 }
 
+void c_one_dim_bool_pred(float* traces, float A, float bound,long length){
+    long i;
+    for(i = 0; i < length; i++){
+        if(-1*(*(traces + i) * A - bound) <= 0){
+            *(traces + i)  = -INFINITY;
+        }else{
+            *(traces + i) = INFINITY;
+        }
+    }
+}
+
+void c_one_dim_bool_pred_threaded(float* traces, float A, float bound,long length){
+    long i;
+    #pragma omp parallel for num_threads(sysconf(_SC_NPROCESSORS_ONLN))
+    for(i = 0; i < length; i++){
+        if(-1*(*(traces + i) * A - bound) < 0){
+            *(traces + i)  = -INFINITY;
+        }
+        else{
+            *(traces + i) = INFINITY;
+        }
+    }
+}
 
 void c_one_dim_pred_threaded(float* traces, float A, float bound,long length){
     long i;

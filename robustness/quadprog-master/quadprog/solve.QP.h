@@ -8,3 +8,4 @@ int qpgen2_(doublereal *dmat, doublereal *dvec, integer *
     
     
 void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,int m_in , int n_in,long length);
+void c_pred_bool(double* traces,double* C_f,double *b,double* results,int m , int n,long length);

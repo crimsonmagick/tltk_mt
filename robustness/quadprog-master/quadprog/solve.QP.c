@@ -1236,3 +1236,37 @@ void wrap_polyhedron_two(double** traces,double* C_f,double *b,double* results,i
     //printf("ierr: %d\n" ,ierr);
     //printf("DONE\n");
 }
+
+void c_pred_bool(double* traces,double* C_f,double *b,double* results,int m , int n,long length){
+    int time_step;
+    
+    double * A_t_trace;
+    double * trace_temp;
+    
+    if(!(A_t_trace = (double*)malloc(m * 1 * sizeof(double)))){
+        perror("Memory Error");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!(trace_temp = (double*)malloc(n * sizeof(double)))){
+        perror("Memory Error");
+        exit(EXIT_FAILURE);
+    }
+    
+    for(time_step = 0; time_step < length; time_step++){
+        memset(A_t_trace,0,m*sizeof(double));
+        memset(trace_temp,0,m*sizeof(double));
+        
+        memcpy(trace_temp,traces + (time_step * n),sizeof(double)*n);
+        
+        matmulcol(C_f,m,n,trace_temp,n,1,A_t_trace);
+        
+        if(matlessthaneq(A_t_trace,b,m,1)){
+            results[time_step] = INFINITY;
+        }
+        else{
+            results[time_step] = -INFINITY;
+        }
+        //free(traces[time_step]);
+    }
+}

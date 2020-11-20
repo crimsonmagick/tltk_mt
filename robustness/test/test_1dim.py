@@ -4,7 +4,8 @@ import os
 import tltk_mtl as MTL
 import numpy as np
 import time
-
+inf = float("inf")
+ninf = float("-inf")
 
 class TestStringMethods(unittest.TestCase):
     def test_one_dim_and(self):
@@ -140,8 +141,39 @@ class TestStringMethods(unittest.TestCase):
         root.eval_interval(traces, time_stamps)
 
         self.assertEqual(root.robustness, -50)
-
-
+    
+    def test_robustness_pass(self):
+        root = MTL.Global(0,float("inf"),MTL.Predicate("test",None,None,robustness = [10,2]))
+        root.eval_interval([],[1,2])
+        self.assertEqual(root.robustness, 2)
+        
+    def test_bool_pred(self):
+        traces = {}
+        root = MTL.bool_pred("test",1,0)
+        traces['test'] = np.array([-1, 0, 150, 100, 160])
+        time_stamps = np.array([1, 2, 3, 4, 5], dtype=np.float32)
+        root.eval_interval(traces,time_stamps)
+        self.assertEqual(root.robustness, float("inf"))
+        
+    def test_higher_dim_bool_pred_true(self):
+        traces = {}
+        Ar1 = np.array([[1, 0, 0]],dtype=np.float64)
+        br1 =  np.array([120,0,0],dtype=np.float64)
+        root = MTL.bool_pred('test',Ar1,br1)    
+        traces['test'] = np.array([[-1,0,0], [0,0,0], [150,0,0] , [100,0,0] , [160,0,0]])
+        time_stamps = np.array([1, 2, 3, 4, 5], dtype=np.float32)
+        root.eval_interval(traces,time_stamps)
+        self.assertEqual(root.robustness, float("inf"))
+    
+    def test_higher_dim_bool_pred_false(self):
+        traces = {}
+        Ar1 = np.array([[1, 0, 0]],dtype=np.float64)
+        br1 =  np.array([120,0,0],dtype=np.float64)
+        root = MTL.bool_pred('test',Ar1,br1)    
+        traces['test'] = np.array([[200,0,0], [0,0,0], [150,0,0] , [100,0,0] , [160,0,0]])
+        time_stamps = np.array([1, 2, 3, 4, 5], dtype=np.float32)
+        results = root.eval_interval(traces,time_stamps)
+        self.assertListEqual(list(results), [float("-inf"),inf,ninf,inf,ninf])
 if __name__ == '__main__':
 
     unittest.main()

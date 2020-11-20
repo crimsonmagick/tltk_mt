@@ -67,6 +67,9 @@ cdef extern from "backend.h":
 
 cdef extern from "backend.h":
     void c_one_dim_pred(float* traces, float A, float bound,long length);
+    
+cdef extern from "backend.h":
+    void c_one_dim_bool_pred(float* traces, float A, float bound,long length);
 
 cdef extern from "backend.h":
     void c_one_dim_pred_threaded(float* traces, float A, float bound,long length);
@@ -472,21 +475,22 @@ def py_one_dim_pred(list robustness, float A, float bound) -> float[::1]:
 def py_one_dim_pred_numpy(robustness, float A, float bound) -> float[::1]:
     cdef float[:] c_robustness = robustness
 
-        
     c_one_dim_pred(&c_robustness[0],A,bound,len(robustness))
-    
 
-    
+    return robustness
+
+def py_one_dim_bool_pred_numpy(robustness, float A, float bound) -> float[::1]:
+    cdef float[:] c_robustness = robustness
+
+    c_one_dim_bool_pred(&c_robustness[0],A,bound,len(robustness))
+
     return robustness
 
 def py_one_dim_pred_threaded_numpy(robustness, float A, float bound) -> float[::1]:
     cdef float[:] c_robustness = robustness
 
-        
     c_one_dim_pred_threaded(&c_robustness[0],A,bound,len(robustness))
-    
 
-    
     return robustness
 
 #_______________MTL.py_______________________
@@ -508,14 +512,43 @@ import pickle
 # trace[name] <= bound
 # Time bounds inclusive
 # 0 robustness is a failure (will add an option to choose later)
-
+class bool_pred:
+    def __init__(self,variable_name,A_Matrix,bound,process_type = 'cpu',robustness=None):
+        self.variable_name = variable_name
+        self.A_Matrix = A_Matrix
+        self.bound = bound
+        self.process_type = process_type
+        self.robustness = None
+        
+        self.predicate_robustness = None
+        if robustness != None:
+            self.predicate_robustness = np.array(robustness,dtype=np.float32)
+            
+    def eval_interval(self,traces,time_stamps):
+        trace = traces[self.variable_name]
+        
+        if ((len(trace.shape) == 1) and (type(self.A_Matrix) == int or type(self.A_Matrix) == float)):
+            trace = np.array(trace,dtype=np.float32)
+            predicate_robustness = py_one_dim_bool_pred_numpy(trace, self.A_Matrix, self.bound)
+        else:
+            trace = np.array(trace,dtype=np.float64)
+            self.A_Matrix = np.array(self.A_Matrix,dtype=np.float64)
+            self.bound = np.array(self.bound,dtype=np.float64)
+            
+            predicate_robustness = pred_bool_higher_dim(self.A_Matrix,self.bound,trace)
+        
+        self.robustness = predicate_robustness[0]
+        return predicate_robustness
+        
 class Predicate:
     def __init__(self,variable_name,A_Matrix,bound,robustness=None,param_name=None,process_type = 'cpu',thread_pool = False):
         self.variable_name = variable_name
         self.value = None
         self.robustness_array = None
         self.param_name = param_name
-        self.robustness = np.array(robustness,dtype=np.float64)
+        self.predicate_robustness = None
+        if robustness != None:
+            self.predicate_robustness = np.array(robustness,dtype=np.float32)
         if type(bound) == list:
             self.bound = np.array(bound,dtype=np.float64)
         else:
@@ -530,8 +563,9 @@ class Predicate:
         
     
     def eval_interval(self,traces,time_stamps,param_names=None):
-        if self.robustness != None:
-            return self.robustness
+        if type(self.predicate_robustness) != type(None):
+            self.robustness = self.predicate_robustness[0]
+            return self.predicate_robustness
         
         if type(self.variable_name) != list:
             trace = traces[self.variable_name]
@@ -867,6 +901,9 @@ class Until:
 
 cdef extern from "../quadprog-master/quadprog/solve.QP.h":
     void wrap_polyhedron_two(double** traces,double* C,double* b,double* results,int m,int n,long length)
+    
+cdef extern from "../quadprog-master/quadprog/solve.QP.h":
+    void c_pred_bool(double* traces,double* C_f,double *b,double* results,int m , int n,long length)
 
 cdef extern:
     void wrap_polyhedron_threaded(double** traces,double* C,double* b,double* results,int m,int n,long length)
@@ -899,7 +936,37 @@ def solve_polyhedron_test(C, b, traces):
     
 
     return np.array(results,dtype=np.float32)
+
+def pred_bool_higher_dim(C, b, traces):
+
+    n3, m1 = C.shape[1], C.shape[0]
     
+#    cdef double** traces_
+    cdef long length = len(traces)
+#    c_results = <double *>malloc(len(traces)*cython.sizeof(double))
+#    traces_ = <double **>malloc(len(traces)*cython.sizeof(c_results))
+    
+#    for time_step in xrange(len(traces)):
+#        traces_[time_step] = <double *>malloc(len(traces[0]) * cython.sizeof(double))
+#        for i in xrange(len(traces[0])):
+            #print(traces[time_step][i], end=",")
+#            traces_[time_step][i] = traces[time_step][i]
+            #sys.stdout.write("%lf," % traces[time_step][i])
+            
+#    C.transpose()
+#    b.transpose()
+    
+    cdef double[::1, :] traces_ = np.array(traces, copy=True, order='F')
+    cdef double[::1, :] C_ = np.array(C, copy=True, order='F')
+    cdef double[::1] b_ = np.array(b, copy=True, order='F')
+    cdef double[:] results = np.empty(length)
+
+    c_pred_bool(&traces_[0,0],&C_[0,0],&b_[0],&results[0],n3,m1,length)
+    
+
+    return np.array(results,dtype=np.float32)
+
+
 def load_trace_csv(file_path):
     trace = np.genfromtxt(file_path,delimiter=",")
     return trace
