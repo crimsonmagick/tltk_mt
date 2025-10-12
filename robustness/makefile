@@ -36,6 +36,6 @@ install:
 	make clean
 	make wheel
 	pip uninstall -y tltk-mtl
-	pip install dist/tltk_mtl-0.0.??.tar.gz
+	pip install dist/tltk_mtl-*.tar.gz
 upload:
-	python3 -m twine upload --repository pypi dist/tltk_mtl-0.0.??.tar.gz -u "__token__" -p $(API_KEY)
+	python3 -m twine upload --repository pypi dist/tltk_mtl-*.tar.gz -u "__token__" -p $(API_KEY)

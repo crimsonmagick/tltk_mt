@@ -1,4 +1,3 @@
-import matlab.engine
 import numpy as np
 from scipy.optimize import minimize
 from numpy import genfromtxt
@@ -59,6 +58,15 @@ def sim_and_return_rob(z, *params):
 
     return rt.robustness
 
+def falsify_rania(model, interpolation, cp_samples, predicates, root, opt):
+
+    iterations = opt[-1]
+    params = (model, opt, interpolation, predicates, root, iterations)
+
+    my_opt = {'maxiter': 1000, 'disp': True}
+    result = minimize(sim_and_return_rob, cp_samples, args=params, method='Nelder-Mead', options=my_opt)
+
+    return result.x
 
 def falsify(model, interpolation, cp_samples, predicates, root, opt):
 

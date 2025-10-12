@@ -1,6 +1,6 @@
 #import sys #uncomment if not using export statment for bash
 #sys.path.insert(1, 'robustness') #uncomment if not using export for bash
-import MTL as MTL 
+import tltk_mtl as MTL
 import numpy as np
 import time
 #predicate definition
@@ -23,7 +23,7 @@ root = MTL.Global(0,100,r1)
 #trace defined as a dictionary
 traces = {'speed': np.array([20,20,52,63,64,65,166],dtype=np.float64), 'rpm':np.array([1020,2022,3022,2523,4024,4025,4626],dtype=np.float64)}
 
-time_stamps = np.array([1,2,3,4,5,6.5,7],dtype=np.float32)
+time_stamps = np.array([1,2,3,4,5,6.5,101],dtype=np.float32)
 
 ## Evaluate Robustness    
 

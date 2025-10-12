@@ -2,7 +2,7 @@ import sys
 sys.path.insert(1, '../robustness')
 import os
 
-import MTL as MTL
+import tltk_mtl as MTL
 import time
 from numpy import genfromtxt
 import numpy as np
