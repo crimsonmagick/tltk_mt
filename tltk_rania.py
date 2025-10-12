@@ -58,7 +58,7 @@ def falsify(model, interpolation, cp_samples, predicates, root, opt):
     params = (model, opt, interpolation, predicates, root, iterations)
 
     my_opt = {'maxiter': 1000, 'disp': True}
-    result = minimize(sim_and_return_rob, cp_samples, args=params, method='Nelder-Mead', options=my_opt)
+    result = minimize(sim_and_return_rob, np.ravel(cp_samples), args=params, method='Nelder-Mead', options=my_opt)
 
     return result.x
 
