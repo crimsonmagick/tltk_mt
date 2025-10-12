@@ -1,11 +1,41 @@
-from locale import currency
-import sys
-
-import numpy as np
-from scipy.optimize import minimize
+import torch
 from numpy import random
+from scipy.optimize import minimize
+from torch.utils.data import DataLoader
+from torchvision import datasets, models, transforms
+from tqdm import tqdm
+
 import auxilliary.computeInputSignal as computeInputSignal
-import stochasticOptimization
+
+transform = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225]),
+])
+dataset = datasets.ImageFolder("/data/imagenet", transform=transform)
+dataloader = DataLoader(dataset, batch_size=32, shuffle=False, num_workers=4)
+
+model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
+model.eval().cuda()
+
+correct = 0
+total = 0
+
+with torch.no_grad():
+    for inputs, labels in tqdm(dataloader):
+        inputs = inputs.cuda()
+        labels = labels.cuda()
+        outputs = model(inputs)
+
+        _, preds = torch.max(outputs, 1)
+
+        correct += (preds == labels).sum().item()
+        total += labels.size(0)
+
+print(f"Accuracy on Tiny ImageNet train subset: {100 * correct / total:.2f}%")
+
 
 
 def sim_and_return_rob(z, *params):
