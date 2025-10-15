@@ -1,11 +1,15 @@
+from pathlib import Path
+
 import torch
 from numpy import random
 from scipy.optimize import minimize
+from scipy.io import loadmat
 from torch.utils.data import DataLoader
-from torchvision import datasets, models, transforms
+from torchvision import models, transforms
 from tqdm import tqdm
 
 import auxilliary.computeInputSignal as computeInputSignal
+from imagenet import ImagenetDataset
 
 transform = transforms.Compose([
     transforms.Resize(256),
@@ -14,9 +18,20 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225]),
 ])
-dataset = datasets.ImageFolder("/data/imagenet", transform=transform)
-dataloader = DataLoader(dataset, batch_size=32, shuffle=False, num_workers=4)
 
+base_dir = f"{Path.home()}/datasets"
+
+dataset = ImagenetDataset(f"{base_dir}/ILSVRC2012_validation_ground_truth.txt",
+                f"{base_dir}/imagenet", transform=transform)
+
+meta = loadmat(f"{base_dir}/meta.mat", squeeze_me=True)
+
+dataloader = DataLoader(
+    dataset,
+    batch_size=1,
+    num_workers=1,
+    pin_memory=True
+)
 model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
 model.eval().cuda()
 
@@ -33,8 +48,8 @@ with torch.no_grad():
 
         correct += (preds == labels).sum().item()
         total += labels.size(0)
+        print(f"Accuracy: {100 * correct / total:.2f}%")
 
-print(f"Accuracy on Tiny ImageNet train subset: {100 * correct / total:.2f}%")
 
 
 
