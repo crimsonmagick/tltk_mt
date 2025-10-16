@@ -21,15 +21,13 @@ transform = transforms.Compose([
 
 base_dir = f"{Path.home()}/datasets"
 
-dataset = ImagenetDataset(f"{base_dir}/ILSVRC2012_validation_ground_truth.txt",
+dataset = ImagenetDataset(f"{base_dir}/ILSVRC2012_validation_label.txt",
                 f"{base_dir}/imagenet", transform=transform)
-
-meta = loadmat(f"{base_dir}/meta.mat", squeeze_me=True)
 
 dataloader = DataLoader(
     dataset,
-    batch_size=1,
-    num_workers=1,
+    batch_size=32,
+    num_workers=16,
     pin_memory=True
 )
 model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
@@ -39,7 +37,9 @@ correct = 0
 total = 0
 
 with torch.no_grad():
-    for inputs, labels in tqdm(dataloader):
+    for i, (inputs, labels) in enumerate(tqdm(dataloader)):
+        # if i > 10:
+        #     break
         inputs = inputs.cuda()
         labels = labels.cuda()
         outputs = model(inputs)
@@ -48,7 +48,8 @@ with torch.no_grad():
 
         correct += (preds == labels).sum().item()
         total += labels.size(0)
-        print(f"Accuracy: {100 * correct / total:.2f}%")
+print(f"Accuracy: {100 * correct / total:.2f}%")
+
 
 
 

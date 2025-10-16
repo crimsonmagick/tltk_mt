@@ -3,11 +3,11 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset
 
+
 class ImagenetDataset(Dataset):
     def __init__(self, ground_truths_file, img_dir, transform=None, target_transform=None):
         with open(ground_truths_file, "r") as f:
-            self.img_labels = [int(line.strip()) for line in f]
-
+            self.img_labels = [int(line.split(' ')[1].strip()) for line in f]
         self.img_dir = img_dir
         self.img_files = sorted(os.listdir(img_dir))
         self.transform = transform
