@@ -3,13 +3,12 @@ from pathlib import Path
 import torch
 from numpy import random
 from scipy.optimize import minimize
-from scipy.io import loadmat
 from torch.utils.data import DataLoader
 from torchvision import models, transforms
 from tqdm import tqdm
 
 import auxilliary.computeInputSignal as computeInputSignal
-from imagenet import ImagenetDataset
+from imagenet_dataset import ImagenetDataset
 
 transform = transforms.Compose([
     transforms.Resize(256),
@@ -19,10 +18,10 @@ transform = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-base_dir = f"{Path.home()}/datasets"
+base_dir = f"{Path.home()}/workspace/data/Imagenet"
 
 dataset = ImagenetDataset(f"{base_dir}/ILSVRC2012_validation_label.txt",
-                f"{base_dir}/imagenet", transform=transform)
+                          f"{base_dir}/val", transform=transform)
 
 dataloader = DataLoader(
     dataset,
@@ -49,9 +48,6 @@ with torch.no_grad():
         correct += (preds == labels).sum().item()
         total += labels.size(0)
 print(f"Accuracy: {100 * correct / total:.2f}%")
-
-
-
 
 
 def sim_and_return_rob(z, *params):
@@ -109,13 +105,11 @@ def falsify(model, interpolation, cp_samples, predicates, root, opt):
     return result.x
 
 
-
-
 import sys
+
 sys.path.insert(1, '../../')
 import numpy as np
 import tltk_mtl as MTL
-
 
 # Define number of convolution DNN layers
 layers = 5
@@ -131,13 +125,16 @@ simulation_time = iterations
 # Optimization vector configuration
 pruning_ratio_LB = 0
 pruning_ratio_UB = 9
-pruning_ratio = [[pruning_ratio_LB,pruning_ratio_UB] for i in range(layers)]
-weight_quant = [[5,8] for i in range(layers)]
-activation_quant = [[5,8] for i in range(layers)]
+pruning_ratio = [[pruning_ratio_LB, pruning_ratio_UB] for i in range(layers)]
+weight_quant = [[5, 8] for i in range(layers)]
+activation_quant = [[5, 8] for i in range(layers)]
 
 # Flatten final vector and define control point bounds
 inp_range = [item for sublist in pruning_ratio + weight_quant + activation_quant for item in sublist]
-cp_bounds = [(pruning_ratio_LB,pruning_ratio_UB) for i in range(layers)] + [(5,8) for i in range(layers)] + [(5,8) for i in range(layers)]
+cp_bounds = [(pruning_ratio_LB, pruning_ratio_UB) for i in range(layers)] + [(5, 8) for i in range(layers)] + [(5, 8)
+                                                                                                               for i in
+                                                                                                               range(
+                                                                                                                   layers)]
 
 opt = ['data', step, inp_range, simulation_time, model_outputs, iterations]
 
@@ -146,13 +143,11 @@ interpolation = 'pconst'
 mode = 'cpu_threaded'
 
 # STL formula definition in the form of Ax <= b (good set)
-r1 = MTL.Predicate('accuracy',-1,-75)
-root = MTL.Global(0,float('inf'),r1)
+r1 = MTL.Predicate('accuracy', -1, -75)
+root = MTL.Global(0, float('inf'), r1)
 
 predicates = [r1]
 
 results = falsify(model, interpolation, cp_bounds, predicates, root, opt)
 
 # print(results)
-
-
